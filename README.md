@@ -1,40 +1,28 @@
 <div align="center">
-  <img src="public/favicon.svg" alt="Reelish Logo" width="120" />
-  <h1>Reelish Web App</h1>
-  <p><strong>TikTok meets DoorDash.</strong> Discover meals through short-form videos. Swipe, watch, order.</p>
+  <img src="public/favicon.svg" alt="Reelish Logo" width="80" />
+  <h1>Reelish Web Application</h1>
+  <p>Discover meals through short-form videos. Swipe, watch, order.</p>
 </div>
 
 <br/>
 
-## 🚀 Features
-- **TikTok-Style UI:** Beautiful, interactive mobile-first video feed mockup.
-- **Glassmorphism Design:** Modern aesthetic with a custom dark theme and Red-Orange accents (`#FF4500` & `#FF8C00`).
-- **Smooth Animations:** Floating gradient blobs and sleek hover effects.
-- **Responsive Layout:** Fixed fullscreen on Desktop/Tablets, cleanly scrollable on Mobile with custom CTA blocks.
-- **Waitlist Integration:** Functional frontend form to capture early adopters.
-- **Client-Side Routing:** Hash-based seamless routing for Terms and Privacy pages without page reloads.
+## Overview
+Reelish is a modern, mobile-first web application designed to bridge the gap between food discovery and ordering. It features a responsive layout with a robust waitlist capture system and client-side routing.
 
----
+## Features
+- **Mobile-First Feed UI:** An interactive, vertical-scrolling video feed interface tailored for food discovery.
+- **Modern Aesthetic:** Built with a custom dark theme, utilizing glassmorphism and deep orange accents.
+- **Responsive Layout:** Enforces a locked, desktop-optimized view on larger screens while retaining native scroll behaviors on mobile devices.
+- **Client-Side Routing:** Implements hash-based routing to seamlessly navigate to Terms of Service and Privacy Policy pages without full page reloads.
 
-## 📱 Phone UI Design
-Here is the core TikTok-style scrolling feed design for discovering food:
-
-> **Note:** Take a screenshot of the phone UI in your browser and save it as `screenshot.png` inside the `public/` folder to display it below!
-
-<div align="center">
-  <img src="public/screenshot.png" alt="Reelish Mobile UI Preview" width="350" style="border-radius: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);" />
-</div>
-
----
-
-## 🛠 Tech Stack
-- **Frontend Framework:** React 18
+## Tech Stack
+- **Framework:** React 18
 - **Build Tool:** Vite
-- **Styling:** Custom CSS (Modules/CSS3) with CSS Variables
-- **Icons:** `lucide-react`
-- **Deployment:** Vercel (Configured with `vercel.json` for SPA rewrites)
+- **Styling:** CSS Modules & Variables
+- **Icons:** Lucide React
+- **Hosting:** Vercel
 
-## 📦 Local Development
+## Local Setup
 
 1. **Clone the repository:**
    ```bash
@@ -47,21 +35,13 @@ Here is the core TikTok-style scrolling feed design for discovering food:
    npm install
    ```
 
-3. **Start the dev server:**
+3. **Start the development server:**
    ```bash
    npm run dev
    ```
 
-4. **Build for production:**
-   ```bash
-   npm run build
-   ```
+## Deployment Configuration
+This project is configured for Vercel deployment. The included `vercel.json` file ensures that all client-side routes fallback to `index.html`, preventing routing errors in production. 
 
-## 🌐 Deployment
-This project is configured out-of-the-box for **Vercel**. 
-Simply link this GitHub repository to your Vercel account, and Vercel will automatically detect Vite and use `npm run build` to deploy the `/dist` directory. The included `vercel.json` ensures all client-side routes fallback to `index.html`.
-
-<br/>
-<div align="center">
-  <i>Built with ❤️ for food lovers.</i>
-</div>
+- **Build Command:** `npm run build`
+- **Output Directory:** `dist`
