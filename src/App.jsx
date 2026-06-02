@@ -1,10 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Bookmark, MessageCircle, Send, Store, UtensilsCrossed } from 'lucide-react';
+import emailjs from '@emailjs/browser';
 import './index.css';
 import Terms from './Terms';
 import Privacy from './Privacy';
 
 function Landing() {
+  const form = useRef();
+  const [status, setStatus] = useState('');
+
+  const sendEmail = (e) => {
+    e.preventDefault();
+    setStatus('Sending...');
+
+    // Connects to EmailJS using the provided credentials
+    emailjs.sendForm('service_u9ec3hm', 'template_g3myq1m', form.current, 'g--u7fCvANirZbdzY')
+      .then((result) => {
+          setStatus('Joined!');
+          e.target.reset();
+          setTimeout(() => setStatus(''), 3000);
+      }, (error) => {
+          setStatus('Error! Try again.');
+          setTimeout(() => setStatus(''), 3000);
+      });
+  };
+
   return (
     <>
       <div className="bg-blobs">
@@ -29,9 +49,11 @@ function Landing() {
             
             <div className="waitlist-section">
               <div className="coming-soon-badge"><span className="status-dot"></span>Coming Soon</div>
-              <form className="email-input-group" onSubmit={(e) => e.preventDefault()}>
-                <input type="email" placeholder="Enter your email address" required className="email-input" />
-                <button type="submit" className="join-btn">Join the Waitlist</button>
+              <form ref={form} className="email-input-group" onSubmit={sendEmail}>
+                <input type="email" name="user_email" placeholder="Enter your email address" required className="email-input" />
+                <button type="submit" className="join-btn" disabled={status === 'Sending...'}>
+                  {status || 'Join the Waitlist'}
+                </button>
               </form>
             </div>
           </div>
