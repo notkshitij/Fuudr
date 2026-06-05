@@ -1,150 +1,394 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Bookmark, MessageCircle, Send, Store, UtensilsCrossed } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
 import emailjs from '@emailjs/browser';
 import './index.css';
 import Terms from './Terms';
 import Privacy from './Privacy';
 
+const REELS = [
+  { img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=700&auto=format&fit=crop', restaurant: 'Burger Boss & Fries', dish: 'Smash Double Cheeseburger', distance: '1.5 km away', handle: '@burgerboss_in' },
+  { img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=700&auto=format&fit=crop', restaurant: 'Napoli Kitchen', dish: 'Margherita Pizza', distance: '0.8 km away', handle: '@napolikitchen' },
+  { img: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=700&auto=format&fit=crop', restaurant: 'Ocean Table', dish: 'Grilled Salmon Bowl', distance: '1.4 km away', handle: '@oceantable.in' },
+  { img: 'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=700&auto=format&fit=crop', restaurant: 'Casa Bianca', dish: 'Truffle Pasta', distance: '0.6 km away', handle: '@casabianca_in' },
+];
+
+const TOTAL = REELS.length;
+const SEGMENT_DURATION = 4000; // ms per reel
+
+/* ── Icons ── */
+const IconSave = () => (
+  <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
+);
+const IconShare = () => (
+  <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" strokeLinecap="round"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" strokeLinecap="round"/></svg>
+);
+const IconReview = () => (
+  <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+);
+const IconSound = () => (
+  <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+);
+const IconCart = () => (
+  <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+);
+const IconMenu = () => (
+  <svg viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>
+);
+
+
+/* ── Phone mockup with real reel UI ── */
+function PhoneCard({ startIdx = 0, rotate = '0deg', bobClass = 'bobbing-1', revealDelay = '0ms' }) {
+  const [idx, setIdx] = useState(startIdx % TOTAL);
+  const [progress, setProgress] = useState(0); // 0-100
+  const [fading, setFading] = useState(false);
+  const tickRef = useRef(null);
+
+  const goNext = () => {
+    setFading(true);
+    setTimeout(() => {
+      setIdx(i => (i + 1) % TOTAL);
+      setProgress(0);
+      setFading(false);
+    }, 350);
+  };
+
+  useEffect(() => {
+    const step = 100 / (SEGMENT_DURATION / 50);
+    tickRef.current = setInterval(() => {
+      setProgress(p => {
+        if (p + step >= 100) { goNext(); return 0; }
+        return p + step;
+      });
+    }, 50);
+    return () => clearInterval(tickRef.current);
+  }, [idx]);
+
+  const r = REELS[idx];
+
+  return (
+    <div className={`reveal ${bobClass}`} style={{ transitionDelay: revealDelay }}>
+      <div style={{ transform: `rotate(${rotate})` }}>
+        <div className="phone-shell">
+          <div className="phone-screen">
+            {/* Reel image */}
+            <img
+              key={idx}
+              src={r.img}
+              alt={r.restaurant}
+              className={`phone-reel-img ${fading ? 'fade-out' : 'fade-in'}`}
+            />
+            <div className="phone-reel-overlay" />
+
+            {/* Status bar */}
+            <div className="phone-statusbar">
+              <span className="phone-time">3:09</span>
+              <div className="phone-status-icons">
+                <span>5G</span>
+                <span>▐▐▐▐</span>
+                <span className="phone-battery">19</span>
+              </div>
+            </div>
+
+            {/* Story progress bars */}
+            <div className="phone-progress-bars">
+              {REELS.map((_, i) => (
+                <div key={i} className="phone-progress-seg">
+                  <div
+                    className="phone-progress-fill"
+                    style={{
+                      width: i < idx ? '100%' : i === idx ? `${progress}%` : '0%',
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Side actions */}
+            <div className="phone-side-actions">
+              {[
+                { icon: <IconSave />, label: 'Save' },
+                { icon: <IconShare />, label: 'Share' },
+                { icon: <IconReview />, label: 'Reviews' },
+                { icon: <IconSound />, label: 'Sound' },
+              ].map(({ icon, label }) => (
+                <div key={label} className="phone-action">
+                  <div className="phone-action-icon">{icon}</div>
+                  <span className="phone-action-label">{label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Bottom info */}
+            <div className="phone-bottom-info">
+              <p className="phone-restaurant">{r.restaurant}</p>
+              <p className="phone-dish-name">{r.dish}</p>
+              <div className="phone-distance">
+                <span>📍</span>
+                <span>{r.distance}</span>
+              </div>
+              <p className="phone-handle">{r.handle}</p>
+            </div>
+
+            {/* CTA buttons */}
+            <div className="phone-ctas">
+              <button className="phone-cart-btn">
+                <IconCart />
+                Add to Cart
+              </button>
+              <button className="phone-menu-btn">
+                <IconMenu />
+                Menu
+              </button>
+            </div>
+
+
+          </div>
+
+          {/* Home indicator */}
+          <div className="phone-home-bar" />
+
+          {/* Hardware buttons */}
+          <div className="phone-btn phone-vol1" />
+          <div className="phone-btn phone-vol2" />
+          <div className="phone-btn phone-power" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── hooks ── */
+function useReveal() {
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      (entries) => entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add('active'); }),
+      { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
+    );
+    document.querySelectorAll('.reveal').forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+}
+function useCursorGlow() {
+  useEffect(() => {
+    const glow = document.getElementById('cursor-glow');
+    if (!glow) return;
+    const move = (e) => { glow.style.left = e.clientX + 'px'; glow.style.top = e.clientY + 'px'; glow.style.opacity = '1'; };
+    const leave = () => { glow.style.opacity = '0'; };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseleave', leave);
+    return () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseleave', leave); };
+  }, []);
+}
+function useNavShrink() {
+  useEffect(() => {
+    const fn = () => {
+      const nav = document.querySelector('nav');
+      if (!nav) return;
+      if (window.scrollY > 50) { nav.classList.add('py-2','scale-95'); nav.classList.remove('py-3','py-4'); }
+      else { nav.classList.remove('py-2','scale-95'); nav.classList.add('py-3'); }
+    };
+    window.addEventListener('scroll', fn);
+    return () => window.removeEventListener('scroll', fn);
+  }, []);
+}
+function useMagnetic() {
+  useEffect(() => {
+    const btns = document.querySelectorAll('.btn-fancy');
+    const hs = [];
+    btns.forEach(btn => {
+      const m = (e) => { const r = btn.getBoundingClientRect(); btn.style.transform = `translate(${(e.clientX-r.left-r.width/2)*0.2}px,${(e.clientY-r.top-r.height/2)*0.2}px) scale(1.05)`; };
+      const l = () => { btn.style.transform = ''; };
+      btn.addEventListener('mousemove', m); btn.addEventListener('mouseleave', l);
+      hs.push([btn,m,l]);
+    });
+    return () => hs.forEach(([b,m,l]) => { b.removeEventListener('mousemove',m); b.removeEventListener('mouseleave',l); });
+  }, []);
+}
+
+const IMG_DINING = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&auto=format&fit=crop';
+
 function Landing() {
   const form = useRef();
   const [status, setStatus] = useState('');
+  useReveal(); useCursorGlow(); useNavShrink(); useMagnetic();
 
   const sendEmail = (e) => {
     e.preventDefault();
     setStatus('Sending...');
-
-    // Connects to EmailJS using the provided credentials
     emailjs.sendForm('service_u9ec3hm', 'template_g3myq1m', form.current, 'g--u7fCvANirZbdzY')
-      .then((result) => {
-          setStatus('Joined!');
-          e.target.reset();
-          setTimeout(() => setStatus(''), 3000);
-      }, (error) => {
-          setStatus('Error! Try again.');
-          setTimeout(() => setStatus(''), 3000);
-      });
+      .then(() => { setStatus('JOINED!'); e.target.reset(); setTimeout(() => setStatus(''), 3500); })
+      .catch(() => { setStatus('ERROR – RETRY'); setTimeout(() => setStatus(''), 3500); });
   };
+
+  const words = [
+    { w: 'Food', d: '0.1s', cls: '' }, { w: 'you', d: '0.2s', cls: '' }, { w: 'can', d: '0.3s', cls: '' },
+    { w: 'almost', d: '0.5s', cls: 'text-primary italic' }, { w: 'smell', d: '0.7s', cls: '' },
+  ];
 
   return (
     <>
-      <div className="bg-blobs">
-        <div className="blob blob-1"></div>
-        <div className="blob blob-2"></div>
+      <div id="cursor-glow" />
+      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{ zIndex: -1 }}>
+        <div className="floating-blob bg-primary w-[600px] h-[600px] -top-32 -left-32" />
+        <div className="floating-blob bg-secondary-container w-[500px] h-[500px] top-1/2 -right-20" style={{ animationDelay: '-7s' }} />
+        <div className="floating-blob bg-surface-container-highest w-[700px] h-[700px] -bottom-40 left-1/4" style={{ animationDelay: '-14s' }} />
       </div>
-      
-      <div className="container">
-        <header>
-          <UtensilsCrossed className="logo-icon" size={28} />
-          <span className="logo-text">Fuud<span className="logo-highlight">r</span></span>
-        </header>
 
-        <main className="main-content">
-          <div className="text-section">
-            <h1 className="title">
-              See it. Crave it.<br/><span>Order it.</span>
-            </h1>
-            <p className="subtitle">
-              Skip the boring menus. Watch tasty food videos and order your favorite meals instantly.
-            </p>
-            
-            <div className="waitlist-section">
-              <div className="coming-soon-badge"><span className="status-dot"></span>Coming Soon</div>
-              <form ref={form} className="email-input-group" onSubmit={sendEmail}>
-                <input type="email" name="user_email" placeholder="Enter your email address" required className="email-input" />
-                <button type="submit" className="join-btn" disabled={status === 'Sending...'}>
-                  {status || 'Join the Waitlist'}
-                </button>
-              </form>
-            </div>
+      {/* Nav */}
+      <header className="fixed top-6 left-1/2 -translate-x-1/2 w-[95%] md:w-[90%] max-w-[1280px] z-50">
+        <nav className="bg-white/90 glass-nav rounded-full border border-secondary/10 shadow-[0_40px_40px_-15px_rgba(171,54,0,0.15)] flex justify-between items-center px-6 md:px-8 py-3 transition-all duration-500">
+          <span className="font-display-xl text-headline-md text-primary italic" style={{ fontFamily: 'Bricolage Grotesque' }}>Fuudr</span>
+          <div className="hidden md:flex items-center gap-8">
+            <a className="font-label-bold text-label-bold uppercase tracking-wider text-primary border-b-2 border-primary pb-1" href="#">Discover</a>
+            <a className="font-label-bold text-label-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors" href="#features">How it Works</a>
+            <a className="font-label-bold text-label-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors" href="#">Creators</a>
           </div>
+          <a href="#hero" className="btn-fancy bg-on-background text-background font-label-bold text-label-bold px-6 py-2.5 rounded-full shadow-lg">Order Now</a>
+        </nav>
+      </header>
 
-          <div className="mockup-section">
-            <div className="phone-frame">
-              <div className="phone-screen">
-                <div className="video-container">
-                  <img 
-                    src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=800&auto=format&fit=crop" 
-                    alt="Delicious Food" 
-                    className="video-cover" 
-                  />
-                  
-                  <div className="tiktok-ui">
-                    <div className="side-actions">
-                      <div className="action-item">
-                        <div className="action-btn">
-                          <Bookmark size={24} fill="white" />
-                        </div>
-                        <span className="action-text">1k</span>
-                      </div>
-                      <div className="action-item">
-                        <div className="action-btn">
-                          <MessageCircle size={24} fill="white" />
-                        </div>
-                        <span className="action-text">25</span>
-                      </div>
-                      <div className="action-item">
-                        <div className="action-btn">
-                          <Send size={24} fill="white" />
-                        </div>
-                        <span className="action-text">18</span>
-                      </div>
-                    </div>
+      <main className="relative">
+        <section id="hero" className="relative min-h-screen flex items-center overflow-hidden">
+          <div className="w-full max-w-[1280px] mx-auto px-5 pt-32 pb-24 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
-                    <div className="video-info">
-                      <h3 className="restaurant-name">The Classic Burger</h3>
-                      <p className="food-desc">5 Oz Patty all Natural Beef...</p>
-                      <div className="store-info">
-                        <Store size={12} />
-                        <span>Black Iron Burger • 1 mile away</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            {/* LEFT */}
+            <div className="z-10 space-y-8 text-center lg:text-left">
+              <div className="reveal inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-primary font-label-bold text-label-bold uppercase tracking-widest">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+                </span>
+                Coming Soon • Now Open
+              </div>
+
+              <h1 className="font-display-xl text-display-xl-mobile md:text-display-xl text-on-background leading-[1.0]" style={{ fontFamily: 'Bricolage Grotesque' }}>
+                {words.map(({ w, d, cls }, i) => (
+                  <React.Fragment key={i}>
+                    <span className={`word-bounce ${cls}`} style={{ animationDelay: d }}>{w}</span>{' '}
+                  </React.Fragment>
+                ))}
+              </h1>
+
+              <p className="reveal font-body-lg text-body-lg text-on-surface-variant max-w-xl mx-auto lg:mx-0" style={{ transitionDelay: '400ms' }}>
+                Skip the boring menus. Watch tasty food reels and order your favourite meals instantly.
+              </p>
+
+              <div className="reveal w-full max-w-xl mx-auto lg:mx-0" style={{ transitionDelay: '600ms' }}>
+                <form ref={form} onSubmit={sendEmail} className="bg-white p-2 rounded-full flex items-center gap-2 shadow-[0_20px_50px_rgba(43,18,8,0.1)] border border-outline/10">
+                  <input name="user_email" className="flex-1 bg-transparent border-none focus:ring-0 px-6 font-body-md text-on-surface placeholder:text-outline-variant outline-none" placeholder="Enter your email address" required type="email" />
+                  <button className="btn-fancy bg-on-background text-background font-label-bold text-label-bold px-8 py-4 rounded-full whitespace-nowrap" type="submit" disabled={status === 'Sending...'}>
+                    {status || 'JOIN WAITLIST'}
+                  </button>
+                </form>
+                <p className="mt-4 text-xs text-outline" style={{ fontFamily: 'Plus Jakarta Sans' }}>Join 2,400+ foodies waiting for the launch.</p>
+              </div>
+
+              <div className="reveal" style={{ transitionDelay: '800ms' }}>
+                <a href="#features" className="btn-fancy inline-block font-label-bold text-label-bold text-primary uppercase tracking-widest border-2 border-primary/30 hover:border-primary/60 px-8 py-3 rounded-full transition-all">
+                  EXPLORE THE MENU
+                </a>
               </div>
             </div>
+
+            {/* RIGHT — two phones */}
+            <div className="hidden lg:block relative h-[580px]">
+              <div className="absolute" style={{ left: '0px', top: '30px', zIndex: 5 }}>
+                <PhoneCard startIdx={0} rotate="-9deg" bobClass="bobbing-1" revealDelay="200ms" />
+              </div>
+              <div className="absolute" style={{ right: '-10px', top: '50px', zIndex: 10 }}>
+                <PhoneCard startIdx={2} rotate="7deg" bobClass="bobbing-2" revealDelay="350ms" />
+              </div>
+            </div>
+
+            {/* Mobile single phone */}
+            <div className="lg:hidden flex justify-center mt-6">
+              <PhoneCard startIdx={0} rotate="0deg" bobClass="bobbing-1" revealDelay="200ms" />
+            </div>
           </div>
 
-          <div className="mobile-cta">
-            <h2>Ready to explore?</h2>
-            <p>Your next favorite dish is one swipe away.</p>
-            <button 
-              className="download-btn-outline" 
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            >
-              Join Waitlist
-            </button>
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 opacity-50 reveal z-10" style={{ transitionDelay: '1000ms' }}>
+            <span style={{ fontFamily: 'Plus Jakarta Sans', fontSize: '10px', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase' }}>Psst... This Way</span>
+            <span className="material-symbols-outlined animate-bounce">expand_more</span>
           </div>
-        </main>
+        </section>
 
-        <footer>
-          <div className="footer-links center-links">
-            <a href="#/terms">Terms</a>
-            <a href="#/privacy">Privacy</a>
-            <a href="mailto:solvers.real@gmail.com">Contact</a>
+        {/* Bento */}
+        <section id="features" className="max-w-[1280px] mx-auto px-5 py-section-gap">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6" style={{ gridAutoRows: '250px' }}>
+            <div className="md:col-span-2 md:row-span-2 bg-surface-container-low rounded-lg p-10 flex flex-col justify-end relative overflow-hidden group reveal">
+              <div className="absolute inset-0 opacity-10 group-hover:opacity-30 transition-all duration-1000 group-hover:scale-110">
+                <img alt="dining" className="w-full h-full object-cover" src={IMG_DINING} />
+              </div>
+              <div className="relative z-10">
+                <span className="text-primary font-label-bold uppercase tracking-widest text-sm mb-4 block translate-y-4 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">Interactive Experience</span>
+                <h2 className="font-headline-lg text-headline-lg mb-4" style={{ fontFamily: 'Bricolage Grotesque' }}>Dine with your eyes first.</h2>
+                <p className="font-body-md text-on-surface-variant max-w-md">Our algorithm learns your cravings to show you the most delicious reels from chefs near you. No more guessing what the dish actually looks like.</p>
+              </div>
+            </div>
+            <div className="bg-secondary-container rounded-lg p-8 flex flex-col justify-between group hover:shadow-xl transition-all duration-500 reveal" style={{ transitionDelay: '150ms' }}>
+              <div className="w-12 h-12 bg-on-background/5 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                <span className="material-symbols-outlined text-on-background">bolt</span>
+              </div>
+              <div>
+                <h3 className="font-headline-md text-2xl mb-2" style={{ fontFamily: 'Bricolage Grotesque' }}>Instant Order</h3>
+                <p className="text-sm text-on-surface-variant">Three taps from reel to real food at your door.</p>
+              </div>
+            </div>
+            <div className="bg-primary-container text-white rounded-lg p-8 flex flex-col justify-between group hover:shadow-xl transition-all duration-500 reveal" style={{ transitionDelay: '300ms' }}>
+              <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                <span className="material-symbols-outlined text-white">verified</span>
+              </div>
+              <div>
+                <h3 className="font-headline-md text-2xl mb-2" style={{ fontFamily: 'Bricolage Grotesque' }}>Curated Menus</h3>
+                <p className="text-sm opacity-80">Only the best local creators and hidden culinary gems.</p>
+              </div>
+            </div>
+            <div className="md:col-span-3 bg-surface-container-highest rounded-lg p-10 flex flex-col md:flex-row items-center justify-between gap-8 reveal" style={{ transitionDelay: '450ms' }}>
+              <div>
+                <h2 className="font-headline-lg text-headline-lg mb-4" style={{ fontFamily: 'Bricolage Grotesque' }}>Ready to satisfy your cravings?</h2>
+                <p className="font-body-md text-on-surface-variant max-w-lg">Join our community of 50k+ food lovers discovering the best meals their city has to offer through beautiful video content.</p>
+              </div>
+              <a href="#hero" className="btn-fancy flex-shrink-0 bg-on-background text-background font-label-bold text-label-bold px-10 py-5 rounded-full shadow-xl">ORDER NOW</a>
+            </div>
           </div>
-        </footer>
-      </div>
+        </section>
+      </main>
+
+      <footer className="bg-surface-container-low border-t border-outline/5">
+        <div className="max-w-[1280px] mx-auto px-5 py-section-gap flex flex-col md:flex-row justify-between items-start md:items-center gap-12">
+          <div className="space-y-4">
+            <div className="font-display-xl text-headline-md text-primary italic" style={{ fontFamily: 'Bricolage Grotesque' }}>Fuudr</div>
+            <p className="font-body-md text-body-md text-on-surface-variant max-w-xs">Satisfy your cravings instantly. Discover the best food near you through immersive video.</p>
+          </div>
+          <div className="flex flex-wrap gap-x-12 gap-y-6">
+            <div className="flex flex-col gap-3">
+              <span className="font-label-bold text-xs uppercase tracking-widest text-outline">Company</span>
+              {['About Us','Creators','Partner with Us'].map(l => <a key={l} className="font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">{l}</a>)}
+            </div>
+            <div className="flex flex-col gap-3">
+              <span className="font-label-bold text-xs uppercase tracking-widest text-outline">Support</span>
+              <a className="font-body-md text-on-surface-variant hover:text-primary transition-colors" href="mailto:solvers.real@gmail.com">Contact</a>
+              <a className="font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#/terms">Terms of Service</a>
+              <a className="font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#/privacy">Privacy Policy</a>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-[1280px] mx-auto px-5 py-8 border-t border-outline/10 text-center md:text-left">
+          <p className="text-xs text-outline" style={{ fontFamily: 'Plus Jakarta Sans' }}>© 2024 Fuudr. All rights reserved.</p>
+        </div>
+      </footer>
     </>
   );
 }
 
 function App() {
-  const [currentHash, setCurrentHash] = useState(window.location.hash);
-
-  useEffect(() => {
-    const onHashChange = () => setCurrentHash(window.location.hash);
-    window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
+  const [hash, setHash] = React.useState(window.location.hash);
+  React.useEffect(() => {
+    const fn = () => setHash(window.location.hash);
+    window.addEventListener('hashchange', fn);
+    return () => window.removeEventListener('hashchange', fn);
   }, []);
-
-  if (currentHash === '#/terms') {
-    return <Terms />;
-  }
-  
-  if (currentHash === '#/privacy') {
-    return <Privacy />;
-  }
-
+  if (hash === '#/terms') return <Terms />;
+  if (hash === '#/privacy') return <Privacy />;
   return <Landing />;
 }
 
