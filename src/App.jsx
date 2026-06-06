@@ -4,16 +4,18 @@ import './index.css';
 import Terms from './Terms';
 import Privacy from './Privacy';
 
-const REELS = [
-  { img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=700&auto=format&fit=crop', restaurant: 'Burger Boss & Fries', dish: 'Smash Double Cheeseburger', distance: '1.5 km away', handle: '@burgerboss_in' },
-  { img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=700&auto=format&fit=crop', restaurant: 'Napoli Kitchen', dish: 'Margherita Pizza', distance: '0.8 km away', handle: '@napolikitchen' },
-  { img: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=700&auto=format&fit=crop', restaurant: 'Ocean Table', dish: 'Grilled Salmon Bowl', distance: '1.4 km away', handle: '@oceantable.in' },
-  { img: 'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=700&auto=format&fit=crop', restaurant: 'Casa Bianca', dish: 'Truffle Pasta', distance: '0.6 km away', handle: '@casabianca_in' },
+const PIZZA_REELS = [
+  { video: '/pizza1.mp4', restaurant: 'Napoli Kitchen',  dish: 'Margherita Pizza',       distance: '0.8 km away', handle: '@napolikitchen' },
+  { video: '/pizza2.mp4', restaurant: 'Pizza House',     dish: 'Pepperoni Special',       distance: '1.2 km away', handle: '@pizzahouse_in' },
 ];
-
-const TOTAL = REELS.length;
-const SEGMENTS = 2;
-const SEGMENT_DURATION = 4000;
+const BURGER_REELS = [
+  { video: '/burger1.mp4', restaurant: 'Burger Boss & Fries', dish: 'Smash Double Cheeseburger', distance: '1.5 km away', handle: '@burgerboss_in' },
+  { video: '/burger2.mp4', restaurant: 'The Patty Lab',       dish: 'Double Smash Burger',       distance: '0.9 km away', handle: '@pattylab_in' },
+];
+const REEL_SETS      = [PIZZA_REELS, BURGER_REELS];
+const SEGMENTS       = 2;
+const SEGMENT_DURATION_DEFAULT = 7000;
+const SEGMENT_DURATION_BURGER2 = 10000; // burger2 shows for 10s
 
 const IconSave   = () => <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>;
 const IconShare  = () => <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" strokeLinecap="round"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" strokeLinecap="round"/></svg>;
@@ -22,41 +24,74 @@ const IconSound  = () => <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 
 const IconCart   = () => <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>;
 const IconMenu   = () => <svg viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>;
 
-function PhoneCard({ startIdx = 0, rotate = '0deg', bobClass = 'bobbing-1', revealDelay = '0ms' }) {
-  const [seg, setSeg]         = useState(0);
-  const [reelIdx, setReelIdx] = useState(startIdx % TOTAL);
-  const [progress, setProgress] = useState(0);
-  const [fading, setFading]   = useState(false);
-  const [showSwipe, setShowSwipe] = useState(false);
-  const [swipeKey, setSwipeKey] = useState(0);
-  const showSwipeRef = useRef(false);
+/* ── Reel info overlay (shared) ── */
+function ReelInfo({ r }) {
+  return (
+    <>
+      <div className="phone-side-actions">
+        {[
+          { icon: <IconSave />, label: 'Save' },
+          { icon: <IconShare />, label: 'Share' },
+          { icon: <IconReview />, label: 'Reviews' },
+          { icon: <IconSound />, label: 'Sound' },
+        ].map(({ icon, label }) => (
+          <div key={label} className="phone-action">
+            <div className="phone-action-icon">{icon}</div>
+            <span className="phone-action-label">{label}</span>
+          </div>
+        ))}
+      </div>
+      <div className="phone-bottom-info">
+        <p className="phone-restaurant">{r.restaurant}</p>
+        <p className="phone-dish-name">{r.dish}</p>
+        <div className="phone-distance"><span>📍</span><span>{r.distance}</span></div>
+        <p className="phone-handle">{r.handle}</p>
+      </div>
+      <div className="phone-ctas">
+        <button className="phone-cart-btn"><IconCart />Add to Cart</button>
+        <button className="phone-menu-btn"><IconMenu />Menu</button>
+      </div>
+    </>
+  );
+}
 
-  const segRef      = useRef(0);
-  const fadingRef   = useRef(false);
-  const progressRef = useRef(0);
-  const timerRef    = useRef(null);
+/* ── Main phone component ── */
+function PhoneCard({ rotate = '0deg', bobClass = 'bobbing-1', revealDelay = '0ms' }) {
+  const [setIdx,    setSetIdx]    = useState(0);   // 0=pizza, 1=burger
+  const [seg,       setSeg]       = useState(0);   // 0 or 1 within current set
+  const [progress,  setProgress]  = useState(0);   // 0-100
+  const [fading,    setFading]    = useState(false);
+  const [scrolling, setScrolling] = useState(false); // scroll-up animation active
+  const [showSwipe, setShowSwipe] = useState(false);
+  const [swipeKey,  setSwipeKey]  = useState(0);
+
+  const segRef       = useRef(0);
+  const setIdxRef    = useRef(0);
+  const fadingRef    = useRef(false);
+  const progressRef  = useRef(0);
+  const showSwipeRef = useRef(false);
+  const timerRef     = useRef(null);
 
   useEffect(() => {
-    const STEP = 100 / (SEGMENT_DURATION / 50);
-
     const iv = setInterval(() => {
       if (fadingRef.current) return;
-      const next = progressRef.current + STEP;
 
-          // Seg 1 is 75% done → show swipe video early
-          if (segRef.current === 1 && next >= 75 && !showSwipeRef.current) {
-            showSwipeRef.current = true;
-            setSwipeKey(k => k + 1);
-            setShowSwipe(true);
-            clearTimeout(timerRef.current);
-            timerRef.current = setTimeout(() => {
-              setShowSwipe(false);
-              showSwipeRef.current = false;
-            }, 2000);
-          }
+      // Duration varies: burger2 = 10s, everything else = 4s
+      const isBurger2 = setIdxRef.current === 1 && segRef.current === 1;
+      const dynStep   = 100 / ((isBurger2 ? SEGMENT_DURATION_BURGER2 : SEGMENT_DURATION_DEFAULT) / 50);
+      const next      = progressRef.current + dynStep;
+      if (segRef.current === 1 && next >= 75 && !showSwipeRef.current) {
+        showSwipeRef.current = true;
+        setSwipeKey(k => k + 1);
+        setShowSwipe(true);
+        clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+          setShowSwipe(false);
+          showSwipeRef.current = false;
+        }, 2000);
+      }
 
-          if (next >= 100) {
-        // Hold bar at 100% visually, then switch
+      if (next >= 100) {
         progressRef.current = 100;
         setProgress(100);
         fadingRef.current = true;
@@ -65,16 +100,31 @@ function PhoneCard({ startIdx = 0, rotate = '0deg', bobClass = 'bobbing-1', reve
         setTimeout(() => {
           const doneSeg = segRef.current;
 
-          const nextSeg = (doneSeg + 1) % SEGMENTS;
-          segRef.current  = nextSeg;
-          progressRef.current = 0;
-          setSeg(nextSeg);
-          setProgress(0);
-          setReelIdx(i => (i + 1) % TOTAL);
-          fadingRef.current = false;
-          setFading(false);
+          if (doneSeg === 1) {
+            // Both bars done → scroll-up transition then switch set
+            setFading(false);
+            setScrolling(true);
+            setTimeout(() => {
+              const nextSet = (setIdxRef.current + 1) % REEL_SETS.length;
+              setIdxRef.current = nextSet;
+              setSetIdx(nextSet);
+              segRef.current = 0;
+              progressRef.current = 0;
+              setSeg(0);
+              setProgress(0);
+              setScrolling(false);
+              fadingRef.current = false;
+            }, 550);
+          } else {
+            // Advance to seg 1 within same set
+            segRef.current = 1;
+            progressRef.current = 0;
+            setSeg(1);
+            setProgress(0);
+            fadingRef.current = false;
+            setFading(false);
+          }
         }, 350);
-
       } else {
         progressRef.current = next;
         setProgress(next);
@@ -84,20 +134,51 @@ function PhoneCard({ startIdx = 0, rotate = '0deg', bobClass = 'bobbing-1', reve
     return () => { clearInterval(iv); clearTimeout(timerRef.current); };
   }, []);
 
-  const r = REELS[reelIdx];
+  const reels    = REEL_SETS[setIdx];
+  const nextReels = REEL_SETS[(setIdx + 1) % REEL_SETS.length];
+  const r        = reels[seg];
+  const nextR    = nextReels[0];
 
   return (
     <div className={`reveal ${bobClass}`} style={{ transitionDelay: revealDelay }}>
       <div style={{ transform: `rotate(${rotate})` }}>
         <div className="phone-shell">
-          <div className="phone-screen">
+          <div className="phone-screen" style={{ overflow: 'hidden' }}>
 
-            {/* Reel image */}
-            <img key={reelIdx} src={r.img} alt={r.restaurant}
-              className={`phone-reel-img ${fading ? 'fade-out' : 'fade-in'}`} />
-            <div className="phone-reel-overlay" />
+            {/* Scroll container — current slides up, next slides in from below */}
+            <div
+              className="reel-scroll-container"
+              style={{
+                transform: scrolling ? 'translateY(-100%)' : 'translateY(0)',
+                transition: scrolling ? 'transform 0.55s cubic-bezier(0.4,0,0.2,1)' : 'none',
+              }}
+            >
+              {/* Current reel */}
+              <div className="reel-slide">
+                <video
+                  key={`${setIdx}-${seg}`}
+                  src={r.video}
+                  autoPlay loop muted playsInline
+                  className={`phone-reel-img ${fading ? 'fade-out' : 'fade-in'}`}
+                />
+                <div className="phone-reel-overlay" />
+                <ReelInfo r={r} />
+              </div>
 
-            {/* Status bar */}
+              {/* Next reel set (peeking below, slides up on scroll) */}
+              <div className="reel-slide">
+                <video
+                  key={`next-${setIdx}`}
+                  src={nextR.video}
+                  autoPlay loop muted playsInline
+                  className="phone-reel-img fade-in"
+                />
+                <div className="phone-reel-overlay" />
+                <ReelInfo r={nextR} />
+              </div>
+            </div>
+
+            {/* Status bar & progress bars always on top */}
             <div className="phone-statusbar">
               <span className="phone-time">3:09</span>
               <div className="phone-status-icons">
@@ -106,7 +187,6 @@ function PhoneCard({ startIdx = 0, rotate = '0deg', bobClass = 'bobbing-1', reve
               </div>
             </div>
 
-            {/* 2 story progress bars */}
             <div className="phone-progress-bars">
               {Array.from({ length: SEGMENTS }).map((_, i) => (
                 <div key={i} className="phone-progress-seg">
@@ -117,54 +197,27 @@ function PhoneCard({ startIdx = 0, rotate = '0deg', bobClass = 'bobbing-1', reve
               ))}
             </div>
 
-            {/* Side actions */}
-            <div className="phone-side-actions">
-              {[
-                { icon: <IconSave />, label: 'Save' },
-                { icon: <IconShare />, label: 'Share' },
-                { icon: <IconReview />, label: 'Reviews' },
-                { icon: <IconSound />, label: 'Sound' },
-              ].map(({ icon, label }) => (
-                <div key={label} className="phone-action">
-                  <div className="phone-action-icon">{icon}</div>
-                  <span className="phone-action-label">{label}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Bottom info */}
-            <div className="phone-bottom-info">
-              <p className="phone-restaurant">{r.restaurant}</p>
-              <p className="phone-dish-name">{r.dish}</p>
-              <div className="phone-distance"><span>📍</span><span>{r.distance}</span></div>
-              <p className="phone-handle">{r.handle}</p>
-            </div>
-
-            {/* CTA buttons */}
-            <div className="phone-ctas">
-              <button className="phone-cart-btn"><IconCart />Add to Cart</button>
-              <button className="phone-menu-btn"><IconMenu />Menu</button>
-            </div>
-
-            {/* Swipe video — INSIDE screen, shown when seg 1 completes */}
+            {/* Swipe hand video */}
             {showSwipe && (
               <video
                 key={swipeKey}
                 src="/swipeup_nobg.webm"
                 autoPlay muted playsInline
-                onTimeUpdate={e => { if (e.target.currentTime >= 2) { e.target.pause(); setShowSwipe(false); showSwipeRef.current = false; } }}
+                onTimeUpdate={e => {
+                  if (e.target.currentTime >= 2) {
+                    e.target.pause();
+                    setShowSwipe(false);
+                    showSwipeRef.current = false;
+                  }
+                }}
                 style={{
-                  position: 'absolute',
-                  inset: 0,
-                  width: '100%',
-                  height: '100%',
+                  position: 'absolute', inset: 0,
+                  width: '100%', height: '100%',
                   objectFit: 'contain',
-                  zIndex: 30,
-                  pointerEvents: 'none',
+                  zIndex: 30, pointerEvents: 'none',
                 }}
               />
             )}
-
           </div>
 
           <div className="phone-home-bar" />
@@ -203,8 +256,8 @@ function useNavShrink() {
     const fn = () => {
       const nav = document.querySelector('nav');
       if (!nav) return;
-      if (window.scrollY > 50) { nav.classList.add('py-2','scale-95'); nav.classList.remove('py-3'); }
-      else { nav.classList.remove('py-2','scale-95'); nav.classList.add('py-3'); }
+      if (window.scrollY > 50) { nav.classList.add('py-2', 'scale-95'); nav.classList.remove('py-3'); }
+      else { nav.classList.remove('py-2', 'scale-95'); nav.classList.add('py-3'); }
     };
     window.addEventListener('scroll', fn);
     return () => window.removeEventListener('scroll', fn);
@@ -215,7 +268,7 @@ function useMagnetic() {
     const btns = document.querySelectorAll('.btn-fancy');
     const hs = [];
     btns.forEach(btn => {
-      const m = e => { const r = btn.getBoundingClientRect(); btn.style.transform = `translate(${(e.clientX-r.left-r.width/2)*0.2}px,${(e.clientY-r.top-r.height/2)*0.2}px) scale(1.05)`; };
+      const m = e => { const r = btn.getBoundingClientRect(); btn.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * 0.2}px,${(e.clientY - r.top - r.height / 2) * 0.2}px) scale(1.05)`; };
       const l = () => { btn.style.transform = ''; };
       btn.addEventListener('mousemove', m); btn.addEventListener('mouseleave', l);
       hs.push([btn, m, l]);
@@ -271,7 +324,6 @@ function Landing() {
       <main className="relative">
         <section id="hero" className="relative min-h-screen flex items-center overflow-hidden">
           <div className="w-full max-w-[1280px] mx-auto px-5 pt-32 pb-24 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-
             <div className="z-10 space-y-8 text-center lg:text-left">
               <div className="reveal inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-primary font-label-bold text-label-bold uppercase tracking-widest">
                 <span className="relative flex h-2 w-2">
@@ -307,10 +359,10 @@ function Landing() {
             </div>
 
             <div className="hidden lg:flex justify-center items-center h-[680px]">
-              <PhoneCard startIdx={0} rotate="-4deg" bobClass="bobbing-1" revealDelay="200ms" />
+              <PhoneCard rotate="-4deg" bobClass="bobbing-1" revealDelay="200ms" />
             </div>
             <div className="lg:hidden flex justify-center mt-6">
-              <PhoneCard startIdx={0} rotate="0deg" bobClass="bobbing-1" revealDelay="200ms" />
+              <PhoneCard rotate="0deg" bobClass="bobbing-1" revealDelay="200ms" />
             </div>
           </div>
 
@@ -370,7 +422,7 @@ function Landing() {
           <div className="flex flex-wrap gap-x-12 gap-y-6">
             <div className="flex flex-col gap-3">
               <span className="font-label-bold text-xs uppercase tracking-widest text-outline">Company</span>
-              {['About Us','Creators','Partner with Us'].map(l => <a key={l} className="font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">{l}</a>)}
+              {['About Us', 'Creators', 'Partner with Us'].map(l => <a key={l} className="font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">{l}</a>)}
             </div>
             <div className="flex flex-col gap-3">
               <span className="font-label-bold text-xs uppercase tracking-widest text-outline">Support</span>
