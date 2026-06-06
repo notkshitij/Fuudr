@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import emailjs from '@emailjs/browser';
+import { supabase } from './supabaseClient';
 import './index.css';
 import Terms from './Terms';
 import Privacy from './Privacy';
@@ -305,14 +305,30 @@ const IMG_DINING = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836
 function Landing() {
   const form = useRef();
   const [status, setStatus] = useState('');
+  const [showPopup, setShowPopup] = useState(false);
   useReveal(); useCursorGlow(); useNavShrink(); useMagnetic();
 
-  const sendEmail = e => {
+  const sendEmail = async e => {
     e.preventDefault();
     setStatus('Sending...');
-    emailjs.sendForm('service_u9ec3hm', 'template_g3myq1m', form.current, 'g--u7fCvANirZbdzY')
-      .then(() => { setStatus('JOINED!'); e.target.reset(); setTimeout(() => setStatus(''), 3500); })
-      .catch(() => { setStatus('ERROR – RETRY'); setTimeout(() => setStatus(''), 3500); });
+    const email = form.current.user_email.value;
+    
+    try {
+      const { error } = await supabase
+        .from('waitlist')
+        .insert([{ email }]);
+      
+      if (error) throw error;
+      
+      setStatus('JOINED!');
+      setShowPopup(true);
+      e.target.reset();
+      setTimeout(() => setStatus(''), 3500);
+    } catch (error) {
+      console.error('Error saving email:', error);
+      setStatus('ERROR – RETRY');
+      setTimeout(() => setStatus(''), 3500);
+    }
   };
 
   const words = [
@@ -455,9 +471,34 @@ function Landing() {
           </div>
         </div>
         <div className="max-w-[1280px] mx-auto px-5 py-8 border-t border-outline/10 text-center md:text-left">
-          <p className="text-xs text-outline" style={{ fontFamily: 'Plus Jakarta Sans' }}>© 2024 Fuudr. All rights reserved.</p>
+          <p className="text-xs text-outline" style={{ fontFamily: 'Plus Jakarta Sans' }}>© 2026 Fuudr. All rights reserved.</p>
         </div>
       </footer>
+
+      {/* Welcome Popup */}
+      {showPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl transform animate-in fade-in zoom-in duration-300">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+              <h2 className="font-headline-lg text-2xl mb-2" style={{ fontFamily: 'Bricolage Grotesque' }}>You're on the list! 🎉</h2>
+              <p className="font-body-md text-on-surface-variant mb-6">
+                Thanks for joining the Fuudr waitlist. We'll notify you when we launch so you can start discovering delicious food near you.
+              </p>
+              <button
+                onClick={() => setShowPopup(false)}
+                className="btn-fancy bg-primary text-white font-label-bold text-label-bold px-8 py-3 rounded-full w-full"
+              >
+                Got it!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
