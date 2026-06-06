@@ -12,92 +12,107 @@ const REELS = [
 ];
 
 const TOTAL = REELS.length;
-const SEGMENT_DURATION = 4000; // ms per reel
+const SEGMENTS = 2;
+const SEGMENT_DURATION = 4000;
 
-/* ── Icons ── */
-const IconSave = () => (
-  <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
-);
-const IconShare = () => (
-  <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" strokeLinecap="round"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" strokeLinecap="round"/></svg>
-);
-const IconReview = () => (
-  <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
-);
-const IconSound = () => (
-  <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-);
-const IconCart = () => (
-  <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-);
-const IconMenu = () => (
-  <svg viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>
-);
+const IconSave   = () => <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>;
+const IconShare  = () => <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" strokeLinecap="round"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" strokeLinecap="round"/></svg>;
+const IconReview = () => <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
+const IconSound  = () => <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>;
+const IconCart   = () => <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>;
+const IconMenu   = () => <svg viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>;
 
-
-/* ── Phone mockup with real reel UI ── */
 function PhoneCard({ startIdx = 0, rotate = '0deg', bobClass = 'bobbing-1', revealDelay = '0ms' }) {
-  const [idx, setIdx] = useState(startIdx % TOTAL);
-  const [progress, setProgress] = useState(0); // 0-100
-  const [fading, setFading] = useState(false);
-  const tickRef = useRef(null);
+  const [seg, setSeg]         = useState(0);
+  const [reelIdx, setReelIdx] = useState(startIdx % TOTAL);
+  const [progress, setProgress] = useState(0);
+  const [fading, setFading]   = useState(false);
+  const [showSwipe, setShowSwipe] = useState(false);
+  const [swipeKey, setSwipeKey] = useState(0);
+  const showSwipeRef = useRef(false);
 
-  const goNext = () => {
-    setFading(true);
-    setTimeout(() => {
-      setIdx(i => (i + 1) % TOTAL);
-      setProgress(0);
-      setFading(false);
-    }, 350);
-  };
+  const segRef      = useRef(0);
+  const fadingRef   = useRef(false);
+  const progressRef = useRef(0);
+  const timerRef    = useRef(null);
 
   useEffect(() => {
-    const step = 100 / (SEGMENT_DURATION / 50);
-    tickRef.current = setInterval(() => {
-      setProgress(p => {
-        if (p + step >= 100) { goNext(); return 0; }
-        return p + step;
-      });
-    }, 50);
-    return () => clearInterval(tickRef.current);
-  }, [idx]);
+    const STEP = 100 / (SEGMENT_DURATION / 50);
 
-  const r = REELS[idx];
+    const iv = setInterval(() => {
+      if (fadingRef.current) return;
+      const next = progressRef.current + STEP;
+
+          // Seg 1 is 75% done → show swipe video early
+          if (segRef.current === 1 && next >= 75 && !showSwipeRef.current) {
+            showSwipeRef.current = true;
+            setSwipeKey(k => k + 1);
+            setShowSwipe(true);
+            clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
+              setShowSwipe(false);
+              showSwipeRef.current = false;
+            }, 2000);
+          }
+
+          if (next >= 100) {
+        // Hold bar at 100% visually, then switch
+        progressRef.current = 100;
+        setProgress(100);
+        fadingRef.current = true;
+        setFading(true);
+
+        setTimeout(() => {
+          const doneSeg = segRef.current;
+
+          const nextSeg = (doneSeg + 1) % SEGMENTS;
+          segRef.current  = nextSeg;
+          progressRef.current = 0;
+          setSeg(nextSeg);
+          setProgress(0);
+          setReelIdx(i => (i + 1) % TOTAL);
+          fadingRef.current = false;
+          setFading(false);
+        }, 350);
+
+      } else {
+        progressRef.current = next;
+        setProgress(next);
+      }
+    }, 50);
+
+    return () => { clearInterval(iv); clearTimeout(timerRef.current); };
+  }, []);
+
+  const r = REELS[reelIdx];
 
   return (
     <div className={`reveal ${bobClass}`} style={{ transitionDelay: revealDelay }}>
       <div style={{ transform: `rotate(${rotate})` }}>
         <div className="phone-shell">
           <div className="phone-screen">
+
             {/* Reel image */}
-            <img
-              key={idx}
-              src={r.img}
-              alt={r.restaurant}
-              className={`phone-reel-img ${fading ? 'fade-out' : 'fade-in'}`}
-            />
+            <img key={reelIdx} src={r.img} alt={r.restaurant}
+              className={`phone-reel-img ${fading ? 'fade-out' : 'fade-in'}`} />
             <div className="phone-reel-overlay" />
 
             {/* Status bar */}
             <div className="phone-statusbar">
               <span className="phone-time">3:09</span>
               <div className="phone-status-icons">
-                <span>5G</span>
-                <span>▐▐▐▐</span>
+                <span>5G</span><span>▐▐▐▐</span>
                 <span className="phone-battery">19</span>
               </div>
             </div>
 
-            {/* Story progress bars */}
+            {/* 2 story progress bars */}
             <div className="phone-progress-bars">
-              {REELS.map((_, i) => (
+              {Array.from({ length: SEGMENTS }).map((_, i) => (
                 <div key={i} className="phone-progress-seg">
-                  <div
-                    className="phone-progress-fill"
-                    style={{
-                      width: i < idx ? '100%' : i === idx ? `${progress}%` : '0%',
-                    }}
-                  />
+                  <div className="phone-progress-fill" style={{
+                    width: i < seg ? '100%' : i === seg ? `${progress}%` : '0%',
+                  }} />
                 </div>
               ))}
             </div>
@@ -121,32 +136,38 @@ function PhoneCard({ startIdx = 0, rotate = '0deg', bobClass = 'bobbing-1', reve
             <div className="phone-bottom-info">
               <p className="phone-restaurant">{r.restaurant}</p>
               <p className="phone-dish-name">{r.dish}</p>
-              <div className="phone-distance">
-                <span>📍</span>
-                <span>{r.distance}</span>
-              </div>
+              <div className="phone-distance"><span>📍</span><span>{r.distance}</span></div>
               <p className="phone-handle">{r.handle}</p>
             </div>
 
             {/* CTA buttons */}
             <div className="phone-ctas">
-              <button className="phone-cart-btn">
-                <IconCart />
-                Add to Cart
-              </button>
-              <button className="phone-menu-btn">
-                <IconMenu />
-                Menu
-              </button>
+              <button className="phone-cart-btn"><IconCart />Add to Cart</button>
+              <button className="phone-menu-btn"><IconMenu />Menu</button>
             </div>
 
+            {/* Swipe video — INSIDE screen, shown when seg 1 completes */}
+            {showSwipe && (
+              <video
+                key={swipeKey}
+                src="/swipeup_nobg.webm"
+                autoPlay muted playsInline
+                onTimeUpdate={e => { if (e.target.currentTime >= 2) { e.target.pause(); setShowSwipe(false); showSwipeRef.current = false; } }}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  zIndex: 30,
+                  pointerEvents: 'none',
+                }}
+              />
+            )}
 
           </div>
 
-          {/* Home indicator */}
           <div className="phone-home-bar" />
-
-          {/* Hardware buttons */}
           <div className="phone-btn phone-vol1" />
           <div className="phone-btn phone-vol2" />
           <div className="phone-btn phone-power" />
@@ -156,14 +177,13 @@ function PhoneCard({ startIdx = 0, rotate = '0deg', bobClass = 'bobbing-1', reve
   );
 }
 
-/* ── hooks ── */
 function useReveal() {
   useEffect(() => {
     const obs = new IntersectionObserver(
-      (entries) => entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add('active'); }),
+      entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('active'); }),
       { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
     );
-    document.querySelectorAll('.reveal').forEach((el) => obs.observe(el));
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
     return () => obs.disconnect();
   }, []);
 }
@@ -171,7 +191,7 @@ function useCursorGlow() {
   useEffect(() => {
     const glow = document.getElementById('cursor-glow');
     if (!glow) return;
-    const move = (e) => { glow.style.left = e.clientX + 'px'; glow.style.top = e.clientY + 'px'; glow.style.opacity = '1'; };
+    const move  = e => { glow.style.left = e.clientX + 'px'; glow.style.top = e.clientY + 'px'; glow.style.opacity = '1'; };
     const leave = () => { glow.style.opacity = '0'; };
     window.addEventListener('mousemove', move);
     window.addEventListener('mouseleave', leave);
@@ -183,7 +203,7 @@ function useNavShrink() {
     const fn = () => {
       const nav = document.querySelector('nav');
       if (!nav) return;
-      if (window.scrollY > 50) { nav.classList.add('py-2','scale-95'); nav.classList.remove('py-3','py-4'); }
+      if (window.scrollY > 50) { nav.classList.add('py-2','scale-95'); nav.classList.remove('py-3'); }
       else { nav.classList.remove('py-2','scale-95'); nav.classList.add('py-3'); }
     };
     window.addEventListener('scroll', fn);
@@ -195,12 +215,12 @@ function useMagnetic() {
     const btns = document.querySelectorAll('.btn-fancy');
     const hs = [];
     btns.forEach(btn => {
-      const m = (e) => { const r = btn.getBoundingClientRect(); btn.style.transform = `translate(${(e.clientX-r.left-r.width/2)*0.2}px,${(e.clientY-r.top-r.height/2)*0.2}px) scale(1.05)`; };
+      const m = e => { const r = btn.getBoundingClientRect(); btn.style.transform = `translate(${(e.clientX-r.left-r.width/2)*0.2}px,${(e.clientY-r.top-r.height/2)*0.2}px) scale(1.05)`; };
       const l = () => { btn.style.transform = ''; };
       btn.addEventListener('mousemove', m); btn.addEventListener('mouseleave', l);
-      hs.push([btn,m,l]);
+      hs.push([btn, m, l]);
     });
-    return () => hs.forEach(([b,m,l]) => { b.removeEventListener('mousemove',m); b.removeEventListener('mouseleave',l); });
+    return () => hs.forEach(([b, m, l]) => { b.removeEventListener('mousemove', m); b.removeEventListener('mouseleave', l); });
   }, []);
 }
 
@@ -211,7 +231,7 @@ function Landing() {
   const [status, setStatus] = useState('');
   useReveal(); useCursorGlow(); useNavShrink(); useMagnetic();
 
-  const sendEmail = (e) => {
+  const sendEmail = e => {
     e.preventDefault();
     setStatus('Sending...');
     emailjs.sendForm('service_u9ec3hm', 'template_g3myq1m', form.current, 'g--u7fCvANirZbdzY')
@@ -220,8 +240,11 @@ function Landing() {
   };
 
   const words = [
-    { w: 'Food', d: '0.1s', cls: '' }, { w: 'you', d: '0.2s', cls: '' }, { w: 'can', d: '0.3s', cls: '' },
-    { w: 'almost', d: '0.5s', cls: 'text-primary italic' }, { w: 'smell', d: '0.7s', cls: '' },
+    { w: 'Food',   d: '0.1s', cls: '' },
+    { w: 'you',    d: '0.2s', cls: '' },
+    { w: 'can',    d: '0.3s', cls: '' },
+    { w: 'almost', d: '0.5s', cls: 'text-primary italic' },
+    { w: 'smell',  d: '0.7s', cls: '' },
   ];
 
   return (
@@ -233,7 +256,6 @@ function Landing() {
         <div className="floating-blob bg-surface-container-highest w-[700px] h-[700px] -bottom-40 left-1/4" style={{ animationDelay: '-14s' }} />
       </div>
 
-      {/* Nav */}
       <header className="fixed top-6 left-1/2 -translate-x-1/2 w-[95%] md:w-[90%] max-w-[1280px] z-50">
         <nav className="bg-white/90 glass-nav rounded-full border border-secondary/10 shadow-[0_40px_40px_-15px_rgba(171,54,0,0.15)] flex justify-between items-center px-6 md:px-8 py-3 transition-all duration-500">
           <span className="font-display-xl text-headline-md text-primary italic" style={{ fontFamily: 'Bricolage Grotesque' }}>Fuudr</span>
@@ -250,7 +272,6 @@ function Landing() {
         <section id="hero" className="relative min-h-screen flex items-center overflow-hidden">
           <div className="w-full max-w-[1280px] mx-auto px-5 pt-32 pb-24 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
-            {/* LEFT */}
             <div className="z-10 space-y-8 text-center lg:text-left">
               <div className="reveal inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-primary font-label-bold text-label-bold uppercase tracking-widest">
                 <span className="relative flex h-2 w-2">
@@ -259,7 +280,6 @@ function Landing() {
                 </span>
                 Coming Soon • Now Open
               </div>
-
               <h1 className="font-display-xl text-display-xl-mobile md:text-display-xl text-on-background leading-[1.0]" style={{ fontFamily: 'Bricolage Grotesque' }}>
                 {words.map(({ w, d, cls }, i) => (
                   <React.Fragment key={i}>
@@ -267,11 +287,9 @@ function Landing() {
                   </React.Fragment>
                 ))}
               </h1>
-
               <p className="reveal font-body-lg text-body-lg text-on-surface-variant max-w-xl mx-auto lg:mx-0" style={{ transitionDelay: '400ms' }}>
                 Skip the boring menus. Watch tasty food reels and order your favourite meals instantly.
               </p>
-
               <div className="reveal w-full max-w-xl mx-auto lg:mx-0" style={{ transitionDelay: '600ms' }}>
                 <form ref={form} onSubmit={sendEmail} className="bg-white p-2 rounded-full flex items-center gap-2 shadow-[0_20px_50px_rgba(43,18,8,0.1)] border border-outline/10">
                   <input name="user_email" className="flex-1 bg-transparent border-none focus:ring-0 px-6 font-body-md text-on-surface placeholder:text-outline-variant outline-none" placeholder="Enter your email address" required type="email" />
@@ -281,7 +299,6 @@ function Landing() {
                 </form>
                 <p className="mt-4 text-xs text-outline" style={{ fontFamily: 'Plus Jakarta Sans' }}>Join 2,400+ foodies waiting for the launch.</p>
               </div>
-
               <div className="reveal" style={{ transitionDelay: '800ms' }}>
                 <a href="#features" className="btn-fancy inline-block font-label-bold text-label-bold text-primary uppercase tracking-widest border-2 border-primary/30 hover:border-primary/60 px-8 py-3 rounded-full transition-all">
                   EXPLORE THE MENU
@@ -289,17 +306,9 @@ function Landing() {
               </div>
             </div>
 
-            {/* RIGHT — two phones */}
-            <div className="hidden lg:block relative h-[580px]">
-              <div className="absolute" style={{ left: '0px', top: '30px', zIndex: 5 }}>
-                <PhoneCard startIdx={0} rotate="-9deg" bobClass="bobbing-1" revealDelay="200ms" />
-              </div>
-              <div className="absolute" style={{ right: '-10px', top: '50px', zIndex: 10 }}>
-                <PhoneCard startIdx={2} rotate="7deg" bobClass="bobbing-2" revealDelay="350ms" />
-              </div>
+            <div className="hidden lg:flex justify-center items-center h-[680px]">
+              <PhoneCard startIdx={0} rotate="-4deg" bobClass="bobbing-1" revealDelay="200ms" />
             </div>
-
-            {/* Mobile single phone */}
             <div className="lg:hidden flex justify-center mt-6">
               <PhoneCard startIdx={0} rotate="0deg" bobClass="bobbing-1" revealDelay="200ms" />
             </div>
@@ -311,7 +320,6 @@ function Landing() {
           </div>
         </section>
 
-        {/* Bento */}
         <section id="features" className="max-w-[1280px] mx-auto px-5 py-section-gap">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6" style={{ gridAutoRows: '250px' }}>
             <div className="md:col-span-2 md:row-span-2 bg-surface-container-low rounded-lg p-10 flex flex-col justify-end relative overflow-hidden group reveal">
