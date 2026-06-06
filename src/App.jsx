@@ -23,6 +23,13 @@ const IconReview = () => <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H
 const IconSound  = () => <svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>;
 const IconCart   = () => <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>;
 const IconMenu   = () => <svg viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>;
+const IconBattery = ({ level = 50 }) => (
+  <svg viewBox="0 0 24 24" className="w-5 h-5" style={{ color: 'white' }}>
+    <rect x="2" y="7" width="16" height="10" rx="2" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+    <rect x="20" y="9" width="2" height="6" rx="1" fill="currentColor"/>
+    <rect x="4" y="9" width="12" height="6" rx="1" fill="currentColor" style={{ opacity: level / 100 }}/>
+  </svg>
+);
 
 function ReelInfo({ r }) {
   return (
@@ -69,6 +76,7 @@ function PhoneCard({ rotate = '0deg', bobClass = 'bobbing-1', revealDelay = '0ms
   const setIdxRef    = useRef(0);
   const fadingRef    = useRef(false);
   const showSwipeRef = useRef(false);
+  const swipeShownOnce = useRef(false);
   const timerRef     = useRef(null);
   const segStartRef  = useRef(Date.now());
 
@@ -89,10 +97,11 @@ function PhoneCard({ rotate = '0deg', bobClass = 'bobbing-1', revealDelay = '0ms
       // Preload next slide only when we're close (90%)
       if (next >= 90 && segRef.current === 1) setPreloadNext(true);
 
-      // Show hand at 65% pizza / 75% burger
+      // Show hand at 65% pizza / 75% burger - only once
       const trigger = setIdxRef.current === 0 ? 65 : 75;
-      if (segRef.current === 1 && next >= trigger && !showSwipeRef.current) {
+      if (segRef.current === 1 && next >= trigger && !showSwipeRef.current && !swipeShownOnce.current) {
         showSwipeRef.current = true;
+        swipeShownOnce.current = true;
         setSwipeKey(k => k + 1);
         setShowSwipe(true);
         clearTimeout(timerRef.current);
@@ -192,7 +201,7 @@ function PhoneCard({ rotate = '0deg', bobClass = 'bobbing-1', revealDelay = '0ms
               <span className="phone-time">3:09</span>
               <div className="phone-status-icons">
                 <span>5G</span><span>▐▐▐▐</span>
-                <span className="phone-battery">19</span>
+                <IconBattery level={19} />
               </div>
             </div>
 
@@ -213,7 +222,7 @@ function PhoneCard({ rotate = '0deg', bobClass = 'bobbing-1', revealDelay = '0ms
                 src="/swipeup_nobg.webm"
                 autoPlay muted playsInline
                 onTimeUpdate={e => {
-                  if (e.target.currentTime >= 2) {
+                  if (e.target.currentTime >= 3) {
                     e.target.pause();
                     setShowSwipe(false);
                     showSwipeRef.current = false;
@@ -331,9 +340,8 @@ function Landing() {
           <div className="hidden md:flex items-center gap-8">
             <a className="font-label-bold text-label-bold uppercase tracking-wider text-primary border-b-2 border-primary pb-1" href="#">Discover</a>
             <a className="font-label-bold text-label-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors" href="#features">How it Works</a>
-            <a className="font-label-bold text-label-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors" href="#">Creators</a>
           </div>
-          <a href="#hero" className="btn-fancy bg-on-background text-background font-label-bold text-label-bold px-6 py-2.5 rounded-full shadow-lg">Order Now</a>
+          <a href="#hero" className=" text-background  px-6 py-2.5"></a>
         </nav>
       </header>
 
@@ -347,7 +355,7 @@ function Landing() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
                 </span>
-                Coming Soon • Now Open
+                Coming Soon
               </div>
 
               <h1 className="font-display-xl text-display-xl-mobile md:text-display-xl text-on-background leading-[1.0]" style={{ fontFamily: 'Bricolage Grotesque' }}>
@@ -374,7 +382,7 @@ function Landing() {
 
               <div className="reveal" style={{ transitionDelay: '800ms' }}>
                 <a href="#features" className="btn-fancy inline-block font-label-bold text-label-bold text-primary uppercase tracking-widest border-2 border-primary/30 hover:border-primary/60 px-8 py-3 rounded-full transition-all">
-                  EXPLORE THE MENU
+                  How It Works
                 </a>
               </div>
             </div>
@@ -422,13 +430,6 @@ function Landing() {
                 <h3 className="font-headline-md text-2xl mb-2" style={{ fontFamily: 'Bricolage Grotesque' }}>Curated Menus</h3>
                 <p className="text-sm opacity-80">Only the best local creators and hidden culinary gems.</p>
               </div>
-            </div>
-            <div className="md:col-span-3 bg-surface-container-highest rounded-lg p-10 flex flex-col md:flex-row items-center justify-between gap-8 reveal" style={{ transitionDelay: '450ms' }}>
-              <div>
-                <h2 className="font-headline-lg text-headline-lg mb-4" style={{ fontFamily: 'Bricolage Grotesque' }}>Ready to satisfy your cravings?</h2>
-                <p className="font-body-md text-on-surface-variant max-w-lg">Join our community of 50k+ food lovers discovering the best meals their city has to offer.</p>
-              </div>
-              <a href="#hero" className="btn-fancy flex-shrink-0 bg-on-background text-background font-label-bold text-label-bold px-10 py-5 rounded-full shadow-xl">ORDER NOW</a>
             </div>
           </div>
         </section>
