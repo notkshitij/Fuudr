@@ -224,6 +224,7 @@ function PhoneCard({ rotate = '0deg', bobClass = 'bobbing-1', revealDelay = '0ms
                   width: '100%', height: '100%',
                   objectFit: 'contain',
                   zIndex: 30, pointerEvents: 'none',
+                  opacity: 0.75,
                 }}
               />
             )}
