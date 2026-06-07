@@ -233,12 +233,19 @@ function Footer() {
     setFooterStatus('Sending...');
     try {
       const { error } = await supabase.from('waitlist').insert([{ email: footerEmail }]);
-      if (error) throw error;
-      setFooterStatus('Joined!');
-      setFooterEmail('');
+      if (error) {
+        if (error.code === '23505') {
+          setFooterStatus('Already joined!');
+        } else {
+          throw error;
+        }
+      } else {
+        setFooterStatus('Joined!');
+        setFooterEmail('');
+      }
       setTimeout(() => setFooterStatus(''), 3000);
     } catch {
-      setFooterStatus('Retry');
+      setFooterStatus('Error — Retry');
       setTimeout(() => setFooterStatus(''), 3000);
     }
   };
@@ -296,6 +303,7 @@ function Footer() {
 ══════════════════ */
 function Landing() {
   const formRef = useRef();
+  const formElRef = useRef();
   const [status, setStatus] = useState('');
   const [showPopup, setShowPopup] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -364,7 +372,7 @@ function Landing() {
           ctx.lineWidth = 1.5;
           ctx.lineCap = 'round';
           ctx.moveTo(points[s].x, points[s].y);
-          ctx.lineTo(points[s + 1].x, points[s + 1].y);
+          ctx.lineTo(points[s + 1].x, points[s + 1].y); 
           ctx.stroke();
         }
       });
@@ -397,18 +405,26 @@ function Landing() {
 
   const sendEmail = async e => {
     e.preventDefault();
+    const email = formElRef.current.user_email.value.trim();
+    if (!email) return;
     setStatus('Sending...');
-    const email = formRef.current.user_email.value;
     try {
       const { error } = await supabase.from('waitlist').insert([{ email }]);
-      if (error) throw error;
-      setStatus('Joined!');
-      setShowPopup(true);
-      e.target.reset();
-      setTimeout(() => setStatus(''), 3500);
+      if (error) {
+        if (error.code === '23505') {
+          setStatus('Already joined!');
+        } else {
+          setStatus('Error — Retry');
+        }
+      } else {
+        setStatus('Joined!');
+        setShowPopup(true);
+        formElRef.current.reset();
+      }
     } catch (err) {
       console.error(err);
       setStatus('Error — Retry');
+    } finally {
       setTimeout(() => setStatus(''), 3500);
     }
   };
@@ -424,18 +440,18 @@ function Landing() {
         <section className="hero-section">
           <canvas className="hero-lines-canvas" id="heroLinesCanvas"/>
           <div className="hero-left">
-            <div className="hero-eyebrow reveal">Coming Soon · Food Discovery App</div>
+            <div className="hero-eyebrow reveal"><strong>Coming Soon · Food Discovery App</strong></div>
 
             <h1 className="hero-headline reveal" style={{ transitionDelay: '100ms' }}>
               Food you<br/>can almost<br/><em>smell.</em>
             </h1>
 
             <p className="hero-sub reveal" style={{ transitionDelay: '200ms' }}>
-              Skip boring menus. Watch short food reels and order your favourite meals — instantly, from restaurants near you.
+              Skip boring menus. Watch short food reels and order your favourite meals instantly, from restaurants near you.
             </p>
 
             <div className="reveal" style={{ transitionDelay: '300ms' }} ref={formRef}>
-              <form onSubmit={sendEmail} className="waitlist-form">
+              <form onSubmit={sendEmail} ref={formElRef} className="waitlist-form">
                 <input
                   name="user_email"
                   type="email"
@@ -535,45 +551,25 @@ function App() {
     return () => window.removeEventListener('hashchange', fn);
   }, []);
 
-  const waIcon = (
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" fill="currentColor"/>
-      <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.978-1.413A9.953 9.953 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-    </svg>
-  );
-
-  const openWA = () => window.open('https://wa.me/919719214408', '_blank');
-
-  if (hash === '#/terms')   return (
-    <>
-      <div className="coming-soon-page">
-        <a href="#/" className="cs-logo">Fuud<span>r</span></a>
-        <div className="cs-tag">Terms of Service</div>
-        <h1 className="cs-title">Coming<br/><em>Soon</em></h1>
-        <p className="cs-sub">We're working on this page. Check back shortly.</p>
-        <a href="#/" className="cs-btn">← Back to Home</a>
-      </div>
-      <button className="theme-toggle" onClick={openWA}>{waIcon}</button>
-    </>
+  if (hash === '#/terms') return (
+    <div className="coming-soon-page">
+      <a href="#/" className="cs-logo">Fuud<span>r</span></a>
+      <div className="cs-tag">Terms of Service</div>
+      <h1 className="cs-title">Coming<br/><em>Soon</em></h1>
+      <p className="cs-sub">We're working on this page. Check back shortly.</p>
+      <a href="#/" className="cs-btn">← Back to Home</a>
+    </div>
   );
   if (hash === '#/privacy') return (
-    <>
-      <div className="coming-soon-page">
-        <a href="#/" className="cs-logo">Fuud<span>r</span></a>
-        <div className="cs-tag">Privacy Policy</div>
-        <h1 className="cs-title">Coming<br/><em>Soon</em></h1>
-        <p className="cs-sub">We're working on this page. Check back shortly.</p>
-        <a href="#/" className="cs-btn">← Back to Home</a>
-      </div>
-      <button className="theme-toggle" onClick={openWA}>{waIcon}</button>
-    </>
+    <div className="coming-soon-page">
+      <a href="#/" className="cs-logo">Fuud<span>r</span></a>
+      <div className="cs-tag">Privacy Policy</div>
+      <h1 className="cs-title">Coming<br/><em>Soon</em></h1>
+      <p className="cs-sub">We're working on this page. Check back shortly.</p>
+      <a href="#/" className="cs-btn">← Back to Home</a>
+    </div>
   );
-  return (
-    <>
-      <Landing/>
-      <button className="theme-toggle" onClick={openWA}>{waIcon}</button>
-    </>
-  );
+  return <Landing/>;
 }
 
 export default App;
