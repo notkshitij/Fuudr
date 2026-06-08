@@ -264,7 +264,7 @@ function Footer() {
               type="email" required
               placeholder="Your email"
               className="footer-waitlist-input"
-              style={{ background: '#1a1410', color: '#faf6f0', WebkitTextFillColor: '#faf6f0' }}
+              style={{ background: '#1a1410', color: '#faf6f0', WebkitTextFillColor: '#faf6f0', outline: 'none', boxShadow: 'none' }}
               value={footerEmail}
               onChange={e => setFooterEmail(e.target.value)}
             />
