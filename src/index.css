@@ -804,6 +804,8 @@ body::after {
   margin: 0 24px 0;
   position: relative;
   overflow: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 .quote-section::before {
@@ -845,6 +847,8 @@ body::after {
   border-radius: 0 0 24px 24px;
   margin: 0 24px 24px;
   overflow: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 .footer-top {

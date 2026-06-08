@@ -134,7 +134,7 @@ function PhoneCard({ bobClass = 'bobbing-1' }) {
             }}
           >
             <div className="reel-slide">
-              <video key={`${setIdx}-${seg}`} src={r.video} autoPlay loop muted playsInline
+              <video key={`${setIdx}-${seg}`} src={r.video} autoPlay loop muted playsInline preload="auto"
                 className={`phone-reel-img ${fading ? 'fade-out' : 'fade-in'}`}/>
               <div className="phone-reel-overlay"/>
               <ReelInfo r={r}/>
@@ -142,7 +142,7 @@ function PhoneCard({ bobClass = 'bobbing-1' }) {
             <div className="reel-slide">
               {preloadNext && (
                 <>
-                  <video key={`next-${setIdx}`} src={nextSet[0].video} autoPlay loop muted playsInline className="phone-reel-img fade-in"/>
+                  <video key={`next-${setIdx}`} src={nextSet[0].video} autoPlay loop muted playsInline preload="auto" className="phone-reel-img fade-in"/>
                   <div className="phone-reel-overlay"/>
                   <ReelInfo r={nextSet[0]}/>
                 </>
@@ -179,7 +179,7 @@ function useReveal() {
   useEffect(() => {
     const obs = new IntersectionObserver(
       entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('active'); }),
-      { threshold: 0.1 }
+      { threshold: 0.05, rootMargin: '0px 0px -40px 0px' }
     );
     document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
     return () => obs.disconnect();
