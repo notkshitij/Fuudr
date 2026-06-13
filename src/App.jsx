@@ -35,6 +35,15 @@ export default function App() {
     const ctx = gsap.context(() => {
       gsap.timeline({delay:.2}).to('.hero h1 .line>span',{y:0,duration:1.2,stagger:.08,ease:'expo.out'});
 
+      // Automatic wave of the letter hover effect on startup
+      const heroLetters = document.querySelectorAll('.hero h1 .hl');
+      heroLetters.forEach((el, i) => {
+        gsap.delayedCall(1.5 + (i * 0.15), () => {
+          el.classList.add('is-hovered');
+          gsap.delayedCall(0.85, () => el.classList.remove('is-hovered'));
+        });
+      });
+
       document.querySelectorAll('.scroll-reveal-text').forEach(el => {
         const words = el.querySelectorAll('.w');
         const section = el.closest('.pin-section');
