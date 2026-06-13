@@ -1,0 +1,105 @@
+/* SECTION HEADER */
+.sec-head {
+  padding: 120px 24px 60px;
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.sec-head .label {
+  padding-top: 18px;
+}
+
+.sec-head h2 {
+  font-family: var(--xl);
+  font-weight: 600;
+  font-size: clamp(36px, 5.5vw, 72px);
+  line-height: .95;
+  letter-spacing: -.03em;
+  max-width: 900px;
+}
+
+.sec-head h2 .acc {
+  color: var(--acc);
+}
+
+/* SCROLL-REVEAL TEXT — GSAP pins this section while words reveal */
+.pin-section {
+  padding: 120px 24px;
+  display: flex;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.pin-section .grid {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 40px;
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  align-items: start;
+}
+
+.scroll-reveal-text {
+  color: transparent;
+  font-family: var(--xl);
+  font-weight: 600;
+  font-size: clamp(40px, 5.5vw, 84px);
+  line-height: 1.15;
+  letter-spacing: -.03em;
+  max-width: 1300px;
+}
+
+.scroll-reveal-text .w {
+  color: var(--fg);
+  opacity: .12;
+  display: inline-block;
+  transition: opacity .4s cubic-bezier(.22, 1, .36, 1);
+}
+
+.scroll-reveal-text .w.lit {
+  opacity: 1;
+}
+
+.scroll-reveal-text .w.acc-static {
+  color: var(--acc);
+}
+
+/* COLUMNS */
+.cols {
+  padding: 0 24px 80px;
+  display: grid;
+  grid-template-columns: 200px repeat(3, 1fr);
+  gap: 40px;
+}
+
+.cols .col {
+  padding-top: 0;
+}
+
+.cols .col h3 {
+  font-family: var(--xl);
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 1.1;
+  letter-spacing: -.02em;
+  margin-bottom: 14px;
+}
+
+.cols .col p {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--mute);
+}
+
+@media(max-width:900px) {
+  .sec-head, .cols {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .cols {
+    gap: 32px;
+  }
+}

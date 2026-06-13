@@ -1,0 +1,212 @@
+/* HERO */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 96px 24px 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero .top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--mute);
+  position: relative;
+  z-index: 2;
+}
+
+.hero .top .right {
+  text-align: right;
+}
+
+.hero .center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 48px 0;
+  position: relative;
+  z-index: 2;
+}
+
+.hero .scroll-ind {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.hero .scroll-ind .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--acc);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: .4;
+    transform: scale(.6);
+  }
+}
+
+.hero .top, .hero .center, .hero .bottom {
+  position: relative;
+  z-index: 2;
+}
+
+.hero h1 {
+  font-family: var(--xl);
+  font-weight: 700;
+  font-size: clamp(56px, 11vw, 180px);
+  line-height: .86;
+  letter-spacing: -.05em;
+  text-align: center;
+  margin: auto 0;
+}
+
+.hero h1 .line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: .05em;
+}
+
+.hero h1 .line>span {
+  display: inline-block;
+  transform: translateY(110%);
+}
+
+.hero h1 .it {
+  font-style: italic;
+  color: var(--acc);
+}
+
+.hl {
+  position: relative;
+  display: inline-block;
+}
+
+.hl::before {
+  content: attr(data-char);
+  visibility: hidden;
+}
+
+.hl-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.hl:hover .hl-inner {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-weight: 900;
+  color: var(--acc);
+  transform: scale(1.15) rotate(-6deg);
+}
+
+.it .hl:hover .hl-inner {
+  color: var(--fg);
+}
+
+.hero h1 .sm {
+  font-family: var(--sans);
+  font-style: italic;
+  font-weight: 500;
+  font-size: .18em;
+  text-transform: none;
+  letter-spacing: -.01em;
+  vertical-align: middle;
+  color: var(--mute);
+}
+
+.hero .bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+}
+
+.hero .bottom h2 {
+  font-family: var(--xl);
+  font-weight: 600;
+  font-size: clamp(20px, 2.4vw, 28px);
+  line-height: 1.1;
+  letter-spacing: -.02em;
+  max-width: 520px;
+}
+
+.hero .bottom h2 a {
+  color: var(--acc);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.hero .links {
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.hero .links a {
+  font-size: 13px;
+  padding: 14px 24px;
+  border: 1px solid var(--fg);
+  border-radius: 100px;
+  letter-spacing: .04em;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background .2s, color .2s;
+}
+
+.hero .links a:hover {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.hero .links a.filled {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.hero .links a.filled:hover {
+  background: var(--acc);
+  border-color: var(--acc);
+}
+
+.hero .links a .arr {
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+}
+
+@media(max-width:900px) {
+  .hero .bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+  }
+}

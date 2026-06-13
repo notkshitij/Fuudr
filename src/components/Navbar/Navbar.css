@@ -1,0 +1,59 @@
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: transparent;
+  color: var(--fg);
+}
+
+nav .l {
+  font-family: var(--xl);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: -.04em;
+}
+
+.brand-logo {
+  font-family: 'Inter Tight', 'Arial Black', sans-serif;
+  font-size: 28px !important;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: -0.08em;
+  display: inline-block;
+  transform: scaleX(1.05); /* Gives it that slightly wide, heavy look */
+}
+
+.brand-logo span {
+  color: var(--acc); /* orange */
+}
+
+nav .brand-logo {
+  font-size: 24px !important;
+}
+
+nav .r {
+  display: flex;
+  gap: 28px;
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+nav .r a {
+  text-decoration: none !important;
+  color: var(--fg) !important;
+  opacity: 1 !important;
+  font-weight: 900 !important;
+  font-size: 13px !important;
+  transition: opacity .2s, color .3s ease;
+}
+
+nav .r a:hover {
+  color: var(--acc) !important;
+}

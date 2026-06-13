@@ -1,0 +1,202 @@
+/* PHONE-SCROLL — phone center, food rolls out 360° */
+.phone-scroll {
+  position: relative;
+}
+
+.phone-sticky {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.phone-mockup {
+  position: relative;
+  z-index: 10;
+  width: 300px;
+  height: 620px;
+  background: linear-gradient(150deg, #2e2e33, #0e0e12);
+  border-radius: 52px;
+  padding: 12px;
+  box-shadow: 0 0 0 2px #0d0d10, 0 40px 100px rgba(0, 0, 0, .45);
+}
+
+.phone-screen {
+  width: 100%;
+  height: 100%;
+  border-radius: 42px;
+  overflow: hidden;
+  background: #000;
+  position: relative;
+  isolation: isolate;
+  clip-path: inset(0 round 42px);
+  -webkit-clip-path: inset(0 round 42px);
+}
+
+.reel-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.2);
+}
+
+.phone-ui {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+  padding: 14px 16px 18px;
+}
+
+.phone-ui .info {
+  margin-top: auto;
+  padding: 40px 16px 24px;
+  margin-left: -16px;
+  margin-right: -16px;
+}
+
+.restaurant-info {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+  padding: 0 4px;
+}
+
+.restaurant-info .r-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.restaurant-info .r-name {
+  font-family: var(--xl);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.01em;
+}
+
+.restaurant-info .r-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(0,0,0,0.4);
+  padding: 3px 8px;
+  border-radius: 100px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.restaurant-info .r-dish {
+  font-size: 14px;
+  opacity: 0.95;
+  font-weight: 500;
+}
+
+.restaurant-info .r-loc {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  opacity: 0.8;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.phone-ctas {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.phone-ui .order {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #fff;
+  padding: 12px;
+  border-radius: 100px;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.phone-ui .order.cart {
+  background: var(--acc);
+  flex: 2;
+}
+
+.phone-ui .order.menu {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  flex: 1;
+}
+
+.phone-side-actions {
+  position: absolute;
+  right: 12px;
+  bottom: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+.phone-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: #fff;
+  cursor: pointer;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+  transition: transform 0.2s;
+}
+
+.phone-action:hover {
+  transform: scale(1.1);
+}
+
+.phone-action .label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+/* Rolling food images — start behind phone (center), roll out */
+.roll-food {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 280px;
+  height: 280px;
+  z-index: 5;
+  will-change: transform, opacity;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.roll-food svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.roll-food img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
