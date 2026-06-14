@@ -98,6 +98,15 @@
   .sec-head, .cols {
     grid-template-columns: 1fr;
     gap: 16px;
+    padding: 60px 16px 40px;
+  }
+  .pin-section {
+    padding: 60px 16px;
+    min-height: auto;
+  }
+  .pin-section .grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
   }
   .cols {
     gap: 32px;

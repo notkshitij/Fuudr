@@ -131,8 +131,26 @@
 }
 
 @media(max-width:900px) {
+  .display {
+    padding: 40px 16px;
+  }
+  .numbered {
+    padding: 60px 16px;
+  }
   .numbered .intro {
     grid-template-columns: 1fr;
     gap: 16px;
+  }
+  .num-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 24px 0;
+  }
+  .num-row .n {
+    padding-top: 0;
+  }
+  .num-imgs {
+    margin-left: 0;
+    margin-top: 16px;
   }
 }

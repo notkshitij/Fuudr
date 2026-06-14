@@ -200,3 +200,16 @@
   height: auto;
   display: block;
 }
+
+@media(max-width: 768px) {
+  .phone-mockup {
+    transform: scale(0.85); /* Scale down the phone to fit smaller screens */
+  }
+  .roll-food {
+    transform: translate(-50%, -50%) scale(0.85) !important; /* Scale down the 3D food items too */
+  }
+  .phone-side-actions {
+    right: -10px; /* Adjust side actions to fit */
+    transform: scale(0.9);
+  }
+}

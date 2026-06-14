@@ -102,17 +102,24 @@
 }
 
 @media(max-width:900px) {
+  .h-section {
+    padding: 60px 0;
+  }
   .h-section .head {
     grid-template-columns: 1fr;
     gap: 16px;
+    padding: 0 16px 40px;
+  }
+  .h-track {
+    padding: 0 16px;
   }
   .h-card {
-    flex: 0 0 280px;
-    min-height: 380px;
-    padding: 24px;
+    flex: 0 0 85vw;
+    min-height: auto;
+    padding: 16px;
   }
   .h-card .t {
     font-size: 24px;
-    margin-top: 60px;
+    margin-top: 24px;
   }
 }

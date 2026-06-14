@@ -57,3 +57,21 @@ nav .r a {
 nav .r a:hover {
   color: var(--acc) !important;
 }
+
+@media (max-width: 768px) {
+  nav {
+    padding: 16px;
+  }
+  
+  nav .brand-logo {
+    font-size: 20px !important;
+  }
+  
+  nav .r {
+    gap: 12px;
+  }
+  
+  nav .r a {
+    font-size: 11px !important;
+  }
+}
