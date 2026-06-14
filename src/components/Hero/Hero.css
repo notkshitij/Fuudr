@@ -25,15 +25,20 @@
 /* 2. Isolated Text Mask Container */
 .text-mask-container {
   position: relative;
-  display: inline-block; /* Hugs the h1 perfectly */
+  display: flex;
+  align-items: stretch; /* Forces h1 to stretch and completely cover the container */
+  justify-content: center;
 }
 
 /* The video that stays behind the text */
 .hero-video-masked {
   position: absolute;
-  inset: 0;
+  top: 2px;
+  bottom: 2px;
+  left: 0;
+  right: 0;
   width: 100%;
-  height: 100%;
+  height: calc(100% - 4px); /* Shave off 2px from top/bottom to prevent edge bleeding */
   object-fit: cover;
   z-index: 1;
   filter: brightness(0.6); /* Ensure background doesn't blow out */
