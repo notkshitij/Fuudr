@@ -511,10 +511,7 @@ export function Home() {
           }}
           aria-label="Scroll to top"
         >
-          <svg style={{ transform: 'rotate(-90deg)' }} width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M5 12h14"></path>
-            <path d="m12 5 7 7-7 7"></path>
-          </svg>
+          <span style={{ color: '#fff', fontSize: '32px', fontWeight: 'bold', lineHeight: 1, marginTop: '-4px' }}>↑</span>
         </button>
       </footer>
 
