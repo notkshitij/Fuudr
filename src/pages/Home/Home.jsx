@@ -1,9 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
 
 import { Navbar } from '../../components/Navbar/Navbar';
+import { supabase } from '../../supabaseClient';
 import './Home.css';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -11,6 +12,33 @@ gsap.registerPlugin(ScrollTrigger);
 export function Home() {
   const marqueeRef = useRef(null);
   
+  // Form States
+  const [formData, setFormData] = useState({ fullName: '', phone: '', email: '' });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState(null);
+
+  const handleWaitlistSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage(null);
+
+    const { error } = await supabase
+      .from('waitlist')
+      .insert([
+        { full_name: formData.fullName, phone: formData.phone, email: formData.email }
+      ]);
+
+    if (error) {
+      console.error("Error saving to waitlist:", error.message);
+      setMessage({ type: 'error', text: 'Something went wrong. Please try again.' });
+    } else {
+      setMessage({ type: 'success', text: "You're on the list! We'll be in touch." });
+      setFormData({ fullName: '', phone: '', email: '' });
+    }
+    
+    setLoading(false);
+  };
+
   useEffect(() => {
     // Lenis Smooth Scroll setup
     const lenis = new Lenis({
@@ -181,7 +209,7 @@ export function Home() {
           <div className="xl hero-line-2">REAL REELS. NO REGRETS.</div>
         </div>
         
-        <div style={{ position: 'relative', zIndex: 10, width: '110vw', maxWidth: '1800px', display: 'flex', justifyContent: 'center', alignItems: 'center', transform: 'translateY(8vh)' }}>
+        <div className="hero-pizza-wrapper">
           <img 
             src="/pizza.avif" 
             alt="Fuudr App Pizza Base" 
@@ -245,23 +273,31 @@ export function Home() {
         <img src="/img1.avif" alt="Floating ingredient" className="floating-img-1" style={{ position: 'absolute', top: '15%', left: '8%', width: 'clamp(80px, 10vw, 120px)', filter: 'drop-shadow(5px 5px 15px rgba(0,0,0,0.2))', zIndex: 5, transform: 'rotate(-10deg)' }} />
         <img src="/img2.avif" alt="Floating ingredient" className="floating-img-2" style={{ position: 'absolute', top: '45%', right: '8%', width: 'clamp(80px, 10vw, 120px)', filter: 'drop-shadow(5px 5px 15px rgba(0,0,0,0.2))', zIndex: 5, transform: 'rotate(15deg)' }} />
 
-        <div className="about-header" style={{textAlign: 'center', position: 'relative', zIndex: 10}}>
-          <h2 className="xl">Where Every Perfect<br/>Reel Tells a Story</h2>
-          <p className="about-text">
-            Our creators are fresh, our kitchens are hot, and our<br/>
-            team is fired up to serve you the best food in town. From<br/>
-            classic comfort food to loaded flavor bombs, every dish<br/>
-            is made with intention, fun, and a little culinary magic.<br/>
-            We believe food is more than fuel, it's a celebration.
+        <div className="about-header" style={{textAlign: 'center', position: 'relative', zIndex: 10, maxWidth: '800px', margin: '0 auto', padding: '0 20px'}}>
+          <h2 className="xl about-title" style={{ color: '#331C11', lineHeight: '1.1', marginBottom: '24px' }}>
+            Where Every Perfect<br/>Reel Tells a Story
+          </h2>
+          <p className="about-text" style={{ color: '#331C11', fontSize: 'clamp(13px, 3.5vw, 22px)', lineHeight: '1.6', fontWeight: 600, marginBottom: '40px', padding: '0 5px' }}>
+            Our ingredients are fresh, our ovens are hot, and our team is fired up to serve you the best pies in town. From classic Margheritas to loaded flavor bombs, every pizza is made with intention, fun, and a little pizza magic. We believe pizza is more than food, it's a celebration.
           </p>
-          <button className="brutal-btn" style={{ fontSize: '18px', padding: '12px 24px', borderRadius: '12px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: '#fff' }}>
-            <span style={{ fontWeight: 800 }}>Order on -</span> 
-            <span style={{ color: '#E63946', fontFamily: 'var(--sans)', fontWeight: 800, fontSize: '20px' }}>fuudr</span>
+
+          <button className="brutal-btn" style={{ fontSize: '14px', padding: '6px 20px', borderRadius: '50px', margin: '0 auto', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: '#fff', border: '2px solid #000', boxShadow: '-3px 3px 0 #000', cursor: 'pointer' }}>
+            <span style={{ fontWeight: 800, color: '#000' }}>Order on -</span> 
+            <span style={{ color: '#E63946', fontFamily: 'var(--sans)', fontWeight: 800, fontSize: '16px' }}>fuudr</span>
           </button>
         </div>
 
         {/* PHOTO GALLERY */}
         <div className="photo-gallery">
+          <div className="polaroid"><img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80" alt="Pizza" /></div>
+          <div className="polaroid"><img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80" alt="Burger" /></div>
+          <div className="polaroid"><img src="https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=600&q=80" alt="Pasta" /></div>
+          <div className="polaroid"><img src="https://images.unsplash.com/photo-1496116218417-1a781b1c416c?auto=format&fit=crop&w=600&q=80" alt="Momos and Dumplings" /></div>
+          <div className="polaroid"><img src="https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=600&q=80" alt="Manchurian Asian Bowl" /></div>
+          <div className="polaroid"><img src="https://images.unsplash.com/photo-1574484284002-952d92456975?auto=format&fit=crop&w=600&q=80" alt="Italian Spread" /></div>
+          <div className="polaroid"><img src="https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=600&q=80" alt="Chinese Noodles" /></div>
+          <div className="polaroid"><img src="https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=600&q=80" alt="Mexican Tacos" /></div>
+          {/* Duplicate set for infinite scroll */}
           <div className="polaroid"><img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80" alt="Pizza" /></div>
           <div className="polaroid"><img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80" alt="Burger" /></div>
           <div className="polaroid"><img src="https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=600&q=80" alt="Pasta" /></div>
@@ -349,25 +385,33 @@ export function Home() {
         <h2 className="xl" style={{ position: 'relative', zIndex: 10, color: '#FCA311', fontSize: 'clamp(48px, 6vw, 80px)', marginBottom: '40px', textTransform: 'none', textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>Join The Waitlist</h2>
 
         <div className="reservation-card" style={{ position: 'relative', zIndex: 10, background: '#F5F0E6', padding: '60px 40px', borderRadius: '16px', width: '100%', maxWidth: '500px', borderLeft: '8px solid #000', borderBottom: '8px solid #000', boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}>
-          <form className="res-form" onSubmit={(e) => e.preventDefault()} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <form className="res-form" onSubmit={handleWaitlistSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             
             <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
               <div style={{ flex: '1 1 250px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <label style={{ fontSize: '14px', fontWeight: 600, color: '#333' }}>Full Name*</label>
-                <input type="text" placeholder="John Smith" style={{ width: '100%', padding: '16px', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.05)', background: '#fff', fontSize: '16px', outline: 'none' }} required />
+                <input type="text" placeholder="John Smith" value={formData.fullName} onChange={(e) => setFormData({...formData, fullName: e.target.value})} style={{ width: '100%', padding: '16px', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.05)', background: '#fff', fontSize: '16px', outline: 'none' }} required />
               </div>
               <div style={{ flex: '1 1 250px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <label style={{ fontSize: '14px', fontWeight: 600, color: '#333' }}>Phone number*</label>
-                <input type="tel" placeholder="(310) 555-1234" style={{ width: '100%', padding: '16px', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.05)', background: '#fff', fontSize: '16px', outline: 'none' }} required />
+                <input type="tel" placeholder="(310) 555-1234" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} style={{ width: '100%', padding: '16px', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.05)', background: '#fff', fontSize: '16px', outline: 'none' }} required />
               </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <label style={{ fontSize: '14px', fontWeight: 600, color: '#333' }}>Email address*</label>
-              <input type="email" placeholder="john.smith@email.com" style={{ width: '100%', padding: '16px', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.05)', background: '#fff', fontSize: '16px', outline: 'none' }} required />
+              <input type="email" placeholder="john.smith@email.com" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} style={{ width: '100%', padding: '16px', borderRadius: '8px', border: '1px solid rgba(0,0,0,0.05)', background: '#fff', fontSize: '16px', outline: 'none' }} required />
             </div>
 
-            <button type="submit" style={{ background: '#FCA311', color: '#000', fontSize: '18px', fontWeight: 700, padding: '16px 32px', borderRadius: '8px', border: '3px solid #000', boxShadow: '4px 4px 0 #000', marginTop: '10px', alignSelf: 'flex-start', cursor: 'pointer', transition: 'all 0.2s' }}>Reserve My Spot</button>
+            <button type="submit" disabled={loading} style={{ background: '#FCA311', color: '#000', fontSize: '18px', fontWeight: 700, padding: '16px 32px', borderRadius: '8px', border: '3px solid #000', boxShadow: '4px 4px 0 #000', marginTop: '10px', alignSelf: 'flex-start', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, transition: 'all 0.2s' }}>
+              {loading ? 'Saving...' : 'Reserve My Spot'}
+            </button>
+
+            {message && (
+              <div style={{ marginTop: '10px', padding: '12px', borderRadius: '8px', background: message.type === 'success' ? '#D4EDDA' : '#F8D7DA', color: message.type === 'success' ? '#155724' : '#721C24', fontSize: '14px', fontWeight: 500 }}>
+                {message.text}
+              </div>
+            )}
           </form>
         </div>
       </section>
@@ -447,7 +491,7 @@ export function Home() {
       <div className="footer-marquee" style={{ background: '#4f2e09', paddingTop: '60px', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', whiteSpace: 'nowrap', display: 'flex' }}>
         <div className="marquee-track" style={{ display: 'inline-flex', alignItems: 'center', animation: 'footerMarquee 45s linear infinite', width: 'max-content' }}>
           {[...Array(16)].map((_, i) => (
-            <div key={i} className="xl" style={{ color: '#cccccc', fontSize: '64px', margin: 0, padding: '0 20px' }}>
+            <div key={i} className="xl footer-marquee-text" style={{ color: '#cccccc', margin: 0, padding: '0 20px' }}>
               Order - <span style={{ color: '#FCA311' }}>fuudr</span>
             </div>
           ))}
@@ -487,7 +531,7 @@ export function Home() {
             ))}
           </div>
 
-          <div className="footer-bottom" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #5A3515', paddingTop: '30px', fontSize: '14px', flexWrap: 'wrap', gap: '20px' }}>
+          <div className="footer-bottom" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: 'none', paddingBottom: '30px', fontSize: '14px', flexWrap: 'wrap', gap: '20px' }}>
             <div style={{ color: '#aaa', fontFamily: 'var(--sans)' }}>Designed for <span style={{ color: '#FCA311', fontWeight: 'bold' }}>Fuudr</span></div>
             <div style={{ color: '#aaa', fontFamily: 'var(--sans)' }}><a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy Policy</a></div>
           </div>

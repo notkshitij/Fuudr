@@ -65,6 +65,49 @@
   z-index: 20;
 }
 
+.hero-pizza-wrapper {
+  position: relative;
+  z-index: 10;
+  width: 110vw;
+  max-width: 1800px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: translateY(8vh);
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .slice-hero {
+    height: 55vh !important;
+    min-height: 400px !important;
+  }
+  .hero-pizza-wrapper {
+    width: 150vw;
+    transform: translateY(0);
+  }
+  .hero-bottom-actions {
+    display: none !important;
+  }
+  .floating-img-1,
+  .floating-img-2 {
+    display: none !important;
+  }
+  .hero-bg-text .xl {
+    font-size: 26vw;
+  }
+  .about-title {
+    font-size: clamp(20px, 7vw, 32px) !important;
+    white-space: nowrap;
+  }
+  .desktop-only-text {
+    display: none !important;
+  }
+  .mobile-only-text {
+    display: block !important;
+  }
+}
+
 /* MARQUEE SECTION */
 .slice-marquee {
   background: var(--acc);
@@ -108,6 +151,15 @@
 }
 
 /* ABOUT SECTION */
+.about-title {
+  font-size: clamp(32px, 6vw, 64px);
+}
+.desktop-only-text {
+  display: block;
+}
+.mobile-only-text {
+  display: none;
+}
 .slice-about {
   padding: 120px 40px;
   background: var(--bg-light);
@@ -167,18 +219,41 @@
   display: block;
 }
 
-.polaroid:nth-child(1) { transform: rotate(-8deg) translateY(15px); }
-.polaroid:nth-child(2) { transform: rotate(4deg) translateY(-10px); }
-.polaroid:nth-child(3) { transform: rotate(-5deg) translateY(5px); }
-.polaroid:nth-child(4) { transform: rotate(6deg) translateY(-15px); }
-.polaroid:nth-child(5) { transform: rotate(-3deg) translateY(10px); }
-.polaroid:nth-child(6) { transform: rotate(5deg) translateY(-5px); }
-.polaroid:nth-child(7) { transform: rotate(-6deg) translateY(12px); }
-.polaroid:nth-child(8) { transform: rotate(3deg) translateY(-8px); }
+.polaroid:nth-child(8n+1) { transform: rotate(-8deg) translateY(15px); }
+.polaroid:nth-child(8n+2) { transform: rotate(4deg) translateY(-10px); }
+.polaroid:nth-child(8n+3) { transform: rotate(-5deg) translateY(5px); }
+.polaroid:nth-child(8n+4) { transform: rotate(6deg) translateY(-15px); }
+.polaroid:nth-child(8n+5) { transform: rotate(-3deg) translateY(10px); }
+.polaroid:nth-child(8n+6) { transform: rotate(5deg) translateY(-5px); }
+.polaroid:nth-child(8n+7) { transform: rotate(-6deg) translateY(12px); }
+.polaroid:nth-child(8n+8) { transform: rotate(3deg) translateY(-8px); }
 
 .polaroid:hover {
   transform: rotate(0deg) scale(1.05) translateY(-10px);
   z-index: 20;
+}
+
+@keyframes gallery-scroll-mobile {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(-50% - 8px)); }
+}
+
+@media (max-width: 768px) {
+  .photo-gallery {
+    justify-content: flex-start;
+    width: max-content;
+    animation: gallery-scroll-mobile 30s linear infinite;
+    gap: 16px;
+    padding: 0;
+    margin-left: 0;
+  }
+  .polaroid {
+    width: 260px;
+    padding: 10px;
+  }
+  .polaroid img {
+    height: 200px;
+  }
 }
 
 .about-cards {
@@ -416,6 +491,10 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
+.footer-marquee-text {
+  font-size: 64px;
+}
+
 /* Push Pin */
 .pin {
   position: absolute;
@@ -450,4 +529,66 @@
   width: 100%;
   height: auto;
   display: block;
+}
+
+/* FOOTER SHRINKING FOR MOBILE */
+@media (max-width: 768px) {
+  .slice-footer {
+    padding: 40px 16px 20px !important;
+  }
+  .footer-badge {
+    width: 100px !important;
+    height: 100px !important;
+    margin-bottom: 24px !important;
+  }
+  .footer-badge span {
+    font-size: 32px !important;
+  }
+  .slice-footer h2 {
+    margin-bottom: 24px !important;
+    font-size: 28px !important;
+  }
+  .footer-actions {
+    margin-bottom: 24px !important;
+    gap: 12px !important;
+    flex-wrap: nowrap !important;
+    width: 100%;
+  }
+  .footer-actions button {
+    padding: 12px 8px !important;
+    font-size: 14px !important;
+    flex: 1;
+    white-space: nowrap;
+  }
+  .footer-socials {
+    margin-bottom: 24px !important;
+    gap: 12px !important;
+    flex-wrap: nowrap !important;
+    width: 100%;
+  }
+  .footer-socials button {
+    padding: 10px 8px !important;
+    font-size: 14px !important;
+    flex: 1;
+    justify-content: center;
+    white-space: nowrap;
+  }
+  .footer-bottom {
+    padding-bottom: 16px !important;
+    gap: 12px !important;
+  }
+  .slice-footer > .brutal-btn {
+    display: none !important;
+  }
+  .slice-marquee div {
+    animation-duration: 25s !important;
+    font-size: 14px !important;
+    gap: 16px !important;
+  }
+  .footer-marquee {
+    padding-top: 30px !important;
+  }
+  .footer-marquee-text, .footer-marquee-text span {
+    font-size: 24px !important;
+  }
 }
