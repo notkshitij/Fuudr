@@ -1,13 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@500;600;700&family=Playfair+Display:ital,wght@0,900;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Calistoga&family=Pacifico&display=swap');
 
 :root {
-  --bg: #F4EFE6;
-  --fg: #0F0A05;
-  --mute: #0F0A0566;
-  --line: #0F0A0518;
-  --acc: #E94F1D;
-  --xl: 'Inter Tight', sans-serif;
+  --bg: #FCA311; /* Vibrant Slice Town Orange */
+  --bg-light: #FFFBF2;
+  --bg-dark: #14213D;
+  --fg: #000000;
+  --mute: #00000088;
+  --line: #000000;
+  --acc: #E63946; /* Slice Town Red */
+  --xl: 'Calistoga', sans-serif;
   --sans: 'Inter', sans-serif;
+  --cursive: 'Pacifico', cursive;
 }
 
 * {
@@ -24,13 +27,27 @@ html, body {
   font-size: 16px;
   line-height: 1.4;
   overflow-x: hidden;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: auto; /* Firefox */
+  scrollbar-color: #888 #111;
 }
 
-/* Hide Scrollbar for Chrome, Safari and Opera */
+/* Custom Scrollbar for Chrome, Safari and Opera */
 ::-webkit-scrollbar {
-  display: none;
+  width: 14px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+  border: 3px solid #111;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
 }
 
 img {
@@ -53,19 +70,58 @@ button {
 
 .xl {
   font-family: var(--xl);
-  font-weight: 700;
-  letter-spacing: -.04em;
-  line-height: .88;
-  text-transform: lowercase;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 0.9;
+  text-transform: uppercase;
 }
 
 .mono-label {
   font-family: var(--sans);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: .12em;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .1em;
   text-transform: uppercase;
-  color: var(--mute);
+  color: var(--fg);
+}
+
+/* Brutalist UI Utilities */
+.brutal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #fff;
+  color: #000;
+  font-family: var(--xl);
+  font-weight: 400;
+  font-size: 16px;
+  padding: 10px 24px;
+  border: 3px solid #000;
+  border-radius: 12px;
+  box-shadow: 4px 4px 0px #000;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+}
+
+.brutal-btn:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px #000;
+  background: var(--bg);
+}
+
+.brutal-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0px 0px 0px #000;
+}
+
+.brutal-card {
+  background: #fff;
+  border: 2px solid #000;
+  border-radius: 24px;
+  box-shadow: 8px 8px 0px #000;
+  overflow: hidden;
 }
 
 /* LENIS SMOOTH SCROLL */

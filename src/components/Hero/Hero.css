@@ -10,6 +10,47 @@
   background: #ffffff; /* Explicitly white */
 }
 
+/* Floating decorative images with mouse-parallax */
+.hero-float {
+  position: absolute;
+  border-radius: 24px;
+  object-fit: cover;
+  pointer-events: none;
+  z-index: 3;
+  box-shadow: 0 20px 60px rgba(15, 10, 5, 0.18);
+  will-change: transform;
+}
+
+.hero-float-1 {
+  top: 14%;
+  left: 6%;
+  width: clamp(90px, 12vw, 180px);
+  height: clamp(90px, 12vw, 180px);
+  transform: rotate(-8deg);
+}
+
+.hero-float-2 {
+  top: 22%;
+  right: 7%;
+  width: clamp(100px, 14vw, 210px);
+  height: clamp(100px, 14vw, 210px);
+  transform: rotate(10deg);
+}
+
+.hero-float-3 {
+  bottom: 24%;
+  left: 10%;
+  width: clamp(80px, 10vw, 150px);
+  height: clamp(80px, 10vw, 150px);
+  transform: rotate(-4deg);
+}
+
+@media(max-width:900px) {
+  .hero-float {
+    display: none;
+  }
+}
+
 /* 1. Fullscreen Expanding Video Layer (topmost interactive layer) */
 .hero-video-expand {
   position: absolute;

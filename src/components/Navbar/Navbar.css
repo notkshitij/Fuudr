@@ -1,77 +1,72 @@
-nav {
+.brutal-nav {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  z-index: 50;
+  width: 100%;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  background: transparent;
-  color: var(--fg);
+  justify-content: space-between;
+  padding: 24px 40px;
+  z-index: 100;
 }
 
-nav .l {
-  font-family: var(--xl);
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: -.04em;
+.nav-group {
+  display: flex;
+  gap: 16px;
+  flex: 1;
+}
+
+.nav-group.r {
+  justify-content: flex-end;
 }
 
 .brand-logo {
-  font-family: 'Inter Tight', 'Arial Black', sans-serif;
-  font-size: 28px !important;
-  font-weight: 900;
-  font-style: italic;
-  letter-spacing: -0.08em;
-  display: inline-block;
-  transform: scaleX(1.05); /* Gives it that slightly wide, heavy look */
+  flex: 0 0 auto;
+  text-align: center;
 }
 
-.brand-logo span {
-  color: var(--acc); /* orange */
-}
-
-nav .brand-logo {
-  font-size: 24px !important;
-}
-
-nav .r {
+.logo-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background-color: #331C11; /* Deep dark brown */
+  border: 4px solid #FCA311; /* Yellow/Orange inner ring */
+  box-shadow: 0 0 0 8px #331C11; /* Thick dark outer ring */
   display: flex;
-  gap: 28px;
-  font-size: 12px;
-  letter-spacing: .08em;
-  text-transform: uppercase;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  transform: rotate(-10deg);
 }
 
-nav .r a {
-  text-decoration: none !important;
-  color: var(--fg) !important;
-  opacity: 1 !important;
-  font-weight: 900 !important;
-  font-size: 13px !important;
-  transition: opacity .2s, color .3s ease;
+.logo-text {
+  font-family: var(--cursive);
+  font-size: 32px;
+  line-height: 0.9;
+  color: #FCA311;
+  text-align: center;
+  text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; /* Thin dark stroke */
+  transform: translateY(-2px); /* visual centering */
 }
 
-nav .r a:hover {
-  color: var(--acc) !important;
+.nav-btn {
+  font-size: 14px;
+  padding: 10px 20px;
+}
+
+.waitlist-btn {
+  background: #fff;
 }
 
 @media (max-width: 768px) {
-  nav {
-    padding: 16px;
+  .brutal-nav {
+    padding: 16px 20px;
   }
-  
-  nav .brand-logo {
-    font-size: 20px !important;
+  .nav-group.l {
+    display: none;
   }
-  
-  nav .r {
-    gap: 12px;
-  }
-  
-  nav .r a {
-    font-size: 11px !important;
+  .brand-logo .xl {
+    font-size: 32px;
+    padding: 6px 12px;
   }
 }
