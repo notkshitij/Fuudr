@@ -630,4 +630,39 @@
     padding: 4px 0 !important;
     box-shadow: 1px 1px 0 #000 !important;
   }
+
+  /* TESTIMONIALS MOBILE FIX */
+  .testimonials-canvas {
+    height: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 40px !important;
+    padding: 0 10px 40px !important;
+  }
+  .testimonials-canvas .sticky-note {
+    position: relative !important;
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    width: 280px !important;
+    height: 280px !important;
+    margin: 0 auto !important;
+    justify-content: center !important;
+  }
+  .testimonials-canvas .polaroid-photo {
+    position: relative !important;
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    width: 100% !important;
+    max-width: 320px !important;
+    margin: 0 auto !important;
+  }
+  .testimonials-canvas .sticky-note:nth-child(odd) { transform: rotate(-2deg) !important; }
+  .testimonials-canvas .sticky-note:nth-child(even) { transform: rotate(2deg) !important; }
+  .testimonials-canvas .polaroid-photo:nth-child(odd) { transform: rotate(3deg) !important; }
+  .testimonials-canvas .polaroid-photo:nth-child(even) { transform: rotate(-3deg) !important; }
 }

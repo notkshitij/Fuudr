@@ -274,7 +274,7 @@ export function Home() {
         <img src="/img2.avif" alt="Floating ingredient" className="floating-img-2" style={{ position: 'absolute', top: '45%', right: '8%', width: 'clamp(80px, 10vw, 120px)', filter: 'drop-shadow(5px 5px 15px rgba(0,0,0,0.2))', zIndex: 5, transform: 'rotate(15deg)' }} />
 
         <div className="about-header" style={{textAlign: 'center', position: 'relative', zIndex: 10, maxWidth: '800px', margin: '0 auto', padding: '0 20px'}}>
-          <h2 className="xl about-title" style={{ color: '#331C11', lineHeight: '1.1', marginBottom: '24px' }}>
+          <h2 className="xl about-title" style={{ fontSize: 'clamp(32px, 5vw, 80px)', lineHeight: 1.1, color: '#3D2101', textShadow: '2px 2px 0 #fff', textTransform: 'none', marginBottom: '24px' }}>
             Where Every Perfect<br/>Reel Tells a Story
           </h2>
           <p className="about-text" style={{ color: '#331C11', fontSize: 'clamp(13px, 3.5vw, 22px)', lineHeight: '1.6', fontWeight: 600, marginBottom: '40px', padding: '0 5px' }}>
@@ -315,7 +315,7 @@ export function Home() {
       {/* TESTIMONIALS SECTION */}
       <section className="slice-testimonials" style={{ position: 'relative', minHeight: '900px', background: 'var(--bg-light)', overflow: 'hidden', padding: '100px 0' }}>
         <div style={{ textAlign: 'center', position: 'relative', zIndex: 10, marginBottom: '60px' }}>
-          <h2 className="xl" style={{ fontSize: 'clamp(48px, 6vw, 80px)', lineHeight: 1.1, color: '#3D2101', textShadow: '2px 2px 0 #fff', textTransform: 'none' }}>
+          <h2 className="xl" style={{ fontSize: 'clamp(32px, 5vw, 80px)', lineHeight: 1.1, color: '#3D2101', textShadow: '2px 2px 0 #fff', textTransform: 'none' }}>
             Why people who<br/>order love fuudr?
           </h2>
         </div>
