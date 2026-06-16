@@ -9,6 +9,17 @@ import './Home.css';
 
 gsap.registerPlugin(ScrollTrigger);
 
+const galleryImages = [
+  { src: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80", alt: "Pizza", likes: "1.2k", comments: "84" },
+  { src: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80", alt: "Burger", likes: "8.4k", comments: "120" },
+  { src: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=600&q=80", alt: "Pasta", likes: "2.1k", comments: "310" },
+  { src: "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?auto=format&fit=crop&w=600&q=80", alt: "Momos and Dumplings", likes: "3.4k", comments: "67" },
+  { src: "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=600&q=80", alt: "Manchurian Asian Bowl", likes: "9.2k", comments: "430" },
+  { src: "https://images.unsplash.com/photo-1574484284002-952d92456975?auto=format&fit=crop&w=600&q=80", alt: "Italian Spread", likes: "1.8k", comments: "92" },
+  { src: "https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=600&q=80", alt: "Chinese Noodles", likes: "4.2k", comments: "150" },
+  { src: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=600&q=80", alt: "Mexican Tacos", likes: "2.7k", comments: "115" }
+];
+
 export function Home() {
   const marqueeRef = useRef(null);
   
@@ -288,23 +299,31 @@ export function Home() {
 
         {/* PHOTO GALLERY */}
         <div className="photo-gallery">
-          <div className="polaroid"><img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80" alt="Pizza" /></div>
-          <div className="polaroid"><img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80" alt="Burger" /></div>
-          <div className="polaroid"><img src="https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=600&q=80" alt="Pasta" /></div>
-          <div className="polaroid"><img src="https://images.unsplash.com/photo-1496116218417-1a781b1c416c?auto=format&fit=crop&w=600&q=80" alt="Momos and Dumplings" /></div>
-          <div className="polaroid"><img src="https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=600&q=80" alt="Manchurian Asian Bowl" /></div>
-          <div className="polaroid"><img src="https://images.unsplash.com/photo-1574484284002-952d92456975?auto=format&fit=crop&w=600&q=80" alt="Italian Spread" /></div>
-          <div className="polaroid"><img src="https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=600&q=80" alt="Chinese Noodles" /></div>
-          <div className="polaroid"><img src="https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=600&q=80" alt="Mexican Tacos" /></div>
-          {/* Duplicate set for infinite scroll */}
-          <div className="polaroid"><img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80" alt="Pizza" /></div>
-          <div className="polaroid"><img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80" alt="Burger" /></div>
-          <div className="polaroid"><img src="https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=600&q=80" alt="Pasta" /></div>
-          <div className="polaroid"><img src="https://images.unsplash.com/photo-1496116218417-1a781b1c416c?auto=format&fit=crop&w=600&q=80" alt="Momos and Dumplings" /></div>
-          <div className="polaroid"><img src="https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=600&q=80" alt="Manchurian Asian Bowl" /></div>
-          <div className="polaroid"><img src="https://images.unsplash.com/photo-1574484284002-952d92456975?auto=format&fit=crop&w=600&q=80" alt="Italian Spread" /></div>
-          <div className="polaroid"><img src="https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=600&q=80" alt="Chinese Noodles" /></div>
-          <div className="polaroid"><img src="https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=600&q=80" alt="Mexican Tacos" /></div>
+          {[...galleryImages, ...galleryImages].map((img, i) => (
+            <div key={i} className="polaroid" style={{ padding: 0, height: '340px', borderRadius: '16px', position: 'relative', overflow: 'hidden' }}>
+              <img src={img.src} alt={img.alt} style={{ width: '100%', height: '100%', objectFit: 'cover', border: 'none' }} />
+              
+              <div style={{ position: 'absolute', bottom: '85px', right: '12px', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', zIndex: 5 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" style={{ filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.8))' }}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                  <span style={{ color: '#fff', fontSize: '11px', fontWeight: 'bold', textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>{img.comments}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" style={{ filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.8))' }}><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                  <span style={{ color: '#fff', fontSize: '11px', fontWeight: 'bold', textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>{img.likes}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" style={{ filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.8))' }}><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                  <span style={{ color: '#fff', fontSize: '11px', fontWeight: 'bold', textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>Share</span>
+                </div>
+              </div>
+              
+              <div className="discovery-actions" style={{ position: 'absolute', bottom: '12px', left: '12px', right: '12px', display: 'flex', gap: '8px', zIndex: 5 }}>
+                <button className="discovery-btn" style={{ flex: 1, background: '#FCA311', color: '#000', border: '2px solid #000', padding: '6px 0', fontSize: '13px', fontWeight: 'bold', borderRadius: '8px', cursor: 'pointer', boxShadow: '2px 2px 0 #000', fontFamily: 'var(--sans)' }}>Add to Cart</button>
+                <button className="discovery-btn" style={{ flex: 1, background: '#fff', color: '#000', border: '2px solid #000', padding: '6px 0', fontSize: '13px', fontWeight: 'bold', borderRadius: '8px', cursor: 'pointer', boxShadow: '2px 2px 0 #000', fontFamily: 'var(--sans)' }}>Menu</button>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
