@@ -280,7 +280,8 @@ const MenuManager = ({ user }) => {
         setFormData(prev => ({ ...prev, name: '', description: '', price: '' }));
         setImageFile(null);
         setVideoFile(null);
-        setSuccessMsg(`Successfully added! You can add another dish in ${formData.category_name}.`);
+        setEditItem(null); // Switch back to Add Mode for the next dish
+        setSuccessMsg(`Successfully saved! You can add a new dish in ${formData.category_name}.`);
         
         // Reset file inputs manually
         const imageInput = document.getElementById('dishImage');
@@ -576,15 +577,13 @@ const MenuManager = ({ user }) => {
                         Dish Reel {!editItem && <span className="text-red-400">*</span>}
                         {editItem && <span className="text-slate-400 font-normal"> (replace)</span>}
                       </label>
-                      {!editItem && (
-                        <button
-                          type="submit" name="save_and_add" disabled={isSubmitting}
-                          title="Save & Add Another Dish in this Category"
-                          className="bg-orange-100 text-orange-600 p-1.5 rounded-lg hover:bg-orange-200 transition-colors flex items-center gap-1 text-xs font-bold disabled:opacity-50"
-                        >
-                          <Plus size={14} strokeWidth={3} />
-                        </button>
-                      )}
+                      <button
+                        type="submit" name="save_and_add" disabled={isSubmitting}
+                        title={editItem ? "Save Changes & Add New Dish" : "Save & Add Another Dish"}
+                        className="bg-orange-100 text-orange-600 p-1.5 rounded-lg hover:bg-orange-200 transition-colors flex items-center gap-1 text-xs font-bold disabled:opacity-50"
+                      >
+                        <Plus size={14} strokeWidth={3} />
+                      </button>
                     </div>
                     <input type="file" id="dishVideo" accept="video/mp4,video/quicktime" onChange={handleVideoChange} className="hidden" />
                     <label
