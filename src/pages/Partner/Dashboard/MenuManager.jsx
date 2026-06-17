@@ -388,7 +388,8 @@ const MenuManager = ({ user }) => {
                 {/* Details Overlay */}
                 <div className="pointer-events-auto">
                   <div className="text-orange-400 font-black text-xs uppercase tracking-widest mb-1">{item.category_name}</div>
-                  <h3 className="text-white font-bold text-xl leading-tight mb-2 drop-shadow-md">{item.name}</h3>
+                  <h3 className="text-white font-bold text-xl leading-tight mb-1 drop-shadow-md">{item.name}</h3>
+                  {item.description && <p className="text-white/70 text-xs leading-snug mb-2 line-clamp-2">{item.description}</p>}
                   <div className="bg-orange-500 text-white font-bold px-3 py-1 rounded-lg w-max text-sm mb-4 shadow-lg shadow-orange-500/20">
                     ₹{item.price}
                   </div>
