@@ -56,10 +56,12 @@ const DashboardLayout = () => {
         fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:flex lg:flex-col lg:rounded-r-3xl shadow-[4px_0_24px_rgba(0,0,0,0.02)]
         ${isMobileMenuOpen ? 'translate-x-0 rounded-r-3xl' : '-translate-x-full'}
       `}>
-        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-100">
-          <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-yellow-500 tracking-tight">
-            Fuudr Partner
-          </span>
+        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-100 bg-white rounded-tr-3xl lg:rounded-none">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-black text-slate-900 tracking-tight flex items-center">
+              Fuudr <span className="text-orange-500 ml-1.5 font-bold">Partner</span>
+            </span>
+          </div>
           <button 
             className="lg:hidden text-slate-500 hover:text-slate-700"
             onClick={() => setIsMobileMenuOpen(false)}
