@@ -618,7 +618,9 @@ export function Home() {
 
           <div className="footer-bottom" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: 'none', paddingBottom: '30px', fontSize: '14px', flexWrap: 'wrap', gap: '20px' }}>
             <div style={{ color: '#aaa', fontFamily: 'var(--sans)' }}>Designed for <span style={{ color: '#FCA311', fontWeight: 'bold' }}>Fuudr</span></div>
-            <div style={{ color: '#aaa', fontFamily: 'var(--sans)' }}><a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy Policy</a></div>
+            <div style={{ display: 'flex', gap: '20px', color: '#aaa', fontFamily: 'var(--sans)' }}>
+              <a href="http://localhost:5174/" target="_blank" rel="noopener noreferrer" style={{ color: '#fff', fontWeight: 'bold', textDecoration: 'none' }}>Register as a Restaurant</a>
+            </div>
           </div>
 
         </div>
