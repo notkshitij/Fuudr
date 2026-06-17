@@ -602,7 +602,7 @@ const MenuManager = ({ user }) => {
                         Dish Reel {!editItem && <span className="text-red-400">*</span>}
                         {editItem && <span className="text-slate-400 font-normal"> (replace)</span>}
                       </label>
-                      {videoFiles.length > 0 && (
+                      {(existingReels.length > 0 || videoFiles.length > 0) && (
                         <label htmlFor="dishVideo" className="cursor-pointer p-1 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors">
                           <Plus size={16} className="text-blue-500" />
                         </label>
