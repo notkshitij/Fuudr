@@ -433,21 +433,21 @@ const MenuManager = ({ user }) => {
       {/* Add / Edit Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-[2rem] w-full max-w-2xl my-8 relative animate-slideUp">
-            <button onClick={resetModal} className="absolute top-6 right-6 text-slate-400 hover:text-slate-600 bg-slate-100 p-2 rounded-full transition-colors">
-              <X size={20} />
+          <div className="bg-white rounded-[2rem] w-full max-w-lg my-4 relative animate-slideUp">
+            <button onClick={resetModal} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-100 p-2 rounded-full transition-colors">
+              <X size={18} />
             </button>
 
-            <div className="p-8 sm:p-10">
-              <h2 className="text-2xl font-bold text-slate-900 mb-1">
+            <div className="p-6 sm:p-8">
+              <h2 className="text-xl font-bold text-slate-900 mb-1">
                 {editItem ? 'Edit Dish' : 'Add New Dish'}
               </h2>
-              <p className="text-slate-400 text-sm mb-6">
+              <p className="text-slate-400 text-sm mb-4">
                 {editItem ? 'Update dish details. Upload new files to replace existing ones.' : 'All fields are required.'}
               </p>
 
               {errorMsg && (
-                <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-xl text-sm font-medium border border-red-200">
+                <div className="mb-4 bg-red-50 text-red-600 p-3 rounded-xl text-sm font-medium border border-red-200">
                   {errorMsg}
                 </div>
               )}
@@ -475,7 +475,7 @@ const MenuManager = ({ user }) => {
                   <div className="sm:col-span-2">
                     <label className="block text-sm font-medium mb-2 text-slate-700">Description</label>
                     <textarea
-                      name="description" required rows="3" value={formData.description} onChange={handleInputChange}
+                      name="description" required rows="2" value={formData.description} onChange={handleInputChange}
                       className="w-full py-3 px-4 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 transition-colors resize-none"
                       placeholder="Briefly describe the dish..."
                     ></textarea>
@@ -530,7 +530,7 @@ const MenuManager = ({ user }) => {
                     <input type="file" id="dishImage" accept="image/*" onChange={handleImageChange} className="hidden" />
                     <label
                       htmlFor="dishImage"
-                      className={`flex flex-col items-center justify-center w-full p-5 border-2 border-dashed rounded-xl transition-colors cursor-pointer h-32
+                      className={`flex flex-col items-center justify-center w-full p-5 border-2 border-dashed rounded-xl transition-colors cursor-pointer h-24
                         ${imageFile ? 'border-orange-400 bg-orange-50' : editItem?.image_url ? 'border-green-300 bg-green-50' : 'border-slate-300 hover:bg-orange-50 hover:border-orange-400'}`}
                     >
                       {imageFile ? (
@@ -574,7 +574,7 @@ const MenuManager = ({ user }) => {
                     <input type="file" id="dishVideo" accept="video/mp4,video/quicktime" onChange={handleVideoChange} className="hidden" />
                     <label
                       htmlFor="dishVideo"
-                      className={`flex flex-col items-center justify-center w-full p-5 border-2 border-dashed rounded-xl transition-colors cursor-pointer h-32
+                      className={`flex flex-col items-center justify-center w-full p-5 border-2 border-dashed rounded-xl transition-colors cursor-pointer h-24
                         ${videoFile ? 'border-blue-400 bg-blue-50' : editItem ? 'border-green-300 bg-green-50' : 'border-slate-300 hover:bg-blue-50 hover:border-blue-400'}`}
                     >
                       {videoFile ? (
