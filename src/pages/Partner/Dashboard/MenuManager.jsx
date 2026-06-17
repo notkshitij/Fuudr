@@ -14,6 +14,7 @@ const MenuManager = ({ user }) => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -76,6 +77,7 @@ const MenuManager = ({ user }) => {
       if (file.size > 5 * 1024 * 1024) { setErrorMsg("Image size should be less than 5MB"); return; }
       setImageFile(file);
       setErrorMsg('');
+      setSuccessMsg('');
     }
   };
 
@@ -85,6 +87,7 @@ const MenuManager = ({ user }) => {
       if (file.size > 50 * 1024 * 1024) { setErrorMsg("Video size should be less than 50MB"); return; }
       setVideoFile(file);
       setErrorMsg('');
+      setSuccessMsg('');
     }
   };
 
@@ -93,6 +96,7 @@ const MenuManager = ({ user }) => {
     setImageFile(null);
     setVideoFile(null);
     setErrorMsg('');
+    setSuccessMsg('');
     setFormData({ name: '', description: '', price: '', category_name: categories[0]?.name || '', is_veg: true });
     setIsModalOpen(true);
   };
@@ -102,6 +106,7 @@ const MenuManager = ({ user }) => {
     setImageFile(null);
     setVideoFile(null);
     setErrorMsg('');
+    setSuccessMsg('');
     setFormData({
       name: item.name,
       description: item.description || '',
@@ -116,6 +121,7 @@ const MenuManager = ({ user }) => {
     setIsModalOpen(false);
     setEditItem(null);
     setErrorMsg('');
+    setSuccessMsg('');
     setImageFile(null);
     setVideoFile(null);
     setFormData({ name: '', description: '', price: '', category_name: categories[0]?.name || '', is_veg: true });
@@ -152,6 +158,7 @@ const MenuManager = ({ user }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const isAddMore = e.nativeEvent.submitter?.name === 'save_and_add';
 
     const isAddMode = !editItem;
 
@@ -161,6 +168,7 @@ const MenuManager = ({ user }) => {
 
     setIsSubmitting(true);
     setErrorMsg('');
+    setSuccessMsg('');
 
     try {
       const selectedCategory = categories.find(c => c.name === formData.category_name);
@@ -251,8 +259,23 @@ const MenuManager = ({ user }) => {
         }
       }
 
-      resetModal();
       fetchMenu();
+
+      if (isAddMore) {
+        // Keep modal open, clear name/desc/price/files, keep category & veg
+        setFormData(prev => ({ ...prev, name: '', description: '', price: '' }));
+        setImageFile(null);
+        setVideoFile(null);
+        setSuccessMsg(`Successfully added! You can add another dish in ${formData.category_name}.`);
+        
+        // Reset file inputs manually
+        const imageInput = document.getElementById('dishImage');
+        if (imageInput) imageInput.value = '';
+        const videoInput = document.getElementById('dishVideo');
+        if (videoInput) videoInput.value = '';
+      } else {
+        resetModal();
+      }
 
     } catch (err) {
       console.error("Error saving dish:", err);
@@ -429,6 +452,15 @@ const MenuManager = ({ user }) => {
                 </div>
               )}
 
+              {successMsg && (
+                <div className="mb-6 bg-green-50 text-green-600 p-4 rounded-xl text-sm font-medium border border-green-200 flex items-center justify-between">
+                  <span>{successMsg}</span>
+                  <button type="button" onClick={() => setSuccessMsg('')} className="text-green-500 hover:text-green-700">
+                    <X size={16} />
+                  </button>
+                </div>
+              )}
+
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="sm:col-span-2">
@@ -524,10 +556,21 @@ const MenuManager = ({ user }) => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2 text-slate-700">
-                      Dish Reel {!editItem && <span className="text-red-400">*</span>}
-                      {editItem && <span className="text-slate-400 font-normal"> (replace)</span>}
-                    </label>
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="block text-sm font-medium text-slate-700">
+                        Dish Reel {!editItem && <span className="text-red-400">*</span>}
+                        {editItem && <span className="text-slate-400 font-normal"> (replace)</span>}
+                      </label>
+                      {!editItem && (
+                        <button
+                          type="submit" name="save_and_add" disabled={isSubmitting}
+                          title="Save & Add Another Dish in this Category"
+                          className="bg-orange-100 text-orange-600 p-1.5 rounded-lg hover:bg-orange-200 transition-colors flex items-center gap-1 text-xs font-bold disabled:opacity-50"
+                        >
+                          <Plus size={14} strokeWidth={3} />
+                        </button>
+                      )}
+                    </div>
                     <input type="file" id="dishVideo" accept="video/mp4,video/quicktime" onChange={handleVideoChange} className="hidden" />
                     <label
                       htmlFor="dishVideo"
@@ -557,17 +600,18 @@ const MenuManager = ({ user }) => {
                   </div>
                 </div>
 
-                <div className="pt-4 flex gap-4">
+                <div className="pt-4 flex flex-col sm:flex-row gap-4">
                   <button type="button" onClick={resetModal} className="flex-1 py-3 px-4 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">
                     Cancel
                   </button>
+
                   <button
-                    type="submit" disabled={isSubmitting}
-                    className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-orange-500 hover:bg-orange-600 transition-colors disabled:opacity-70 flex items-center justify-center gap-2"
+                    type="submit" name="save" disabled={isSubmitting}
+                    className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-orange-500 hover:bg-orange-600 transition-colors disabled:opacity-70 flex items-center justify-center gap-2 whitespace-nowrap"
                   >
                     {isSubmitting ? (
                       <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>Saving...</>
-                    ) : editItem ? 'Save Changes' : 'Add Dish'}
+                    ) : editItem ? 'Save Changes' : 'Save Dish'}
                   </button>
                 </div>
               </form>
