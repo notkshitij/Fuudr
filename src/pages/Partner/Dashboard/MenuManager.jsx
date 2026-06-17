@@ -3,6 +3,133 @@ import { Plus, Image as ImageIcon, X, Upload, UtensilsCrossed, Video, Trash2, Pe
 import { supabase } from '../../../supabaseClient';
 import { uploadToCloudinary } from '../../../utils/cloudinary';
 
+const ReelPlayer = ({ item, onClose }) => {
+  const reels = (item.reels || []).filter(r => r.video_url);
+  const [currentIdx, setCurrentIdx] = React.useState(0);
+  const [isPlaying, setIsPlaying] = React.useState(true);
+  const [showIcon, setShowIcon] = React.useState(false);
+  const [progress, setProgress] = React.useState(0);
+  const videoRef = React.useRef(null);
+
+  const goTo = (idx) => {
+    if (idx < 0 || idx >= reels.length) return;
+    setCurrentIdx(idx);
+    setProgress(0);
+    setIsPlaying(true);
+  };
+
+  const togglePlay = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.paused) { v.play(); setIsPlaying(true); }
+    else { v.pause(); setIsPlaying(false); }
+    setShowIcon(true);
+    setTimeout(() => setShowIcon(false), 700);
+  };
+
+  React.useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.currentTime = 0;
+    v.play().catch(() => {});
+    setIsPlaying(true);
+    const onTimeUpdate = () => setProgress(v.duration ? v.currentTime / v.duration : 0);
+    const onEnded = () => { if (currentIdx < reels.length - 1) goTo(currentIdx + 1); };
+    v.addEventListener('timeupdate', onTimeUpdate);
+    v.addEventListener('ended', onEnded);
+    return () => { v.removeEventListener('timeupdate', onTimeUpdate); v.removeEventListener('ended', onEnded); };
+  }, [currentIdx]);
+
+  if (reels.length === 0) return (
+    <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center" onClick={onClose}>
+      <div className="text-center text-slate-400 p-8">
+        <Video size={48} className="mx-auto mb-4 opacity-30" />
+        <p className="text-lg font-bold text-slate-300">No Reel Available</p>
+      </div>
+    </div>
+  );
+
+  const videoUrl = reels[currentIdx].video_url;
+
+  return (
+    <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center" onClick={onClose}>
+      <button onClick={onClose} className="absolute top-6 right-6 text-white/60 hover:text-white bg-white/10 p-2 rounded-full hover:bg-white/20 transition-colors z-10">
+        <X size={24} />
+      </button>
+
+      <div
+        className="relative bg-black shadow-2xl overflow-hidden"
+        style={{ width: 'min(380px, 90vw)', aspectRatio: '9/16', borderRadius: '2rem' }}
+        onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+      >
+        <video
+          key={videoUrl}
+          ref={videoRef}
+          src={videoUrl}
+          className="w-full h-full object-cover"
+          autoPlay
+          playsInline
+        />
+
+        {/* Story bars */}
+        <div className="absolute top-4 left-4 right-4 flex gap-1.5 z-10" onClick={e => e.stopPropagation()}>
+          {reels.map((_, i) => (
+            <div key={i} className="flex-1 h-0.5 bg-white/30 rounded-full overflow-hidden cursor-pointer" onClick={() => goTo(i)}>
+              <div
+                className="h-full bg-white rounded-full transition-none"
+                style={{ width: i < currentIdx ? '100%' : i === currentIdx ? `${progress * 100}%` : '0%' }}
+              />
+            </div>
+          ))}
+        </div>
+
+
+
+        {/* Left / Right tap zones */}
+        <div className="absolute inset-y-0 left-0 w-1/3 z-10" onClick={(e) => { e.stopPropagation(); goTo(currentIdx - 1); }} />
+        <div className="absolute inset-y-0 right-0 w-1/3 z-10" onClick={(e) => { e.stopPropagation(); goTo(currentIdx + 1); }} />
+
+        {/* Arrow icons */}
+        {currentIdx > 0 && (
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10">
+            <div className="bg-black/40 backdrop-blur-sm rounded-full p-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </div>
+          </div>
+        )}
+        {currentIdx < reels.length - 1 && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none z-10">
+            <div className="bg-black/40 backdrop-blur-sm rounded-full p-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          </div>
+        )}
+
+        {/* Bottom overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 p-6 pointer-events-none">
+          <p className="text-orange-400 font-black text-xs uppercase tracking-widest mb-1">{item.category_name}</p>
+          <h3 className="text-white font-bold text-2xl leading-tight mb-1">{item.name}</h3>
+          {item.description && <p className="text-white/70 text-sm mb-3 line-clamp-2">{item.description}</p>}
+          <div className="bg-orange-500 text-white font-bold px-4 py-1.5 rounded-full w-max text-sm shadow-lg">₹{item.price}</div>
+        </div>
+
+        {/* Play/pause flash */}
+        {showIcon && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+            <div className="bg-black/50 rounded-full p-5">
+              {isPlaying
+                ? <Play className="text-white fill-white" size={32} />
+                : <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="white" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+              }
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const MenuManager = ({ user }) => {
   const [menuItems, setMenuItems] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -11,6 +138,8 @@ const MenuManager = ({ user }) => {
   const [editItem, setEditItem] = useState(null); 
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [activeVideoItem, setActiveVideoItem] = useState(null);
+  const [previewVideoUrl, setPreviewVideoUrl] = useState(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -23,7 +152,9 @@ const MenuManager = ({ user }) => {
     is_veg: true
   });
   const [imageFile, setImageFile] = useState(null);
-  const [videoFile, setVideoFile] = useState(null);
+  const [videoFiles, setVideoFiles] = useState([]);
+  const [existingReels, setExistingReels] = useState([]);
+  const [deletedReelIds, setDeletedReelIds] = useState([]);
 
   const fetchMenu = async () => {
     setLoading(true);
@@ -97,28 +228,36 @@ const MenuManager = ({ user }) => {
 
   const handleVideoChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      if (file.size > 50 * 1024 * 1024) { setErrorMsg("Video size should be less than 50MB"); return; }
-      setVideoFile(file);
+      const newFiles = Array.from(e.target.files).filter(f => {
+        if (f.size > 50 * 1024 * 1024) { setErrorMsg(`${f.name} exceeds 50MB limit`); return false; }
+        return true;
+      });
+      setVideoFiles(prev => [...prev, ...newFiles]);
       setErrorMsg('');
       setSuccessMsg('');
+      e.target.value = '';
     }
+  };
+
+  const removeVideoFile = (index) => {
+    setVideoFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const openAddModal = () => {
     setEditItem(null);
     setImageFile(null);
-    setVideoFile(null);
+    setVideoFiles([]);
     setErrorMsg('');
     setSuccessMsg('');
     setFormData({ name: '', description: '', price: '', category_name: categories[0]?.name || '', is_veg: true });
     setIsModalOpen(true);
   };
 
-  const openEditModal = (item) => {
+  const openEditModal = async (item) => {
     setEditItem(item);
     setImageFile(null);
-    setVideoFile(null);
+    setVideoFiles([]);
+    setDeletedReelIds([]);
     setErrorMsg('');
     setSuccessMsg('');
     setFormData({
@@ -128,6 +267,9 @@ const MenuManager = ({ user }) => {
       category_name: item.category_name,
       is_veg: item.is_veg
     });
+    // Fetch all saved reels for this item
+    const { data } = await supabase.from('reels').select('id, video_url').eq('menu_item_id', item.id);
+    setExistingReels(data || []);
     setIsModalOpen(true);
   };
 
@@ -137,7 +279,9 @@ const MenuManager = ({ user }) => {
     setErrorMsg('');
     setSuccessMsg('');
     setImageFile(null);
-    setVideoFile(null);
+    setVideoFiles([]);
+    setExistingReels([]);
+    setDeletedReelIds([]);
     setFormData({ name: '', description: '', price: '', category_name: categories[0]?.name || '', is_veg: true });
   };
 
@@ -178,7 +322,7 @@ const MenuManager = ({ user }) => {
 
     // In add mode both are mandatory
     if (isAddMode && !imageFile) { setErrorMsg("Dish photo is required."); return; }
-    if (isAddMode && !videoFile) { setErrorMsg("Dish reel is required."); return; }
+    if (isAddMode && videoFiles.length === 0) { setErrorMsg("At least one dish reel is required."); return; }
 
     setIsSubmitting(true);
     setErrorMsg('');
@@ -189,16 +333,10 @@ const MenuManager = ({ user }) => {
       const categoryId = selectedCategory ? selectedCategory.id : null;
 
       let imageUrl = editItem?.image_url || null;
-      let videoUrl = null;
 
       // Upload new image if provided
       if (imageFile) {
         imageUrl = await uploadToCloudinary(imageFile, 'image');
-      }
-
-      // Upload new video if provided
-      if (videoFile) {
-        videoUrl = await uploadToCloudinary(videoFile, 'video');
       }
 
       if (isAddMode) {
@@ -219,8 +357,9 @@ const MenuManager = ({ user }) => {
           .single();
         if (menuError) throw menuError;
 
-        // Insert reel
-        await supabase.from('reels').insert([{
+        // Upload and insert all reels
+        const videoUrls = await Promise.all(videoFiles.map(f => uploadToCloudinary(f, 'video')));
+        await supabase.from('reels').insert(videoUrls.map(videoUrl => ({
           partner_id: user.id,
           menu_item_id: menuItem.id,
           category_id: categoryId,
@@ -229,7 +368,7 @@ const MenuManager = ({ user }) => {
           description: formData.description,
           price: parseFloat(formData.price),
           video_url: videoUrl,
-        }]);
+        })));
 
       } else {
         // UPDATE menu item
@@ -247,29 +386,33 @@ const MenuManager = ({ user }) => {
           .eq('id', editItem.id);
         if (updateError) throw updateError;
 
-        // Update linked reel if new video uploaded
-        if (videoUrl) {
-          await supabase.from('reels')
-            .update({
-              category_id: categoryId,
-              category_name: formData.category_name,
-              dish_name: formData.name,
-              description: formData.description,
-              price: parseFloat(formData.price),
-              video_url: videoUrl,
-            })
-            .eq('menu_item_id', editItem.id);
-        } else {
-          // Update reel metadata even without new video
-          await supabase.from('reels')
-            .update({
-              category_id: categoryId,
-              category_name: formData.category_name,
-              dish_name: formData.name,
-              description: formData.description,
-              price: parseFloat(formData.price),
-            })
-            .eq('menu_item_id', editItem.id);
+        // Delete removed reels
+        if (deletedReelIds.length > 0) {
+          await supabase.from('reels').delete().in('id', deletedReelIds);
+        }
+        // Update metadata on remaining reels
+        await supabase.from('reels')
+          .update({
+            category_id: categoryId,
+            category_name: formData.category_name,
+            dish_name: formData.name,
+            description: formData.description,
+            price: parseFloat(formData.price),
+          })
+          .eq('menu_item_id', editItem.id);
+        // Upload and insert new reels
+        if (videoFiles.length > 0) {
+          const newVideoUrls = await Promise.all(videoFiles.map(f => uploadToCloudinary(f, 'video')));
+          await supabase.from('reels').insert(newVideoUrls.map(videoUrl => ({
+            partner_id: user.id,
+            menu_item_id: editItem.id,
+            category_id: categoryId,
+            category_name: formData.category_name,
+            dish_name: formData.name,
+            description: formData.description,
+            price: parseFloat(formData.price),
+            video_url: videoUrl,
+          })));
         }
       }
 
@@ -280,8 +423,7 @@ const MenuManager = ({ user }) => {
         setFormData(prev => ({ ...prev, name: '', description: '', price: '' }));
         setImageFile(null);
         setVideoFile(null);
-        setEditItem(null); // Switch back to Add Mode for the next dish
-        setSuccessMsg(`Successfully saved! You can add a new dish in ${formData.category_name}.`);
+        setSuccessMsg(`Successfully added! You can add another dish in ${formData.category_name}.`);
         
         // Reset file inputs manually
         const imageInput = document.getElementById('dishImage');
@@ -435,12 +577,7 @@ const MenuManager = ({ user }) => {
                 </div>
               </div>
 
-              {/* Center Play Icon */}
-              {!deleteConfirmId && (
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100 pointer-events-none">
-                  <Play className="text-white fill-white ml-1" size={32} />
-                </div>
-              )}
+
             </div>
           ))}
         </div>
@@ -544,73 +681,93 @@ const MenuManager = ({ user }) => {
                       {editItem && <span className="text-slate-400 font-normal"> (replace)</span>}
                     </label>
                     <input type="file" id="dishImage" accept="image/*" onChange={handleImageChange} className="hidden" />
-                    <label
-                      htmlFor="dishImage"
-                      className={`flex flex-col items-center justify-center w-full p-5 border-2 border-dashed rounded-xl transition-colors cursor-pointer h-24
-                        ${imageFile ? 'border-orange-400 bg-orange-50' : editItem?.image_url ? 'border-green-300 bg-green-50' : 'border-slate-300 hover:bg-orange-50 hover:border-orange-400'}`}
-                    >
-                      {imageFile ? (
-                        <div className="text-center">
-                          <ImageIcon className="mx-auto text-orange-500 mb-1" size={24} />
-                          <span className="text-orange-700 font-medium text-xs line-clamp-1 px-2">{imageFile.name}</span>
-                          <p className="text-orange-400 text-xs mt-0.5">Tap to change</p>
+                    {imageFile ? (
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="relative w-14 h-14 overflow-hidden border-2 border-orange-300 bg-black flex-shrink-0 cursor-pointer"
+                          style={{borderRadius: '10px'}}
+                          onClick={() => setPreviewImageUrl(URL.createObjectURL(imageFile))}
+                        >
+                          <img src={URL.createObjectURL(imageFile)} alt="preview" className="absolute inset-0 w-full h-full object-cover" />
                         </div>
-                      ) : editItem?.image_url ? (
-                        <div className="text-center">
-                          <ImageIcon className="mx-auto text-green-500 mb-1" size={24} />
-                          <span className="text-green-700 font-medium text-xs">Photo exists</span>
-                          <p className="text-green-400 text-xs mt-0.5">Tap to replace</p>
+                        <div>
+                          <p className="text-xs font-medium text-slate-700 line-clamp-1">{imageFile.name}</p>
+                          <label htmlFor="dishImage" className="text-xs text-orange-500 cursor-pointer hover:underline">Tap to change</label>
                         </div>
-                      ) : (
-                        <div className="text-center text-slate-500">
-                          <Upload className="mx-auto mb-1" size={22} />
-                          <span className="text-sm font-semibold">Upload Photo</span>
-                          <p className="text-xs text-slate-400 mt-0.5">JPG / PNG, Max 5MB</p>
+                      </div>
+                    ) : editItem?.image_url ? (
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="relative w-14 h-14 overflow-hidden border-2 border-green-300 flex-shrink-0 cursor-pointer"
+                          style={{borderRadius: '10px'}}
+                          onClick={() => setPreviewImageUrl(editItem.image_url)}
+                        >
+                          <img src={editItem.image_url} alt="existing" className="absolute inset-0 w-full h-full object-cover" />
                         </div>
-                      )}
-                    </label>
+                        <div>
+                          <p className="text-xs font-medium text-green-700">Photo exists</p>
+                          <label htmlFor="dishImage" className="text-xs text-green-500 cursor-pointer hover:underline">Tap to replace</label>
+                        </div>
+                      </div>
+                    ) : (
+                      <label htmlFor="dishImage" className="flex flex-col items-center justify-center w-full p-4 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer h-24 hover:bg-orange-50 hover:border-orange-400 transition-colors">
+                        <Upload className="text-slate-400 mb-1" size={22} />
+                        <span className="text-sm font-semibold text-slate-500">Upload Photo</span>
+                        <p className="text-xs text-slate-400 mt-0.5">JPG / PNG, Max 5MB</p>
+                      </label>
+                    )}
                   </div>
 
                   <div>
-                    <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center justify-between mb-2">
                       <label className="block text-sm font-medium text-slate-700">
                         Dish Reel {!editItem && <span className="text-red-400">*</span>}
                         {editItem && <span className="text-slate-400 font-normal"> (replace)</span>}
                       </label>
-                      <button
-                        type="submit" name="save_and_add" disabled={isSubmitting}
-                        title={editItem ? "Save Changes & Add New Dish" : "Save & Add Another Dish"}
-                        className="bg-orange-100 text-orange-600 p-1.5 rounded-lg hover:bg-orange-200 transition-colors flex items-center gap-1 text-xs font-bold disabled:opacity-50"
-                      >
-                        <Plus size={14} strokeWidth={3} />
-                      </button>
-                    </div>
-                    <input type="file" id="dishVideo" accept="video/mp4,video/quicktime" onChange={handleVideoChange} className="hidden" />
-                    <label
-                      htmlFor="dishVideo"
-                      className={`flex flex-col items-center justify-center w-full p-5 border-2 border-dashed rounded-xl transition-colors cursor-pointer h-24
-                        ${videoFile ? 'border-blue-400 bg-blue-50' : editItem ? 'border-green-300 bg-green-50' : 'border-slate-300 hover:bg-blue-50 hover:border-blue-400'}`}
-                    >
-                      {videoFile ? (
-                        <div className="text-center">
-                          <Video className="mx-auto text-blue-500 mb-1" size={24} />
-                          <span className="text-blue-700 font-medium text-xs line-clamp-1 px-2">{videoFile.name}</span>
-                          <p className="text-blue-400 text-xs mt-0.5">Tap to change</p>
-                        </div>
-                      ) : editItem ? (
-                        <div className="text-center">
-                          <Video className="mx-auto text-green-500 mb-1" size={24} />
-                          <span className="text-green-700 font-medium text-xs">Reel exists</span>
-                          <p className="text-green-400 text-xs mt-0.5">Tap to replace</p>
-                        </div>
-                      ) : (
-                        <div className="text-center text-slate-500">
-                          <Video className="mx-auto mb-1" size={22} />
-                          <span className="text-sm font-semibold">Upload Reel</span>
-                          <p className="text-xs text-slate-400 mt-0.5">MP4 / MOV, Max 50MB</p>
-                        </div>
+                      {(existingReels.length > 0 || videoFiles.length > 0) && (
+                        <label htmlFor="dishVideo" className="cursor-pointer p-1 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors">
+                          <Plus size={16} className="text-blue-500" />
+                        </label>
                       )}
-                    </label>
+                    </div>
+                    <input type="file" id="dishVideo" accept="video/mp4,video/quicktime" multiple onChange={handleVideoChange} className="hidden" />
+
+                    {/* Video previews */}
+                    {(existingReels.length > 0 || videoFiles.length > 0) ? (
+                      <div className="flex flex-wrap gap-2">
+                        {existingReels.map((reel) => (
+                          <div key={reel.id} className="relative w-14 h-14 overflow-hidden border-2 border-green-300 bg-black flex-shrink-0 cursor-pointer" style={{borderRadius: '10px'}} onClick={() => setPreviewVideoUrl(reel.video_url)}>
+                            <video src={reel.video_url} className="absolute inset-0 w-full h-full object-cover opacity-80" muted playsInline />
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setDeletedReelIds(prev => [...prev, reel.id]); setExistingReels(prev => prev.filter(r => r.id !== reel.id)); }}
+                              className="absolute top-0.5 right-0.5 bg-black/60 text-white rounded-full p-0.5 hover:bg-red-500 transition-colors z-10"
+                            >
+                              <X size={10} />
+                            </button>
+                          </div>
+                        ))}
+                        {videoFiles.map((file, idx) => (
+                          <div key={idx} className="relative w-14 h-14 overflow-hidden border-2 border-blue-300 bg-black flex-shrink-0 cursor-pointer" style={{borderRadius: '10px'}} onClick={() => setPreviewVideoUrl(URL.createObjectURL(file))}>
+                            <video src={URL.createObjectURL(file)} className="absolute inset-0 w-full h-full object-cover opacity-80" muted playsInline />
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); removeVideoFile(idx); }}
+                              className="absolute top-0.5 right-0.5 bg-black/60 text-white rounded-full p-0.5 hover:bg-red-500 transition-colors z-10"
+                            >
+                              <X size={10} />
+                            </button>
+                            <p className="absolute bottom-0 left-0 right-0 text-white text-[9px] bg-black/50 text-center truncate px-1 py-0.5">{file.name}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <label htmlFor="dishVideo" className="flex flex-col items-center justify-center w-full p-4 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer h-24 hover:bg-blue-50 hover:border-blue-400 transition-colors">
+                        <Video className="text-slate-400 mb-1" size={22} />
+                        <span className="text-sm font-semibold text-slate-500">Upload Reel</span>
+                        <p className="text-xs text-slate-400 mt-0.5">MP4 / MOV, Max 50MB each</p>
+                      </label>
+                    )}
                   </div>
                 </div>
 
@@ -636,39 +793,37 @@ const MenuManager = ({ user }) => {
 
       {/* Video Player Modal */}
       {activeVideoItem && (
-        <div className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-4">
-          <button 
-            onClick={() => setActiveVideoItem(null)} 
-            className="absolute top-6 right-6 text-white/50 hover:text-white p-2 z-10 transition-colors bg-white/10 rounded-full hover:bg-white/20"
-          >
-            <X size={28} />
+        <ReelPlayer item={activeVideoItem} onClose={() => setActiveVideoItem(null)} />
+      )}
+      {/* Image Preview Overlay */}
+      {previewImageUrl && (
+        <div className="fixed inset-0 bg-black/90 z-[200] flex items-center justify-center p-4" onClick={() => setPreviewImageUrl(null)}>
+          <button className="absolute top-6 right-6 text-white/60 hover:text-white bg-white/10 p-2 rounded-full hover:bg-white/20 transition-colors">
+            <X size={24} />
           </button>
-          
-          <div className="w-full max-w-[400px] aspect-[9/16] bg-black rounded-[2rem] overflow-hidden relative shadow-2xl ring-1 ring-white/20">
-            {activeVideoItem.reels && activeVideoItem.reels.length > 0 && activeVideoItem.reels[0].video_url ? (
-              <video
-                src={activeVideoItem.reels[0].video_url}
-                className="w-full h-full object-cover"
-                controls
-                autoPlay
-                playsInline
-              />
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 p-8 text-center">
-                <Video size={48} className="mb-4 opacity-30" />
-                <p className="text-lg font-bold text-slate-300">No Reel Available</p>
-                <p className="text-sm mt-2">This dish doesn't have a promotional video reel yet. Edit the dish to upload one.</p>
-              </div>
-            )}
-            
-            {/* Dish Info Overlay in Player */}
-            <div className="absolute top-0 left-0 right-0 p-6 bg-gradient-to-b from-black/80 to-transparent pointer-events-none flex justify-between items-start">
-               <div>
-                  <h3 className="text-white font-bold text-xl drop-shadow-md">{activeVideoItem.name}</h3>
-                  <p className="text-orange-400 font-bold">₹{activeVideoItem.price}</p>
-               </div>
-            </div>
-          </div>
+          <img
+            src={previewImageUrl}
+            alt="preview"
+            className="max-h-[80vh] max-w-full rounded-2xl object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+
+      {/* Upload Preview Overlay */}
+      {previewVideoUrl && (
+        <div className="fixed inset-0 bg-black/90 z-[200] flex items-center justify-center p-4" onClick={() => setPreviewVideoUrl(null)}>
+          <button className="absolute top-6 right-6 text-white/60 hover:text-white bg-white/10 p-2 rounded-full hover:bg-white/20 transition-colors">
+            <X size={24} />
+          </button>
+          <video
+            src={previewVideoUrl}
+            className="max-h-[80vh] max-w-full rounded-2xl"
+            controls
+            autoPlay
+            playsInline
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>
