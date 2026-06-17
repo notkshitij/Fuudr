@@ -3,6 +3,133 @@ import { Plus, Image as ImageIcon, X, Upload, UtensilsCrossed, Video, Trash2, Pe
 import { supabase } from '../../../supabaseClient';
 import { uploadToCloudinary } from '../../../utils/cloudinary';
 
+const ReelPlayer = ({ item, onClose }) => {
+  const reels = (item.reels || []).filter(r => r.video_url);
+  const [currentIdx, setCurrentIdx] = React.useState(0);
+  const [isPlaying, setIsPlaying] = React.useState(true);
+  const [showIcon, setShowIcon] = React.useState(false);
+  const [progress, setProgress] = React.useState(0);
+  const videoRef = React.useRef(null);
+
+  const goTo = (idx) => {
+    if (idx < 0 || idx >= reels.length) return;
+    setCurrentIdx(idx);
+    setProgress(0);
+    setIsPlaying(true);
+  };
+
+  const togglePlay = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.paused) { v.play(); setIsPlaying(true); }
+    else { v.pause(); setIsPlaying(false); }
+    setShowIcon(true);
+    setTimeout(() => setShowIcon(false), 700);
+  };
+
+  React.useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.currentTime = 0;
+    v.play().catch(() => {});
+    setIsPlaying(true);
+    const onTimeUpdate = () => setProgress(v.duration ? v.currentTime / v.duration : 0);
+    const onEnded = () => { if (currentIdx < reels.length - 1) goTo(currentIdx + 1); };
+    v.addEventListener('timeupdate', onTimeUpdate);
+    v.addEventListener('ended', onEnded);
+    return () => { v.removeEventListener('timeupdate', onTimeUpdate); v.removeEventListener('ended', onEnded); };
+  }, [currentIdx]);
+
+  if (reels.length === 0) return (
+    <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center" onClick={onClose}>
+      <div className="text-center text-slate-400 p-8">
+        <Video size={48} className="mx-auto mb-4 opacity-30" />
+        <p className="text-lg font-bold text-slate-300">No Reel Available</p>
+      </div>
+    </div>
+  );
+
+  const videoUrl = reels[currentIdx].video_url;
+
+  return (
+    <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center" onClick={onClose}>
+      <button onClick={onClose} className="absolute top-6 right-6 text-white/60 hover:text-white bg-white/10 p-2 rounded-full hover:bg-white/20 transition-colors z-10">
+        <X size={24} />
+      </button>
+
+      <div
+        className="relative bg-black shadow-2xl overflow-hidden"
+        style={{ width: 'min(380px, 90vw)', aspectRatio: '9/16', borderRadius: '2rem' }}
+        onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+      >
+        <video
+          key={videoUrl}
+          ref={videoRef}
+          src={videoUrl}
+          className="w-full h-full object-cover"
+          autoPlay
+          playsInline
+        />
+
+        {/* Story bars */}
+        <div className="absolute top-4 left-4 right-4 flex gap-1.5 z-10" onClick={e => e.stopPropagation()}>
+          {reels.map((_, i) => (
+            <div key={i} className="flex-1 h-0.5 bg-white/30 rounded-full overflow-hidden cursor-pointer" onClick={() => goTo(i)}>
+              <div
+                className="h-full bg-white rounded-full transition-none"
+                style={{ width: i < currentIdx ? '100%' : i === currentIdx ? `${progress * 100}%` : '0%' }}
+              />
+            </div>
+          ))}
+        </div>
+
+
+
+        {/* Left / Right tap zones */}
+        <div className="absolute inset-y-0 left-0 w-1/3 z-10" onClick={(e) => { e.stopPropagation(); goTo(currentIdx - 1); }} />
+        <div className="absolute inset-y-0 right-0 w-1/3 z-10" onClick={(e) => { e.stopPropagation(); goTo(currentIdx + 1); }} />
+
+        {/* Arrow icons */}
+        {currentIdx > 0 && (
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10">
+            <div className="bg-black/40 backdrop-blur-sm rounded-full p-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </div>
+          </div>
+        )}
+        {currentIdx < reels.length - 1 && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none z-10">
+            <div className="bg-black/40 backdrop-blur-sm rounded-full p-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          </div>
+        )}
+
+        {/* Bottom overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 p-6 pointer-events-none">
+          <p className="text-orange-400 font-black text-xs uppercase tracking-widest mb-1">{item.category_name}</p>
+          <h3 className="text-white font-bold text-2xl leading-tight mb-1">{item.name}</h3>
+          {item.description && <p className="text-white/70 text-sm mb-3 line-clamp-2">{item.description}</p>}
+          <div className="bg-orange-500 text-white font-bold px-4 py-1.5 rounded-full w-max text-sm shadow-lg">₹{item.price}</div>
+        </div>
+
+        {/* Play/pause flash */}
+        {showIcon && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+            <div className="bg-black/50 rounded-full p-5">
+              {isPlaying
+                ? <Play className="text-white fill-white" size={32} />
+                : <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="white" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+              }
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const MenuManager = ({ user }) => {
   const [menuItems, setMenuItems] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -450,12 +577,7 @@ const MenuManager = ({ user }) => {
                 </div>
               </div>
 
-              {/* Center Play Icon */}
-              {!deleteConfirmId && (
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100 pointer-events-none">
-                  <Play className="text-white fill-white ml-1" size={32} />
-                </div>
-              )}
+
             </div>
           ))}
         </div>
@@ -671,40 +793,7 @@ const MenuManager = ({ user }) => {
 
       {/* Video Player Modal */}
       {activeVideoItem && (
-        <div className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-4">
-          <button 
-            onClick={() => setActiveVideoItem(null)} 
-            className="absolute top-6 right-6 text-white/50 hover:text-white p-2 z-10 transition-colors bg-white/10 rounded-full hover:bg-white/20"
-          >
-            <X size={28} />
-          </button>
-          
-          <div className="w-full max-w-[400px] aspect-[9/16] bg-black rounded-[2rem] overflow-hidden relative shadow-2xl ring-1 ring-white/20">
-            {activeVideoItem.reels && activeVideoItem.reels.length > 0 && activeVideoItem.reels[0].video_url ? (
-              <video
-                src={activeVideoItem.reels[0].video_url}
-                className="w-full h-full object-cover"
-                controls
-                autoPlay
-                playsInline
-              />
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 p-8 text-center">
-                <Video size={48} className="mb-4 opacity-30" />
-                <p className="text-lg font-bold text-slate-300">No Reel Available</p>
-                <p className="text-sm mt-2">This dish doesn't have a promotional video reel yet. Edit the dish to upload one.</p>
-              </div>
-            )}
-            
-            {/* Dish Info Overlay in Player */}
-            <div className="absolute top-0 left-0 right-0 p-6 bg-gradient-to-b from-black/80 to-transparent pointer-events-none flex justify-between items-start">
-               <div>
-                  <h3 className="text-white font-bold text-xl drop-shadow-md">{activeVideoItem.name}</h3>
-                  <p className="text-orange-400 font-bold">₹{activeVideoItem.price}</p>
-               </div>
-            </div>
-          </div>
-        </div>
+        <ReelPlayer item={activeVideoItem} onClose={() => setActiveVideoItem(null)} />
       )}
       {/* Image Preview Overlay */}
       {previewImageUrl && (
