@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './Navbar.css';
 
 export const Navbar = () => {
@@ -6,7 +7,7 @@ export const Navbar = () => {
     <nav className="brutal-nav">
       <div className="nav-group l">
         <a href="#home" className="brutal-btn nav-btn" style={{ background: 'var(--bg)' }}>Home App</a>
-        <a href="http://localhost:5174/" target="_blank" rel="noopener noreferrer" className="brutal-btn nav-btn" style={{ background: 'var(--bg)' }}>Register as a Restaurant</a>
+        <Link to="/partner" className="brutal-btn nav-btn" style={{ background: 'var(--bg)' }}>Register as a Restaurant</Link>
       </div>
       
       <div className="brand-logo">
