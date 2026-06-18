@@ -87,32 +87,35 @@ const SignIn = () => {
           </div>
         )}
 
-        <div>
-          <label className="block text-sm font-medium mb-2 text-slate-900">Email Address</label>
-          <div className="relative flex items-center">
-            <Mail className="absolute left-4 text-slate-400 pointer-events-none" size={20} />
+        <div className="space-y-1.5">
+          <label className="block text-sm font-semibold text-slate-700 ml-1">Email Address</label>
+          <div className="relative flex items-center group">
+            <Mail className="absolute left-4 text-slate-400 group-focus-within:text-orange-500 transition-colors duration-300 pointer-events-none" size={20} />
             <input 
               type="email" 
               name="identifier"
               value={credentials.identifier}
               onChange={handleChange}
-              className="w-full py-3 pl-11 pr-4 border border-slate-200 rounded-lg bg-slate-50 text-slate-900 transition duration-200 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10" 
+              className="w-full py-3.5 pl-12 pr-4 border border-slate-200/80 rounded-xl bg-slate-50/50 text-slate-900 transition duration-300 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 hover:bg-slate-50" 
               placeholder="Enter your email address" 
               required
             />
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-2 text-slate-900">Password</label>
-          <div className="relative flex items-center">
-            <Lock className="absolute left-4 text-slate-400 pointer-events-none" size={20} />
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between ml-1">
+            <label className="block text-sm font-semibold text-slate-700">Password</label>
+            <Link to="/partner/forgot-password" className="text-sm font-semibold text-orange-500 hover:text-orange-600 transition-colors">Forgot password?</Link>
+          </div>
+          <div className="relative flex items-center group">
+            <Lock className="absolute left-4 text-slate-400 group-focus-within:text-orange-500 transition-colors duration-300 pointer-events-none" size={20} />
             <input 
               type="password" 
               name="password"
               value={credentials.password}
               onChange={handleChange}
-              className="w-full py-3 pl-11 pr-4 border border-slate-200 rounded-lg bg-slate-50 text-slate-900 transition duration-200 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10" 
+              className="w-full py-3.5 pl-12 pr-4 border border-slate-200/80 rounded-xl bg-slate-50/50 text-slate-900 transition duration-300 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 hover:bg-slate-50" 
               placeholder="Enter your password" 
               required
             />
@@ -122,10 +125,10 @@ const SignIn = () => {
         <button 
           type="submit" 
           disabled={loading}
-          className="w-full inline-flex items-center justify-center gap-2 py-3 px-6 rounded-lg font-semibold text-white bg-orange-500 hover:bg-orange-600 active:translate-y-0 hover:-translate-y-px transition-all shadow-[0_4px_6px_-1px_rgba(249,115,22,0.2)] hover:shadow-[0_6px_8px_-1px_rgba(249,115,22,0.3)] mt-4 disabled:opacity-70 disabled:cursor-not-allowed"
+          className="w-full inline-flex items-center justify-center gap-2 py-4 px-6 rounded-xl font-bold text-white bg-orange-500 hover:bg-orange-600 active:scale-[0.98] transition-all duration-300 shadow-lg shadow-orange-500/25 mt-8 disabled:opacity-70 disabled:cursor-not-allowed group"
         >
           {loading ? 'Signing In...' : 'Sign In'}
-          {!loading && <ArrowRight size={20} />}
+          {!loading && <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />}
         </button>
 
         <div className="mt-8 text-center text-sm text-slate-500">
