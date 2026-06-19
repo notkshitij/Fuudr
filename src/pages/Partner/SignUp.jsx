@@ -5,17 +5,16 @@ import {
   User, 
   Phone, 
   Mail, 
-  MapPin, 
   UtensilsCrossed, 
   Lock,
   ArrowRight,
   ChevronDown,
   Eye,
-  EyeOff,
-  MapPinned
+  EyeOff
 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import AuthLayout from '../../components/Partner/AuthLayout';
+import AddressAutocomplete from '../../components/Partner/AddressAutocomplete';
 import { supabase } from '../../supabaseClient';
 
 // Utility function to hash password securely
@@ -47,6 +46,8 @@ const SignUp = () => {
     mobileNumber: '',
     email: '',
     address: '',
+    latitude: null,
+    longitude: null,
     restaurantType: 'restaurant',
     providesDelivery: 'yes',
     password: ''
@@ -60,6 +61,15 @@ const SignUp = () => {
     }));
   };
 
+  const handleAddressSelect = ({ address, latitude, longitude }) => {
+    setFormData(prev => ({
+      ...prev,
+      address,
+      latitude,
+      longitude
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -69,6 +79,9 @@ const SignUp = () => {
       // Basic validation
       if (formData.mobileNumber.length < 10) {
         throw new Error("Please enter a valid mobile number.");
+      }
+      if (!formData.latitude || !formData.longitude) {
+        throw new Error("Please select your restaurant address from the suggestions list.");
       }
 
       // Hash the password before saving
@@ -83,6 +96,8 @@ const SignUp = () => {
             mobile_number: formData.mobileNumber,
             email: formData.email,
             address: formData.address,
+            latitude: formData.latitude,
+            longitude: formData.longitude,
             restaurant_type: formData.restaurantType,
             provides_delivery: formData.providesDelivery === 'yes',
             password: hashedPassword // Storing the hash
@@ -201,32 +216,12 @@ const SignUp = () => {
         {/* Address */}
         <div>
           <label className="block text-sm font-medium mb-2 text-slate-900">Restaurant Address</label>
-          <div className="relative flex items-center">
-            <MapPin className="absolute left-4 text-slate-400 pointer-events-none" size={20} />
-            <input 
-              type="text" 
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              className="w-full py-3 pl-11 pr-12 border border-slate-200 rounded-lg bg-slate-50 text-slate-900 transition duration-200 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10" 
-              placeholder="e.g. 123 Main Street, Sector 4..." 
-              required
-            />
-            <button
-              type="button"
-              onClick={() => {
-                if (formData.address.trim()) {
-                  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.address)}`, '_blank');
-                } else {
-                  alert("Please enter an address first to see it on maps.");
-                }
-              }}
-              title="View on Google Maps"
-              className="absolute right-4 text-slate-400 hover:text-orange-500 transition-colors focus:outline-none"
-            >
-              <MapPinned size={20} />
-            </button>
-          </div>
+          <AddressAutocomplete
+            value={formData.address}
+            onSelect={handleAddressSelect}
+            placeholder="Search your restaurant address..."
+            required
+          />
         </div>
 
         {/* Row 3: Type & Delivery */}

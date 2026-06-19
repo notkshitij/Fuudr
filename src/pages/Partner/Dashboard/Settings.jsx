@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Save, Building2, Clock, FileText, Image as ImageIcon, Upload, ShieldCheck, MapPin, Mail, Phone, User, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../../../supabaseClient';
 import { uploadToCloudinary } from '../../../utils/cloudinary';
+import AddressAutocomplete from '../../../components/Partner/AddressAutocomplete';
 
 const Settings = ({ user }) => {
   const [loading, setLoading] = useState(false);
@@ -17,6 +18,8 @@ const Settings = ({ user }) => {
     mobile_number: '',
     email: '',
     address: '',
+    latitude: null,
+    longitude: null,
     restaurant_type: '',
     provides_delivery: true,
     opening_time: '',
@@ -38,6 +41,8 @@ const Settings = ({ user }) => {
         mobile_number: user.mobile_number || '',
         email: user.email || '',
         address: user.address || '',
+        latitude: user.latitude || null,
+        longitude: user.longitude || null,
         restaurant_type: user.restaurant_type || '',
         provides_delivery: user.provides_delivery ?? true,
         opening_time: user.opening_time || '',
@@ -256,12 +261,17 @@ const Settings = ({ user }) => {
 
               <div className="md:col-span-2">
                 <label className={labelClasses}>Physical Address</label>
-                <div className="relative">
-                  <div className="absolute top-4 left-0 pl-4 pointer-events-none">
-                    <MapPin className="text-slate-400" size={18} />
-                  </div>
-                  <textarea name="address" required rows="3" value={formData.address} onChange={handleChange} className={`${inputClasses} pl-11 resize-none`}></textarea>
-                </div>
+                <AddressAutocomplete
+                  value={formData.address}
+                  onSelect={({ address, latitude, longitude }) => {
+                    setFormData(prev => ({ ...prev, address, latitude, longitude }));
+                  }}
+                />
+                {formData.latitude && formData.longitude && (
+                  <p className="mt-1.5 text-xs text-green-600 font-semibold flex items-center gap-1">
+                    <CheckCircle2 size={12} /> Location confirmed ({formData.latitude.toFixed(4)}, {formData.longitude.toFixed(4)})
+                  </p>
+                )}
               </div>
             </div>
           </div>
