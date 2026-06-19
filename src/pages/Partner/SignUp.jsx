@@ -49,6 +49,8 @@ const SignUp = () => {
     latitude: null,
     longitude: null,
     googleMapLink: '',
+    avgRating: 0.0,
+    totalReviews: 0,
     restaurantType: 'restaurant',
     providesDelivery: 'yes',
     password: ''
@@ -62,13 +64,15 @@ const SignUp = () => {
     }));
   };
 
-  const handleAddressSelect = ({ address, latitude, longitude, googleMapLink }) => {
+  const handleAddressSelect = ({ address, latitude, longitude, googleMapLink, rating, userRatingCount }) => {
     setFormData(prev => ({
       ...prev,
       address,
       latitude,
       longitude,
-      googleMapLink
+      googleMapLink,
+      avgRating: rating,
+      totalReviews: userRatingCount
     }));
   };
 
@@ -101,6 +105,8 @@ const SignUp = () => {
             latitude: formData.latitude,
             longitude: formData.longitude,
             google_map_link: formData.googleMapLink,
+            avg_rating: formData.avgRating,
+            total_reviews: formData.totalReviews,
             restaurant_type: formData.restaurantType,
             provides_delivery: formData.providesDelivery === 'yes',
             password: hashedPassword // Storing the hash

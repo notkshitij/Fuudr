@@ -105,7 +105,7 @@ const AddressAutocomplete = ({
 
     try {
       const res = await fetch(
-        `https://places.googleapis.com/v1/places/${placeId}?fields=location,formattedAddress,googleMapsUri&sessionToken=${sessionTokenRef.current}`,
+        `https://places.googleapis.com/v1/places/${placeId}?fields=location,formattedAddress,googleMapsUri,rating,userRatingCount&sessionToken=${sessionTokenRef.current}`,
         {
           headers: {
             'X-Goog-Api-Key': GOOGLE_MAPS_API_KEY,
@@ -124,6 +124,8 @@ const AddressAutocomplete = ({
           latitude: lat,
           longitude: lng,
           googleMapLink: data.googleMapsUri || fallbackLink,
+          rating: data.rating || 0,
+          userRatingCount: data.userRatingCount || 0,
           placeId,
         });
       }

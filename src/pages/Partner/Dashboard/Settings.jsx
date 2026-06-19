@@ -21,6 +21,8 @@ const Settings = ({ user }) => {
     latitude: null,
     longitude: null,
     google_map_link: '',
+    avg_rating: 0.0,
+    total_reviews: 0,
     restaurant_type: '',
     provides_delivery: true,
     opening_time: '',
@@ -45,6 +47,8 @@ const Settings = ({ user }) => {
         latitude: user.latitude || null,
         longitude: user.longitude || null,
         google_map_link: user.google_map_link || '',
+        avg_rating: user.avg_rating || 0.0,
+        total_reviews: user.total_reviews || 0,
         restaurant_type: user.restaurant_type || '',
         provides_delivery: user.provides_delivery ?? true,
         opening_time: user.opening_time || '',
@@ -265,8 +269,16 @@ const Settings = ({ user }) => {
                 <label className={labelClasses}>Physical Address</label>
                 <AddressAutocomplete
                   value={formData.address}
-                  onSelect={({ address, latitude, longitude, googleMapLink }) => {
-                    setFormData(prev => ({ ...prev, address, latitude, longitude, google_map_link: googleMapLink }));
+                  onSelect={({ address, latitude, longitude, googleMapLink, rating, userRatingCount }) => {
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      address, 
+                      latitude, 
+                      longitude, 
+                      google_map_link: googleMapLink,
+                      avg_rating: rating,
+                      total_reviews: userRatingCount
+                    }));
                   }}
                 />
                 {formData.latitude && formData.longitude && (
@@ -284,6 +296,11 @@ const Settings = ({ user }) => {
                         >
                           View on Google Maps
                         </a>
+                      </p>
+                    )}
+                    {(formData.avg_rating > 0 || formData.total_reviews > 0) && (
+                      <p className="text-slate-500">
+                        ★ {formData.avg_rating} ({formData.total_reviews} Google reviews)
                       </p>
                     )}
                   </div>
