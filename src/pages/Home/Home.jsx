@@ -165,12 +165,18 @@ export function Home() {
         }
       );
 
-      // 6. Hide Navbar Logo on Footer
+      // 6. Hide Navbar items on Footer
       ScrollTrigger.create({
         trigger: '.slice-footer',
         start: 'top 150px',
-        onEnter: () => gsap.to('.brand-logo', { autoAlpha: 0, scale: 0.8, duration: 0.3 }),
-        onLeaveBack: () => gsap.to('.brand-logo', { autoAlpha: 1, scale: 1, duration: 0.3 })
+        onEnter: () => {
+          gsap.to('.nav-fade-target', { autoAlpha: 0, duration: 0.3 });
+          gsap.to('.brand-logo', { scale: 0.8, duration: 0.3 }, '<');
+        },
+        onLeaveBack: () => {
+          gsap.to('.nav-fade-target', { autoAlpha: 1, duration: 0.3 });
+          gsap.to('.brand-logo', { scale: 1, duration: 0.3 }, '<');
+        }
       });
 
     });
@@ -232,7 +238,7 @@ export function Home() {
             }}>+</span>
           </button>
 
-          <button className="brutal-btn" onClick={() => document.getElementById('partner-cta')?.scrollIntoView({ behavior: 'smooth' })} style={{ background: '#fff', color: '#000', fontSize: '18px', padding: '6px 24px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button className="brutal-btn" onClick={() => document.getElementById('partner-cta')?.scrollIntoView({ behavior: 'smooth' })} style={{ fontSize: '18px', padding: '6px 24px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             Register Restaurant
             <span style={{
               background: '#FCA311', 
@@ -566,8 +572,8 @@ export function Home() {
           <h2 className="xl" style={{ color: '#fff', fontSize: 'clamp(32px, 5vw, 48px)', marginBottom: '40px' }}>See it. Crave it. Eat it.</h2>
 
           <div className="footer-actions" style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '60px', flexWrap: 'wrap' }}>
-            <button className="brutal-btn" onClick={() => window.open('https://whatsapp.com/channel/0029VbCTk553QxS6ZxDutH1N', '_blank')} style={{ background: '#FCA311', color: '#000', padding: '16px 32px', fontSize: '20px', borderRadius: '12px' }}>Join Community</button>
-            <button className="brutal-btn" onClick={() => document.getElementById('partner-cta')?.scrollIntoView({ behavior: 'smooth' })} style={{ background: '#fff', color: '#000', padding: '16px 32px', fontSize: '20px', borderRadius: '12px' }}>Register Restaurant</button>
+            <button className="brutal-btn footer-join-btn" onClick={() => window.open('https://whatsapp.com/channel/0029VbCTk553QxS6ZxDutH1N', '_blank')} style={{ padding: '16px 32px', fontSize: '20px', borderRadius: '12px' }}>Join Community</button>
+            <button className="brutal-btn footer-register-btn" onClick={() => document.getElementById('partner-cta')?.scrollIntoView({ behavior: 'smooth' })} style={{ padding: '16px 32px', fontSize: '20px', borderRadius: '12px' }}>Register Restaurant</button>
           </div>
 
           <div className="footer-socials" style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '80px', flexWrap: 'wrap' }}>
