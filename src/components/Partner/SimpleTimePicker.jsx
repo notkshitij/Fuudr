@@ -45,17 +45,42 @@ const TimeDropdown = ({
   panelMinWidth = '100%',
 }) => {
   const ref = useRef(null);
+  const menuRef = useRef(null);
   const listRef = useRef(null);
+  const [menuStyle, setMenuStyle] = useState({});
+
+  const updateMenuPosition = () => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    setMenuStyle({
+      top: rect.bottom + 4,
+      left: rect.left,
+      width: Math.max(rect.width, parseInt(panelMinWidth, 10) || 100),
+    });
+  };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (ref.current && !ref.current.contains(e.target) && isOpen) {
-        onToggle(false);
-      }
+      if (
+        ref.current?.contains(e.target) ||
+        menuRef.current?.contains(e.target)
+      ) return;
+      if (isOpen) onToggle(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen, onToggle]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    updateMenuPosition();
+    window.addEventListener('scroll', updateMenuPosition, true);
+    window.addEventListener('resize', updateMenuPosition);
+    return () => {
+      window.removeEventListener('scroll', updateMenuPosition, true);
+      window.removeEventListener('resize', updateMenuPosition);
+    };
+  }, [isOpen, panelMinWidth]);
 
   useEffect(() => {
     if (!isOpen || !listRef.current || !value) return;
@@ -83,8 +108,9 @@ const TimeDropdown = ({
 
       {isOpen && (
         <div
-          className="absolute z-[100] top-[calc(100%+4px)] left-0 bg-white border border-slate-100 rounded-lg shadow-md overflow-hidden"
-          style={{ minWidth: panelMinWidth, width: 'max(100%, 100px)' }}
+          ref={menuRef}
+          className="fixed z-[200] bg-white border border-slate-100 rounded-lg shadow-md overflow-hidden"
+          style={{ ...menuStyle, minWidth: panelMinWidth }}
         >
           <div
             ref={listRef}

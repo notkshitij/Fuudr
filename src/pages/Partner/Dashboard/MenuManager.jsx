@@ -443,7 +443,7 @@ const MenuManager = ({ user }) => {
   };
 
   return (
-    <div className="animate-fadeIn">
+    <div className="animate-fadeIn h-full overflow-y-auto overscroll-contain pb-12">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 mb-1">Menu Management</h1>

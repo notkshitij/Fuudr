@@ -70,7 +70,7 @@ const Overview = ({ user }) => {
   ];
 
   return (
-    <div className="animate-fadeIn max-w-6xl mx-auto pb-12">
+    <div className="animate-fadeIn max-w-6xl mx-auto pb-12 h-full overflow-y-auto overscroll-contain">
       
       {/* Header */}
       <div className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-slate-200 pb-6">
