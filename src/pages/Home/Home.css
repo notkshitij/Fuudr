@@ -427,6 +427,26 @@
   margin-top: 80px;
 }
 
+.brutal-btn.footer-join-btn {
+  background: var(--bg);
+  color: #000;
+}
+
+.brutal-btn.footer-register-btn {
+  background: #fff;
+  color: #000;
+}
+
+.brutal-btn.footer-join-btn:hover,
+.brutal-btn.footer-join-btn:active {
+  background: var(--bg);
+}
+
+.brutal-btn.footer-register-btn:hover,
+.brutal-btn.footer-register-btn:active {
+  background: #fff;
+}
+
 @media (max-width: 900px) {
   .about-cards, .stats-grid, .menu-grid {
     grid-template-columns: 1fr;

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Upload, 
-  Clock, 
   FileText, 
   CheckCircle2,
   ArrowRight,
@@ -12,6 +11,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 import { uploadToCloudinary } from '../../utils/cloudinary';
+import SimpleTimePicker from '../../components/Partner/SimpleTimePicker';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -75,6 +75,15 @@ const ProfileSetup = () => {
       return { ...prev, operatingDays: days };
     });
   };
+
+  const toggleAllDays = () => {
+    setFormData(prev => ({
+      ...prev,
+      operatingDays: prev.operatingDays.length === DAYS_OF_WEEK.length ? [] : [...DAYS_OF_WEEK]
+    }));
+  };
+
+  const allDaysSelected = formData.operatingDays.length === DAYS_OF_WEEK.length;
 
   const uploadFile = async (file, path) => {
     try {
@@ -219,7 +228,7 @@ const ProfileSetup = () => {
         return (
           <div className="animate-fadeIn">
             <h2 className="text-2xl font-bold mb-2 text-slate-900 text-center">Operating Days</h2>
-            <p className="text-slate-500 mb-8 text-center">Which days are you open for business?</p>
+            <p className="text-slate-500 mb-4 text-center">Which days are you open for business?</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {DAYS_OF_WEEK.map(day => {
                 const isSelected = formData.operatingDays.includes(day);
@@ -243,6 +252,20 @@ const ProfileSetup = () => {
                   </button>
                 );
               })}
+              <div className="col-span-2 sm:col-span-3 flex justify-center pt-1">
+                <button
+                  type="button"
+                  onClick={toggleAllDays}
+                  className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl border-2 font-bold text-sm transition-all shadow-md active:scale-95 ${
+                    allDaysSelected
+                      ? 'border-orange-600 bg-orange-500 text-white shadow-orange-500/30 hover:bg-orange-600'
+                      : 'border-orange-500 bg-orange-100 text-orange-700 shadow-orange-200 hover:bg-orange-200 ring-2 ring-orange-300/50'
+                  }`}
+                >
+                  <CalendarDays size={20} />
+                  {allDaysSelected ? 'Deselect All Days' : 'Select All Days'}
+                </button>
+              </div>
             </div>
           </div>
         );
@@ -250,44 +273,20 @@ const ProfileSetup = () => {
         return (
           <div className="animate-fadeIn">
             <h2 className="text-2xl font-bold mb-2 text-slate-900 text-center">Operating Hours</h2>
-            <p className="text-slate-500 mb-8 text-center">When do you open and close on your working days?</p>
-            <div className="flex flex-col gap-6 max-w-md mx-auto">
-              <div>
-                <label className="block text-sm font-medium mb-2 text-slate-700">Opening Time</label>
-                <div className="relative flex items-center">
-                  <Clock className="absolute left-4 text-slate-400 pointer-events-none" size={20} />
-                  <input 
-                    type="time" 
-                    name="openingTime"
-                    value={formData.openingTime}
-                    onChange={(e) => {
-                      handleChange(e);
-                      if (e.target.value) e.target.blur(); // Auto close the picker
-                    }}
-                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                    onKeyDown={(e) => e.preventDefault()}
-                    className="w-full py-4 pl-12 pr-4 border-2 border-slate-200 rounded-xl bg-slate-50 text-slate-900 text-lg transition duration-200 focus:outline-none focus:border-orange-500 focus:bg-white cursor-pointer" 
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2 text-slate-700">Closing Time</label>
-                <div className="relative flex items-center">
-                  <Clock className="absolute left-4 text-slate-400 pointer-events-none" size={20} />
-                  <input 
-                    type="time" 
-                    name="closingTime"
-                    value={formData.closingTime}
-                    onChange={(e) => {
-                      handleChange(e);
-                      if (e.target.value) e.target.blur(); // Auto close the picker
-                    }}
-                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
-                    onKeyDown={(e) => e.preventDefault()}
-                    className="w-full py-4 pl-12 pr-4 border-2 border-slate-200 rounded-xl bg-slate-50 text-slate-900 text-lg transition duration-200 focus:outline-none focus:border-orange-500 focus:bg-white cursor-pointer" 
-                  />
-                </div>
-              </div>
+            <p className="text-slate-500 mb-4 text-center">When do you open and close on your working days?</p>
+            <div className="flex flex-col gap-3 max-w-lg mx-auto">
+              <SimpleTimePicker
+                label="Opening Time"
+                defaultPeriod="AM"
+                value={formData.openingTime}
+                onChange={(time) => setFormData(prev => ({ ...prev, openingTime: time }))}
+              />
+              <SimpleTimePicker
+                label="Closing Time"
+                defaultPeriod="PM"
+                value={formData.closingTime}
+                onChange={(time) => setFormData(prev => ({ ...prev, closingTime: time }))}
+              />
             </div>
           </div>
         );
