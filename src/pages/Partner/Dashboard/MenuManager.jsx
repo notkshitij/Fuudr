@@ -357,16 +357,12 @@ const MenuManager = ({ user }) => {
           .single();
         if (menuError) throw menuError;
 
-        // Upload and insert all reels
+        // Upload and insert all reels — dish data lives on menu_items now,
+        // so reels only store the link + video.
         const videoUrls = await Promise.all(videoFiles.map(f => uploadToCloudinary(f, 'video')));
         await supabase.from('reels').insert(videoUrls.map(videoUrl => ({
           partner_id: user.id,
           menu_item_id: menuItem.id,
-          category_id: categoryId,
-          category_name: formData.category_name,
-          dish_name: formData.name,
-          description: formData.description,
-          price: parseFloat(formData.price),
           video_url: videoUrl,
         })));
 
@@ -390,27 +386,15 @@ const MenuManager = ({ user }) => {
         if (deletedReelIds.length > 0) {
           await supabase.from('reels').delete().in('id', deletedReelIds);
         }
-        // Update metadata on remaining reels
-        await supabase.from('reels')
-          .update({
-            category_id: categoryId,
-            category_name: formData.category_name,
-            dish_name: formData.name,
-            description: formData.description,
-            price: parseFloat(formData.price),
-          })
-          .eq('menu_item_id', editItem.id);
+        // Dish metadata (name, price, description, category) lives on menu_items —
+        // already updated above. Reels carry no dish data, so nothing to update here.
+
         // Upload and insert new reels
         if (videoFiles.length > 0) {
           const newVideoUrls = await Promise.all(videoFiles.map(f => uploadToCloudinary(f, 'video')));
           await supabase.from('reels').insert(newVideoUrls.map(videoUrl => ({
             partner_id: user.id,
             menu_item_id: editItem.id,
-            category_id: categoryId,
-            category_name: formData.category_name,
-            dish_name: formData.name,
-            description: formData.description,
-            price: parseFloat(formData.price),
             video_url: videoUrl,
           })));
         }
