@@ -17,7 +17,7 @@ function createSessionToken() {
 /**
  * AddressAutocomplete
  * Restaurant/place address search box backed by Google Places API (New).
- * Calls onSelect({ address, latitude, longitude, placeId }) when the user
+ * Calls onSelect({ address, latitude, longitude, googleMapLink, rating, userRatingCount, placeId }) when the user
  * picks a suggestion. Does NOT allow free-typed address to be submitted —
  * forces a selection from Google so lat/lng is always captured.
  */

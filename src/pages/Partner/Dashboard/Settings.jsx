@@ -282,14 +282,14 @@ const Settings = ({ user }) => {
                 <AddressAutocomplete
                   value={formData.address}
                   onSelect={({ address, latitude, longitude, googleMapLink, rating, userRatingCount }) => {
-                    setFormData(prev => ({ 
-                      ...prev, 
-                      address, 
-                      latitude, 
-                      longitude, 
+                    setFormData(prev => ({
+                      ...prev,
+                      address,
+                      latitude,
+                      longitude,
                       google_map_link: googleMapLink,
                       avg_rating: rating,
-                      total_reviews: userRatingCount
+                      total_reviews: userRatingCount,
                     }));
                   }}
                 />

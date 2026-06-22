@@ -72,7 +72,7 @@ const SignUp = () => {
       longitude,
       googleMapLink,
       avgRating: rating,
-      totalReviews: userRatingCount
+      totalReviews: userRatingCount,
     }));
   };
 
@@ -104,7 +104,7 @@ const SignUp = () => {
             address: formData.address,
             latitude: formData.latitude,
             longitude: formData.longitude,
-            google_map_link: formData.googleMapLink,
+            google_map_link: formData.googleMapLink || null,
             avg_rating: formData.avgRating,
             total_reviews: formData.totalReviews,
             restaurant_type: formData.restaurantType,
