@@ -7,6 +7,7 @@ import SignIn from './pages/Partner/SignIn';
 import SignUp from './pages/Partner/SignUp';
 import ProfileSetup from './pages/Partner/ProfileSetup';
 import DashboardLayout from './pages/Partner/Dashboard/DashboardLayout';
+import AdminFuudr from './pages/AdminFuudr/AdminFuudr';
 import './App.css';
 
 export default function App() {
@@ -14,6 +15,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/adminfuudr" element={<AdminFuudr />} />
         <Route path="/fuudr-backstage" element={
           <ProtectedRoute>
             <AdminPortal />
