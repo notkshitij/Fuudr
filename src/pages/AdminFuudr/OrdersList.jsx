@@ -52,7 +52,8 @@ export default function OrdersList() {
       const matchSearch = !q ||
         o.delivery_name?.toLowerCase().includes(q) ||
         o.id.toLowerCase().includes(q) ||
-        o.delivery_address?.toLowerCase().includes(q);
+        o.delivery_address?.toLowerCase().includes(q) ||
+        o.restaurant_name?.toLowerCase().includes(q);
       
       let matchDate = true;
       if (dateFilter) {
@@ -105,7 +106,7 @@ export default function OrdersList() {
           <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search by name, order ID, address..."
+            placeholder="Search by name, order ID, address, restaurant..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-900 placeholder-slate-400 outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
@@ -166,6 +167,7 @@ export default function OrdersList() {
                 <tr className="bg-slate-50 border-b border-slate-100">
                   <th className="px-5 py-3.5 text-[11px] font-black text-slate-400 uppercase tracking-wider">Order</th>
                   <th className="px-5 py-3.5 text-[11px] font-black text-slate-400 uppercase tracking-wider">Customer</th>
+                  <th className="px-5 py-3.5 text-[11px] font-black text-slate-400 uppercase tracking-wider">Restaurant</th>
                   <th className="px-5 py-3.5 text-[11px] font-black text-slate-400 uppercase tracking-wider">Items</th>
                   <th className="px-5 py-3.5 text-[11px] font-black text-slate-400 uppercase tracking-wider">Total</th>
                   <th className="px-5 py-3.5 text-[11px] font-black text-slate-400 uppercase tracking-wider">Time</th>
@@ -189,6 +191,9 @@ export default function OrdersList() {
                       <td className="px-5 py-4">
                         <div className="font-bold text-slate-900 text-sm">{order.delivery_name || 'N/A'}</div>
                         <div className="text-xs text-slate-400 mt-0.5 truncate max-w-[180px]">{order.delivery_address || '—'}</div>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="font-bold text-slate-900 text-sm truncate max-w-[150px]">{order.restaurant_name || '—'}</div>
                       </td>
                       <td className="px-5 py-4">
                         <div className="text-sm text-slate-600 max-w-[160px] truncate">{preview}{extra ? <span className="text-slate-400">{extra} more</span> : ''}</div>

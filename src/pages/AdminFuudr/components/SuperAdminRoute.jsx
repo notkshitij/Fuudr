@@ -5,10 +5,10 @@ import { supabase } from '../../../supabaseClient';
 const SESSION_KEY = 'fuudr_super_admin_auth';
 
 const FOOD_IMAGES = [
-  'https://images.pexels.com/photos/3850349/pexels-photo-3850349.jpeg?auto=compress&cs=tinysrgb&w=1200',
-  'https://images.pexels.com/photos/5951559/pexels-photo-5951559.jpeg?auto=compress&cs=tinysrgb&w=1200',
-  'https://images.pexels.com/photos/14622417/pexels-photo-14622417.jpeg?auto=compress&cs=tinysrgb&w=1200',
-  'https://images.pexels.com/photos/12084254/pexels-photo-12084254.jpeg?auto=compress&cs=tinysrgb&w=1200',
+  'https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg?auto=compress&cs=tinysrgb&w=1200',
+  'https://images.pexels.com/photos/1049620/pexels-photo-1049620.jpeg?auto=compress&cs=tinysrgb&w=1200',
+  'https://images.pexels.com/photos/376464/pexels-photo-376464.jpeg?auto=compress&cs=tinysrgb&w=1200',
+  'https://images.pexels.com/photos/70497/pexels-photo-70497.jpeg?auto=compress&cs=tinysrgb&w=1200',
 ];
 
 export function SuperAdminRoute({ children }) {
@@ -68,6 +68,8 @@ export function SuperAdminRoute({ children }) {
           position: relative;
           width: 55%;
           overflow: hidden;
+          margin: 16px;
+          border-radius: 28px;
         }
         @media (min-width: 860px) { .sa-left { display: block; } }
 

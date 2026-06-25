@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import { ArrowLeft, MapPin, CreditCard, Clock, Package, Flame, Bike, CheckCircle, ChevronRight, IndianRupee } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Clock, Package, Flame, Bike, CheckCircle, ChevronRight, IndianRupee, UtensilsCrossed, Printer } from 'lucide-react';
 
 const STEPS = [
   { key: 'confirmed',  label: 'Confirmed',  icon: Package, desc: 'Order placed & confirmed' },
@@ -34,6 +34,70 @@ export default function ManageOrder() {
     setUpdating(false);
   };
 
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank');
+    const items = Array.isArray(order.items) ? order.items : [];
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Receipt - #${order.id.slice(-8).toUpperCase()}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: 'Courier New', monospace; padding: 40px; color: #000; position: relative; }
+          .watermark {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 100px; font-weight: 900; color: rgba(0,0,0,0.04);
+            letter-spacing: 10px; pointer-events: none; z-index: 0; white-space: nowrap;
+          }
+          .content { position: relative; z-index: 1; max-width: 400px; margin: 0 auto; }
+          h1 { font-size: 28px; font-weight: 900; letter-spacing: 4px; text-align: center; margin-bottom: 4px; }
+          .subtitle { text-align: center; font-size: 12px; color: #666; margin-bottom: 24px; }
+          .divider { border-top: 1px dashed #999; margin: 16px 0; }
+          .row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+          .label { color: #666; }
+          .items-header { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #666; margin-bottom: 10px; }
+          .item-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+          .total-row { display: flex; justify-content: space-between; font-size: 16px; font-weight: 700; margin-top: 4px; }
+          .footer { text-align: center; font-size: 11px; color: #999; margin-top: 24px; }
+          @media print { body { padding: 20px; } }
+        </style>
+      </head>
+      <body>
+        <div class="watermark">FUUDR</div>
+        <div class="content">
+          <h1>FUUDR</h1>
+          <p class="subtitle">Order Receipt</p>
+          <div class="divider"></div>
+          <div class="row"><span class="label">Order ID</span><span>#${order.id.slice(-8).toUpperCase()}</span></div>
+          <div class="row"><span class="label">Date</span><span>${new Date(order.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span></div>
+          <div class="row"><span class="label">Time</span><span>${new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>
+          ${order.restaurant_name ? `<div class="row"><span class="label">Restaurant</span><span>${order.restaurant_name}</span></div>` : ''}
+          <div class="divider"></div>
+          <div class="row"><span class="label">Customer</span><span>${order.delivery_name || '—'}</span></div>
+          <div class="row"><span class="label">Address</span><span style="max-width:200px;text-align:right">${order.delivery_address || '—'}</span></div>
+          <div class="row"><span class="label">Pincode</span><span>${order.delivery_pincode || '—'}</span></div>
+          <div class="row"><span class="label">Payment</span><span>${order.payment_method || '—'}</span></div>
+          <div class="divider"></div>
+          <div class="items-header">ITEMS</div>
+          ${items.map(item => `
+            <div class="item-row">
+              <span>${item.dishName} x${item.quantity}</span>
+              <span>₹${item.price * item.quantity}</span>
+            </div>
+          `).join('')}
+          <div class="divider"></div>
+          <div class="total-row"><span>TOTAL</span><span>₹${order.total_price}</span></div>
+          <div class="footer">Thank you for ordering with Fuudr!<br/>fuudr.com</div>
+        </div>
+        <script>window.onload = () => { window.print(); }</script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   if (loading) return (
     <div className="space-y-4">
       {[1,2,3].map(i => <div key={i} className="h-32 bg-white rounded-2xl border border-slate-100 animate-pulse" />)}
@@ -54,18 +118,26 @@ export default function ManageOrder() {
     <div className="max-w-5xl mx-auto font-outfit pb-12 space-y-6">
 
       {/* ── Back + Header ── */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => navigate('/adminfuudr/orders')}
-          className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-all"
-        >
-          <ArrowLeft size={16} />
-        </button>
-        <div className="flex items-center gap-2 text-sm text-slate-400 font-medium">
-          <button onClick={() => navigate('/adminfuudr/orders')} className="hover:text-slate-700">Orders</button>
-          <ChevronRight size={14} />
-          <span className="text-slate-700 font-bold">#{order.id.slice(-8).toUpperCase()}</span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/adminfuudr/orders')}
+            className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-all"
+          >
+            <ArrowLeft size={16} />
+          </button>
+          <div className="flex items-center gap-2 text-sm text-slate-400 font-medium">
+            <button onClick={() => navigate('/adminfuudr/orders')} className="hover:text-slate-700">Orders</button>
+            <ChevronRight size={14} />
+            <span className="text-slate-700 font-bold">#{order.id.slice(-8).toUpperCase()}</span>
+          </div>
         </div>
+        <button
+          onClick={handlePrint}
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl font-semibold text-sm hover:bg-slate-50 transition-all"
+        >
+          <Printer size={15} /> Print Receipt
+        </button>
       </div>
 
       {/* ── Order Title + Quick Status ── */}
@@ -145,8 +217,9 @@ export default function ManageOrder() {
 
         {/* Customer Info */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6">
-          <h3 className="font-bold text-slate-900 mb-5 text-base">Customer Information</h3>
+          <h3 className="font-bold text-slate-900 mb-5 text-base">Order Details & Customer</h3>
           <div className="space-y-4">
+            <InfoRow icon={<UtensilsCrossed size={16} />} label="Restaurant" value={order.restaurant_name || '—'} />
             <InfoRow icon={<MapPin size={16} />} label="Delivery Name" value={order.delivery_name || '—'} />
             <InfoRow icon={<MapPin size={16} />} label="Address" value={order.delivery_address || '—'} />
             <InfoRow icon={<MapPin size={16} />} label="Pincode" value={order.delivery_pincode || '—'} />

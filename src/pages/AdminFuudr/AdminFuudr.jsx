@@ -19,7 +19,7 @@ export default function AdminFuudr() {
   const fetchDashboardData = async () => {
     const { data } = await supabase
       .from('orders')
-      .select('id, status, total_price, delivery_name, created_at')
+      .select('id, status, total_price, delivery_name, created_at, restaurant_name')
       .order('created_at', { ascending: false });
 
     if (data) {
@@ -182,6 +182,9 @@ export default function AdminFuudr() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-slate-900 text-sm truncate">{order.delivery_name || 'Unknown'}</p>
+                      {order.restaurant_name && (
+                        <p className="text-xs text-slate-400 truncate">{order.restaurant_name}</p>
+                      )}
                       <p className="text-xs text-slate-400 mt-0.5">#{order.id.slice(0, 8).toUpperCase()} · {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
