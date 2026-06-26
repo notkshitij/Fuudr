@@ -199,6 +199,9 @@
   padding: 0 20px;
   position: relative;
   z-index: 10;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .polaroid {
@@ -208,7 +211,6 @@
   box-shadow: 6px 6px 0px rgba(0,0,0,1);
   width: 280px;
   flex-shrink: 0;
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .polaroid img {
