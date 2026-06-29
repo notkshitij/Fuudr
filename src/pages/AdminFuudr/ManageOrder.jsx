@@ -150,8 +150,15 @@ export default function ManageOrder() {
 
   const handleStatusChange = async (newStatus) => {
     setUpdating(true);
+    console.log('[handleStatusChange] Updating order status to:', newStatus, 'for ID:', id);
     const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', id);
-    if (!error) setOrder(prev => ({ ...prev, status: newStatus }));
+    if (error) {
+      console.error('[handleStatusChange] Supabase Error:', error);
+      alert(`Database Error: ${error.message || JSON.stringify(error)}\nCode: ${error.code || 'None'}`);
+    } else {
+      console.log('[handleStatusChange] Status updated successfully in DB.');
+      setOrder(prev => ({ ...prev, status: newStatus }));
+    }
     setUpdating(false);
   };
 
