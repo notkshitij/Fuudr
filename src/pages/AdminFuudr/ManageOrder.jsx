@@ -19,6 +19,9 @@ export default function ManageOrder() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [distanceInfo, setDistanceInfo] = useState({ distance: '', duration: '' });
+  const [videoUrls, setVideoUrls] = useState({});
+  const [activeVideoList, setActiveVideoList] = useState([]);
+  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
 
   useEffect(() => { fetchOrderDetails(); }, [id]);
 
@@ -66,10 +69,41 @@ export default function ManageOrder() {
     }
   }, [order]);
 
+  useEffect(() => {
+    if (order) {
+      const fetchVideoUrls = async () => {
+        const orderItems = getOrderItems(order);
+        const itemIds = orderItems.map(item => item.menuItemId).filter(Boolean);
+        if (itemIds.length > 0) {
+          try {
+            const { data, error } = await supabase
+              .from('reels')
+              .select('menu_item_id, video_url')
+              .in('menu_item_id', itemIds);
+            if (!error && data) {
+              const mapping = {};
+              data.forEach(row => {
+                if (!mapping[row.menu_item_id]) {
+                  mapping[row.menu_item_id] = [];
+                }
+                mapping[row.menu_item_id].push(row.video_url);
+              });
+              setVideoUrls(mapping);
+            }
+          } catch (err) {
+            console.error('Error fetching reel video URLs:', err);
+          }
+        }
+      };
+      fetchVideoUrls();
+    }
+  }, [order]);
+
   const getOrderItems = (order) => {
     if (!order) return [];
     if (order.bill?.items && Array.isArray(order.bill.items)) {
       return order.bill.items.map(item => ({
+        menuItemId: item.menu_item_id || item.menuItemId,
         dishName: item.name || item.dishName,
         quantity: item.qty || item.quantity || 1,
         price: item.price || 0,
@@ -79,6 +113,7 @@ export default function ManageOrder() {
     }
     if (Array.isArray(order.items)) {
       return order.items.map(item => ({
+        menuItemId: item.menuItemId || item.menu_item_id || item.id,
         dishName: item.dishName || item.name,
         quantity: item.quantity || item.qty || 1,
         price: item.price || 0,
@@ -410,7 +445,8 @@ export default function ManageOrder() {
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Delivery Destination</p>
                   <p className="text-sm font-black text-slate-900 mt-0.5">{order.delivery_name}</p>
-                  <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{order.delivery_address}</p>
+                  <p className="text-xs text-slate-500 font-bold mt-0.5">{order.mobile_no || '—'}</p>
+                  <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">{order.delivery_address}</p>
                   <div className="mt-2.5">
                     <a
                       href={
@@ -453,22 +489,130 @@ export default function ManageOrder() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-slate-900 text-sm truncate">{item.dishName}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1 ${item.isVeg ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                    {item.isVeg ? 'Veg' : 'Non-veg'} · Qty: {item.quantity}
+                  <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-2">
+                    <span>
+                      <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1 ${item.isVeg ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                      {item.isVeg ? 'Veg' : 'Non-veg'} · Qty: {item.quantity}
+                    </span>
+                    {item.menuItemId && videoUrls[item.menuItemId] && videoUrls[item.menuItemId].length > 0 && (
+                      <button
+                        onClick={() => {
+                          setActiveVideoList(videoUrls[item.menuItemId]);
+                          setActiveVideoIndex(0);
+                        }}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 hover:bg-orange-100 text-orange-600 text-[10px] font-bold transition-all border border-orange-100 shadow-sm"
+                      >
+                        <Flame size={10} className="animate-pulse" />
+                        Watch {videoUrls[item.menuItemId].length > 1 ? `${videoUrls[item.menuItemId].length} Reels` : 'Reel'}
+                      </button>
+                    )}
                   </p>
                 </div>
                 <p className="font-black text-slate-900 text-sm flex-shrink-0">₹{item.price * item.quantity}</p>
               </div>
             ))}
           </div>
-          <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-500 flex items-center gap-1"><IndianRupee size={13} />Total</span>
-            <span className="text-xl font-black text-slate-900">₹{order.bill?.total ?? order.total_price}</span>
+          <div className="border-t border-slate-100 pt-4 mt-5 space-y-2">
+            <div className="flex justify-between items-center text-xs text-slate-500 font-bold">
+              <span>Subtotal</span>
+              <span>₹{order.bill?.subtotal ?? 0}</span>
+            </div>
+            <div className="flex justify-between items-center text-xs text-slate-500 font-bold">
+              <span>Delivery Fee</span>
+              <span>₹{order.bill?.delivery_fee ?? 0}</span>
+            </div>
+            {order.bill?.discount > 0 && (
+              <div className="flex justify-between items-center text-xs text-rose-500 font-bold">
+                <span>Discount</span>
+                <span>-₹{order.bill.discount}</span>
+              </div>
+            )}
+            {order.bill?.taxes > 0 && (
+              <div className="flex justify-between items-center text-xs text-slate-500 font-bold">
+                <span>Taxes & Charges</span>
+                <span>₹{order.bill.taxes}</span>
+              </div>
+            )}
+            <div className="border-t border-dashed border-slate-200 pt-3 mt-1 flex justify-between items-center">
+              <span className="text-sm font-black text-slate-800 flex items-center gap-1"><IndianRupee size={13} />Grand Total</span>
+              <span className="text-xl font-black text-slate-950">₹{order.bill?.total ?? order.total_price ?? 0}</span>
+            </div>
           </div>
         </div>
 
       </div>
+
+      {/* ── Video Player Modal Overlay ── */}
+      {activeVideoList.length > 0 && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 rounded-3xl overflow-hidden max-w-sm w-full relative border border-slate-800 shadow-2xl flex flex-col">
+            {/* Story Style Progress Dashes */}
+            {activeVideoList.length > 1 && (
+              <div className="absolute top-4 left-4 right-4 z-20 flex gap-1">
+                {activeVideoList.map((_, idx) => (
+                  <div
+                    key={idx}
+                    className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                      idx === activeVideoIndex ? 'bg-orange-500' : 'bg-white/30'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+
+            <button
+              onClick={() => {
+                setActiveVideoList([]);
+                setActiveVideoIndex(0);
+              }}
+              className="absolute top-8 right-4 z-20 w-8 h-8 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-all text-lg font-bold"
+            >
+              ×
+            </button>
+
+            <div className="aspect-[9/16] w-full bg-black flex items-center justify-center relative">
+              {/* Left Tap Target */}
+              {activeVideoIndex > 0 && (
+                <button
+                  onClick={() => setActiveVideoIndex(prev => prev - 1)}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition-all border border-white/10"
+                >
+                  ‹
+                </button>
+              )}
+
+              {/* Right Tap Target */}
+              {activeVideoIndex < activeVideoList.length - 1 && (
+                <button
+                  onClick={() => setActiveVideoIndex(prev => prev + 1)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 transition-all border border-white/10"
+                >
+                  ›
+                </button>
+              )}
+
+              <video
+                key={activeVideoList[activeVideoIndex]}
+                src={activeVideoList[activeVideoIndex]}
+                controls
+                autoPlay
+                className="w-full h-full object-cover"
+                onEnded={() => {
+                  if (activeVideoIndex < activeVideoList.length - 1) {
+                    setActiveVideoIndex(prev => prev + 1);
+                  } else {
+                    setActiveVideoIndex(0);
+                  }
+                }}
+              />
+            </div>
+            <div className="p-4 bg-slate-900 border-t border-slate-800 text-center flex justify-between items-center px-6">
+              <p className="text-xs font-bold text-slate-400">Reel {activeVideoIndex + 1} of {activeVideoList.length}</p>
+              <p className="text-sm font-bold text-orange-500 uppercase tracking-widest text-[10px]">Fuudr food reel</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
