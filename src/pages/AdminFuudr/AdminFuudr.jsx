@@ -4,32 +4,48 @@ import { ArrowRight, ShoppingBag, CheckCircle, Clock, Bike, Package, TrendingUp,
 import { supabase } from '../../supabaseClient';
 
 const STATUS_CONFIG = {
-  confirmed:  { label: 'Confirmed',   color: 'text-slate-700',   bg: 'bg-slate-100',   dot: 'bg-slate-500',   icon: Package },
+  placed:     { label: 'Placed',      color: 'text-slate-700',   bg: 'bg-slate-100',   dot: 'bg-slate-500',   icon: Package },
   preparing:  { label: 'Preparing',   color: 'text-amber-700',   bg: 'bg-amber-50',    dot: 'bg-amber-500',   icon: Clock },
   on_the_way: { label: 'On the Way',  color: 'text-blue-700',    bg: 'bg-blue-50',     dot: 'bg-blue-500',    icon: Bike },
   delivered:  { label: 'Delivered',   color: 'text-emerald-700', bg: 'bg-emerald-50',  dot: 'bg-emerald-500', icon: CheckCircle },
+  cancelled:  { label: 'Cancelled',   color: 'text-rose-700',    bg: 'bg-rose-50',     dot: 'bg-rose-500',    icon: CheckCircle },
 };
 
 export default function AdminFuudr() {
   const navigate = useNavigate();
-  const [stats, setStats] = useState({ total: 0, confirmed: 0, preparing: 0, on_the_way: 0, delivered: 0, revenue: 0 });
+  const [stats, setStats] = useState({ total: 0, placed: 0, preparing: 0, on_the_way: 0, delivered: 0, cancelled: 0, revenue: 0 });
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchDashboardData = async () => {
     const { data } = await supabase
       .from('orders')
-      .select('id, status, total_price, delivery_name, created_at, restaurant_name')
+      .select(`
+        id,
+        status,
+        bill,
+        delivery_name,
+        created_at,
+        partners!orders_partner_id_fkey (
+          restaurant_name
+        )
+      `)
       .order('created_at', { ascending: false });
 
     if (data) {
-      const s = { total: data.length, confirmed: 0, preparing: 0, on_the_way: 0, delivered: 0, revenue: 0 };
+      const s = { total: data.length, placed: 0, preparing: 0, on_the_way: 0, delivered: 0, cancelled: 0, revenue: 0 };
       data.forEach(o => {
         if (s[o.status] !== undefined) s[o.status]++;
-        s.revenue += Number(o.total_price) || 0;
+        if (o.status !== 'cancelled') {
+          const totalPrice = o.bill?.total ?? o.total_price ?? 0;
+          s.revenue += Number(totalPrice) || 0;
+        }
       });
       setStats(s);
-      setRecentOrders(data.slice(0, 5));
+      setRecentOrders(data.slice(0, 5).map(o => ({
+        ...o,
+        restaurant_name: o.partners?.restaurant_name ?? o.restaurant_name
+      })));
     }
     setLoading(false);
   };
@@ -43,7 +59,7 @@ export default function AdminFuudr() {
     return () => supabase.removeChannel(sub);
   }, []);
 
-  const activeCount = stats.confirmed + stats.preparing + stats.on_the_way;
+  const activeCount = stats.placed + stats.preparing + stats.on_the_way;
 
   const statCards = [
     { label: 'Total Orders',   value: stats.total,          icon: ShoppingBag,  accent: 'orange' },
@@ -169,7 +185,7 @@ export default function AdminFuudr() {
           ) : (
             <div className="space-y-2">
               {recentOrders.map(order => {
-                const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.confirmed;
+                const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.placed;
                 const Icon = cfg.icon;
                 return (
                   <button
@@ -185,7 +201,7 @@ export default function AdminFuudr() {
                       {order.restaurant_name && (
                         <p className="text-xs text-slate-400 truncate">{order.restaurant_name}</p>
                       )}
-                      <p className="text-xs text-slate-400 mt-0.5">#{order.id.slice(0, 8).toUpperCase()} · {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">#{order.id.split('-').pop().toUpperCase()} · {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className={`text-xs font-bold px-2 py-1 rounded-lg ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>

@@ -21,6 +21,14 @@ const playDing = () => {
 
 const sendEmailNotification = async (order) => {
   try {
+    let itemsList = [];
+    if (order.bill?.items && Array.isArray(order.bill.items)) {
+      itemsList = order.bill.items.map(i => `${i.name || i.dishName} x${i.qty || i.quantity || 1}`);
+    } else if (Array.isArray(order.items)) {
+      itemsList = order.items.map(i => `${i.dishName || i.name} x${i.quantity || i.qty || 1}`);
+    }
+    const totalPrice = order.bill?.total ?? order.total_price ?? 0;
+
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -34,12 +42,12 @@ const sendEmailNotification = async (order) => {
         html: `
           <h2>New Order Received!</h2>
           <p><strong>Order ID:</strong> #${order.id?.slice(-8).toUpperCase()}</p>
-          <p><strong>Customer:</strong> ${order.delivery_name}</p>
-          <p><strong>Address:</strong> ${order.delivery_address}</p>
-          <p><strong>Restaurant:</strong> ${order.restaurant_name}</p>
-          <p><strong>Items:</strong> ${order.items?.map(i => `${i.dishName} x${i.quantity}`).join(', ')}</p>
-          <p><strong>Total:</strong> ₹${order.total_price}</p>
-          <p><strong>Payment:</strong> ${order.payment_method}</p>
+          <p><strong>Customer:</strong> ${order.delivery_name || '—'}</p>
+          <p><strong>Address:</strong> ${order.delivery_address || '—'}</p>
+          <p><strong>Restaurant:</strong> ${order.restaurant_name || '—'}</p>
+          <p><strong>Items:</strong> ${itemsList.join(', ')}</p>
+          <p><strong>Total:</strong> ₹${totalPrice}</p>
+          <p><strong>Payment:</strong> ${order.bill?.payment_method ?? order.payment_method ?? '—'}</p>
           <p><strong>Status:</strong> ${order.status}</p>
           <p><strong>Time:</strong> ${new Date(order.created_at).toLocaleString('en-IN')}</p>
         `
@@ -65,14 +73,33 @@ export function useNewOrderNotification() {
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'orders' },
-        (payload) => {
-          setNewOrder(payload.new);
+        async (payload) => {
+          const newOrderData = payload.new;
+          
+          let partnerName = 'Restaurant';
+          if (newOrderData.partner_id) {
+            const { data } = await supabase
+              .from('partners')
+              .select('restaurant_name')
+              .eq('id', newOrderData.partner_id)
+              .single();
+            if (data) partnerName = data.restaurant_name;
+          }
+
+          const orderWithRestaurant = {
+            ...newOrderData,
+            restaurant_name: partnerName
+          };
+
+          setNewOrder(orderWithRestaurant);
           playDing();
-          sendEmailNotification(payload.new);
+          sendEmailNotification(orderWithRestaurant);
+
+          const totalPrice = orderWithRestaurant.bill?.total ?? orderWithRestaurant.total_price ?? 0;
 
           if ('Notification' in window && Notification.permission === 'granted') {
             new Notification('🛎 New Order — Fuudr', {
-              body: `${payload.new.delivery_name || 'Customer'} · ₹${payload.new.total_price}`,
+              body: `${orderWithRestaurant.delivery_name || 'Customer'} · ₹${totalPrice}`,
               icon: '/favicon.png',
             });
           }
