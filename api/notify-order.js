@@ -39,6 +39,19 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'SMTP configurations missing' });
     }
 
+    // Safely parse JSON bill column if it comes in as a string
+    let parsedBill = order.bill;
+    if (typeof parsedBill === 'string') {
+      try {
+        parsedBill = JSON.parse(parsedBill);
+      } catch (e) {
+        console.error('Failed to parse bill JSON string', e);
+      }
+    }
+    const totalPrice = (parsedBill && typeof parsedBill === 'object')
+      ? (parsedBill.total ?? parsedBill.grandTotal ?? order.total_price ?? 0)
+      : (order.total_price ?? 0);
+
     const transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 465,
@@ -62,11 +75,11 @@ export default async function handler(req, res) {
             <tr><td style="padding: 6px 0; color: #888;">Order ID:</td><td style="padding: 6px 0; font-weight: bold; text-align: right;">${order.id}</td></tr>
             <tr><td style="padding: 6px 0; color: #888;">Customer:</td><td style="padding: 6px 0; font-weight: bold; text-align: right;">${order.delivery_name || 'N/A'}</td></tr>
             <tr><td style="padding: 6px 0; color: #888;">Address:</td><td style="padding: 6px 0; font-weight: bold; text-align: right;">${order.delivery_address || 'N/A'}</td></tr>
-            <tr><td style="padding: 6px 0; color: #888;">Total Amount:</td><td style="padding: 6px 0; font-weight: bold; text-align: right; color: #2e7d32; font-size: 16px;">$${order.total_price || '0.00'}</td></tr>
+            <tr><td style="padding: 6px 0; color: #888;">Total Amount:</td><td style="padding: 6px 0; font-weight: bold; text-align: right; color: #2e7d32; font-size: 16px;">₹${totalPrice}</td></tr>
           </table>
           <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
           <div style="text-align: center; margin-top: 25px;">
-            <a href="https://fuudr-admin.vercel.app/" style="background: #FF4500; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">View Live Orders Portal</a>
+            <a href="https://fuudr.com/adminfuudr" style="background: #FF4500; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">View Live Orders Portal</a>
           </div>
         </div>
       `,
