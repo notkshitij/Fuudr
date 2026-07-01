@@ -12,6 +12,53 @@ const STEPS = [
 
 const STEP_INDEX = { placed: 0, preparing: 1, on_the_way: 2, delivered: 3 };
 
+function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+const loadGoogleMapsScript = (apiKey) => {
+  return new Promise((resolve, reject) => {
+    if (window.google && window.google.maps) {
+      resolve(window.google.maps);
+      return;
+    }
+    const scriptId = 'google-maps-script';
+    let script = document.getElementById(scriptId);
+    if (!script) {
+      script = document.createElement('script');
+      script.id = scriptId;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+
+    function handleLoad() {
+      resolve(window.google.maps);
+      script.removeEventListener('load', handleLoad);
+      script.removeEventListener('error', handleError);
+    }
+    function handleError(err) {
+      reject(err);
+      script.removeEventListener('load', handleLoad);
+      script.removeEventListener('error', handleError);
+    }
+
+    script.addEventListener('load', handleLoad);
+    script.addEventListener('error', handleError);
+  });
+};
+
 export default function ManageOrder() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -27,7 +74,26 @@ export default function ManageOrder() {
 
   useEffect(() => {
     if (order) {
-      const getFallbackDistance = (orderId) => {
+      const getFallbackDistance = (orderObj) => {
+        if (
+          orderObj.partners?.latitude &&
+          orderObj.partners?.longitude &&
+          orderObj.delivery_latitude &&
+          orderObj.delivery_longitude
+        ) {
+          const distanceKm = calculateHaversineDistance(
+            orderObj.partners.latitude,
+            orderObj.partners.longitude,
+            orderObj.delivery_latitude,
+            orderObj.delivery_longitude
+          );
+          // Standard estimate: driving distance is usually ~1.25x straight-line distance
+          const estDistance = (distanceKm * 1.25).toFixed(1);
+          const durationMin = Math.round(estDistance * 3.5 + 2);
+          return { distance: `${estDistance} km`, duration: `${durationMin} mins` };
+        }
+
+        const orderId = orderObj.id;
         if (!orderId) return { distance: '3.2 km', duration: '12 mins' };
         const charCodeSum = orderId.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
         const distanceKm = (2.1 + (charCodeSum % 35) / 10).toFixed(1);
@@ -36,29 +102,42 @@ export default function ManageOrder() {
       };
 
       const getDistance = async () => {
-        const fallback = getFallbackDistance(order.id);
+        const fallback = getFallbackDistance(order);
         if (order.partners?.latitude && order.partners?.longitude && order.delivery_address) {
           try {
-            const origin = `${order.partners.latitude},${order.partners.longitude}`;
-            const dest = (order.delivery_latitude && order.delivery_longitude)
-              ? `${order.delivery_latitude},${order.delivery_longitude}`
-              : encodeURIComponent(order.delivery_address);
             const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
             if (!apiKey) {
               setDistanceInfo(fallback);
               return;
             }
-            const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin}&destinations=${dest}&key=${apiKey}`;
-            const res = await fetch(url);
-            const data = await res.json();
-            if (data.rows?.[0]?.elements?.[0]?.status === 'OK') {
-              const distText = data.rows[0].elements[0].distance.text;
-              const durText = data.rows[0].elements[0].duration.text;
-              setDistanceInfo({ distance: distText, duration: durText });
-            } else {
-              setDistanceInfo(fallback);
-            }
+
+            const maps = await loadGoogleMapsScript(apiKey);
+            const service = new maps.DistanceMatrixService();
+
+            const origin = new maps.LatLng(order.partners.latitude, order.partners.longitude);
+            const dest = (order.delivery_latitude && order.delivery_longitude)
+              ? new maps.LatLng(order.delivery_latitude, order.delivery_longitude)
+              : order.delivery_address;
+
+            service.getDistanceMatrix(
+              {
+                origins: [origin],
+                destinations: [dest],
+                travelMode: maps.TravelMode.DRIVING,
+              },
+              (response, status) => {
+                if (status === 'OK' && response?.rows?.[0]?.elements?.[0]?.status === 'OK') {
+                  const distText = response.rows[0].elements[0].distance.text;
+                  const durText = response.rows[0].elements[0].duration.text;
+                  setDistanceInfo({ distance: distText, duration: durText });
+                } else {
+                  console.warn('Google Maps DistanceMatrix API response status not OK:', status, response);
+                  setDistanceInfo(fallback);
+                }
+              }
+            );
           } catch (e) {
+            console.error('Error loading Google Maps script or calling DistanceMatrix:', e);
             setDistanceInfo(fallback);
           }
         } else {
