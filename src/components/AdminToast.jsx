@@ -12,7 +12,7 @@ export function AdminToast({ order, onClose }) {
             <span>🛎</span> New Order!
           </h4>
           <p className="text-slate-300 text-sm mt-1">
-            {order.delivery_name || 'Unknown'} &middot; ₹{order.total_price}
+            {order.delivery_name || 'Unknown'} &middot; ₹{order.bill?.total ?? order.total_price}
           </p>
         </div>
         <button 

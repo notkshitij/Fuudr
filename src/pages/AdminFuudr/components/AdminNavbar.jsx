@@ -15,7 +15,7 @@ export function AdminNavbar() {
       const { count } = await supabase
         .from('orders')
         .select('*', { count: 'exact', head: true })
-        .in('status', ['confirmed', 'preparing', 'on_the_way']);
+        .in('status', ['placed', 'preparing', 'on_the_way']);
       setLiveCount(count || 0);
     };
     fetchActive();

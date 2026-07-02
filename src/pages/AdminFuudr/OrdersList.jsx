@@ -5,10 +5,11 @@ import { Eye, Search, Filter, Package, Clock, Bike, CheckCircle, RefreshCw } fro
 
 const STATUS_CONFIG = {
   all:        { label: 'All Orders',  color: 'text-slate-700',   bg: 'bg-slate-100',  dot: 'bg-slate-400' },
-  confirmed:  { label: 'Confirmed',   color: 'text-slate-700',   bg: 'bg-slate-100',  dot: 'bg-slate-500',   icon: Package },
-  preparing:  { label: 'Preparing',   color: 'text-amber-700',   bg: 'bg-amber-50',   dot: 'bg-amber-500',   icon: Clock },
-  on_the_way: { label: 'On the Way',  color: 'text-blue-700',    bg: 'bg-blue-50',    dot: 'bg-blue-500',    icon: Bike },
-  delivered:  { label: 'Delivered',   color: 'text-emerald-700', bg: 'bg-emerald-50', dot: 'bg-emerald-500', icon: CheckCircle },
+  placed:     { label: 'Placed',      color: 'text-slate-700',   bg: 'bg-slate-100',  dot: 'bg-slate-500',   icon: Package },
+  preparing:  { label: 'Preparing',   color: 'text-amber-700',   bg: 'bg-amber-50',    dot: 'bg-amber-500',   icon: Clock },
+  on_the_way: { label: 'On the Way',  color: 'text-blue-700',    bg: 'bg-blue-50',     dot: 'bg-blue-500',    icon: Bike },
+  delivered:  { label: 'Delivered',   color: 'text-emerald-700', bg: 'bg-emerald-50',  dot: 'bg-emerald-500', icon: CheckCircle },
+  cancelled:  { label: 'Cancelled',   color: 'text-rose-700',    bg: 'bg-rose-50',     dot: 'bg-rose-500',    icon: CheckCircle },
 };
 
 export default function OrdersList() {
@@ -22,9 +23,20 @@ export default function OrdersList() {
   const fetchOrders = async () => {
     const { data, error } = await supabase
       .from('orders')
-      .select('*')
+      .select(`
+        *,
+        partners!orders_partner_id_fkey (
+          restaurant_name
+        )
+      `)
       .order('created_at', { ascending: false });
-    if (!error && data) setOrders(data);
+    if (!error && data) {
+      const normalized = data.map(o => ({
+        ...o,
+        restaurant_name: o.partners?.restaurant_name ?? o.restaurant_name
+      }));
+      setOrders(normalized);
+    }
     setLoading(false);
   };
 
@@ -39,7 +51,7 @@ export default function OrdersList() {
 
   // Tab counts
   const counts = useMemo(() => {
-    const c = { all: orders.length, confirmed: 0, preparing: 0, on_the_way: 0, delivered: 0 };
+    const c = { all: orders.length, placed: 0, preparing: 0, on_the_way: 0, delivered: 0, cancelled: 0 };
     orders.forEach(o => { if (c[o.status] !== undefined) c[o.status]++; });
     return c;
   }, [orders]);
@@ -69,7 +81,7 @@ export default function OrdersList() {
     });
   }, [orders, activeTab, search, dateFilter]);
 
-  const activeOrders = counts.confirmed + counts.preparing + counts.on_the_way;
+  const activeOrders = counts.placed + counts.preparing + counts.on_the_way;
 
   return (
     <div className="font-outfit space-y-6">
@@ -177,15 +189,35 @@ export default function OrdersList() {
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {filtered.map((order) => {
-                  const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.confirmed;
-                  const items = Array.isArray(order.items) ? order.items : [];
+                  const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.placed;
+                  const parts = order.id.split('-');
+                  const displayId = parts[parts.length - 1].toUpperCase();
+
+                  let items = [];
+                  if (order.bill?.items && Array.isArray(order.bill.items)) {
+                    items = order.bill.items.map(i => ({
+                      dishName: i.name || i.dishName,
+                      quantity: i.qty || i.quantity || 1,
+                      price: i.price || 0,
+                      isVeg: i.isVeg !== undefined ? i.isVeg : true
+                    }));
+                  } else if (Array.isArray(order.items)) {
+                    items = order.items.map(i => ({
+                      dishName: i.dishName || i.name,
+                      quantity: i.quantity || i.qty || 1,
+                      price: i.price || 0,
+                      isVeg: i.isVeg !== undefined ? i.isVeg : true
+                    }));
+                  }
+
                   const preview = items.slice(0, 2).map(i => i.dishName).join(', ');
                   const extra = items.length > 2 ? ` +${items.length - 2}` : '';
+                  const totalPrice = order.bill?.total ?? order.total_price ?? 0;
                   return (
                     <tr key={order.id} className="hover:bg-slate-50/70 transition-colors">
                       <td className="px-5 py-4 whitespace-nowrap">
                         <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
-                          #{order.id.slice(-8).toUpperCase()}
+                          #{displayId}
                         </span>
                       </td>
                       <td className="px-5 py-4">
@@ -200,7 +232,7 @@ export default function OrdersList() {
                         <div className="text-xs text-slate-400 mt-0.5">{items.length} item{items.length !== 1 ? 's' : ''}</div>
                       </td>
                       <td className="px-5 py-4 whitespace-nowrap">
-                        <span className="font-black text-slate-900">₹{order.total_price}</span>
+                        <span className="font-black text-slate-900">₹{totalPrice}</span>
                       </td>
                       <td className="px-5 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-slate-700">{new Date(order.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</div>
