@@ -1,15 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { Save, Building2, Clock, FileText, Image as ImageIcon, Upload, ShieldCheck, MapPin, Mail, Phone, User, CheckCircle2, CalendarDays } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Save, Building2, Clock, FileText, Image as ImageIcon, Upload, ShieldCheck, MapPin, Mail, Phone, User, CheckCircle2, CalendarDays, ChevronDown, UtensilsCrossed } from 'lucide-react';
 import { supabase } from '../../../supabaseClient';
 import { uploadToCloudinary } from '../../../utils/cloudinary';
 import AddressAutocomplete from '../../../components/Partner/AddressAutocomplete';
 import SimpleTimePicker from '../../../components/Partner/SimpleTimePicker';
+
+const restaurantTypes = [
+  { value: 'Restaurant', label: 'Restaurant' },
+  { value: 'Cafe', label: 'Cafe' },
+  { value: 'Fine Dining', label: 'Fine Dining' },
+  { value: 'Fast Food', label: 'Fast Food' },
+  { value: 'Food Truck', label: 'Food Truck' },
+  { value: 'Bakery', label: 'Bakery' },
+  { value: 'Cloud Kitchen', label: 'Cloud Kitchen' }
+];
 
 const Settings = ({ user }) => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [activeTab, setActiveTab] = useState('basic'); // 'basic', 'operating', 'legal'
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -247,14 +269,40 @@ const Settings = ({ user }) => {
 
               <div>
                 <label className={labelClasses}>Restaurant Type</label>
-                <select name="restaurant_type" value={formData.restaurant_type} onChange={handleChange} className={inputClasses}>
-                  <option value="Cafe">Cafe</option>
-                  <option value="Fine Dining">Fine Dining</option>
-                  <option value="Fast Food">Fast Food</option>
-                  <option value="Food Truck">Food Truck</option>
-                  <option value="Bakery">Bakery</option>
-                  <option value="Cloud Kitchen">Cloud Kitchen</option>
-                </select>
+                <div className="relative w-full md:max-w-sm" ref={dropdownRef}>
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+                    <UtensilsCrossed className="text-slate-400" size={18} />
+                  </div>
+                  
+                  {/* Custom Dropdown Trigger */}
+                  <button 
+                    type="button"
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className={`${inputClasses} pl-11 pr-10 flex items-center justify-between text-left cursor-pointer`}
+                  >
+                    <span className="truncate">{formData.restaurant_type || 'Select Type'}</span>
+                    <ChevronDown size={18} className={`text-slate-400 transition-transform duration-300 shrink-0 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {/* Custom Dropdown Menu */}
+                  <div 
+                    className={`absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 shadow-xl rounded-2xl overflow-hidden z-30 transition-all duration-300 origin-top transform ${isDropdownOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-95 pointer-events-none'}`}
+                  >
+                    {restaurantTypes.map(type => (
+                      <button 
+                        key={type.value}
+                        type="button"
+                        className={`w-full px-5 py-3 text-left transition-colors flex items-center justify-between text-sm cursor-pointer ${formData.restaurant_type === type.value ? 'bg-orange-50 text-orange-600 font-bold' : 'text-slate-700 hover:bg-slate-50'}`}
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, restaurant_type: type.value }));
+                          setIsDropdownOpen(false);
+                        }}
+                      >
+                        {type.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div>

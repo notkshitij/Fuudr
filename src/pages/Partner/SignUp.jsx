@@ -19,14 +19,6 @@ import AuthLayout from '../../components/Partner/AuthLayout';
 import AddressAutocomplete from '../../components/Partner/AddressAutocomplete';
 import { supabase } from '../../supabaseClient';
 
-// Utility function to hash password securely
-async function hashPassword(password) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
 const restaurantTypes = [
   { value: 'bakery', label: 'Bakery' },
   { value: 'cafe', label: 'Cafe' },
@@ -92,37 +84,30 @@ const SignUp = () => {
         throw new Error("Please select your restaurant address from the suggestions list.");
       }
 
-      // Hash the password before saving
-      const hashedPassword = await hashPassword(formData.password);
+      // Register the partner directly (custom email/password auth, hashed server-side via RPC)
+      const { data: partnerData, error: partnerError } = await supabase
+        .rpc('register_partner', {
+          p_restaurant_name: formData.restaurantName,
+          p_owner_name: formData.ownerName,
+          p_mobile_number: formData.mobileNumber,
+          p_email: formData.email,
+          p_password: formData.password,
+          p_address: formData.address,
+          p_latitude: formData.latitude,
+          p_longitude: formData.longitude,
+          p_google_map_link: formData.googleMapLink || null,
+          p_avg_rating: formData.avgRating,
+          p_total_reviews: formData.totalReviews,
+          p_restaurant_type: formData.restaurantType,
+          p_provides_delivery: formData.providesDelivery === 'yes'
+        });
 
-      const { data, error } = await supabase
-        .from('partners')
-        .insert([
-          {
-            restaurant_name: formData.restaurantName,
-            owner_name: formData.ownerName,
-            mobile_number: formData.mobileNumber,
-            email: formData.email,
-            address: formData.address,
-            latitude: formData.latitude,
-            longitude: formData.longitude,
-            google_map_link: formData.googleMapLink || null,
-            avg_rating: formData.avgRating,
-            total_reviews: formData.totalReviews,
-            restaurant_type: formData.restaurantType,
-            provides_delivery: formData.providesDelivery === 'yes',
-            password: hashedPassword // Storing the hash
-          }
-        ])
-        .select()
-        .single();
-
-      if (error || !data) {
-        throw error || new Error('Failed to create account.');
+      if (partnerError || !partnerData) {
+        throw partnerError || new Error('Failed to create partner profile.');
       }
 
-      // Save user session
-      localStorage.setItem('partnerUser', JSON.stringify(data));
+      // Save user session in localStorage (matching existing structure)
+      localStorage.setItem('partnerUser', JSON.stringify(partnerData));
 
       // Success, redirect to Onboarding
       navigate('/partner/setup-profile');
@@ -142,15 +127,7 @@ const SignUp = () => {
           friendlyMessage = "An account with these details already exists. Please sign in instead.";
         }
       } else if (err?.message) {
-        // Only show messages we explicitly threw ourselves (validation errors);
-        // hide raw Supabase/Postgres errors from the user.
-        const knownValidationMessages = [
-          "Please enter a valid mobile number.",
-          "Please select your restaurant address from the suggestions list."
-        ];
-        friendlyMessage = knownValidationMessages.includes(err.message)
-          ? err.message
-          : "We couldn't create your account right now. Please check your details and try again.";
+        friendlyMessage = err.message;
       }
 
       setErrorMsg(friendlyMessage);

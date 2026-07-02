@@ -5,14 +5,6 @@ import { Mail, Lock, ArrowRight } from 'lucide-react';
 import AuthLayout from '../../components/Partner/AuthLayout';
 import { supabase } from '../../supabaseClient';
 
-// Utility function to hash password securely
-async function hashPassword(password) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
 const SignIn = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -35,26 +27,22 @@ const SignIn = () => {
     setErrorMsg('');
 
     try {
-      // Hash the password to match against the DB
-      const hashedPassword = await hashPassword(credentials.password);
+      // Log in directly against the partners table (custom email/password auth via RPC)
+      const { data: partnerData, error: partnerError } = await supabase
+        .rpc('login_partner', {
+          p_email: credentials.identifier,
+          p_password: credentials.password,
+        });
 
-      // Query the partners table where email matches the input
-      const { data, error } = await supabase
-        .from('partners')
-        .select('*')
-        .eq('email', credentials.identifier)
-        .eq('password', hashedPassword)
-        .single(); // we expect exactly one match
-
-      if (error || !data) {
+      if (partnerError || !partnerData) {
         throw new Error('Invalid email or password.');
       }
 
-      // Save user session
-      localStorage.setItem('partnerUser', JSON.stringify(data));
+      // Save user session in localStorage (matching existing structure)
+      localStorage.setItem('partnerUser', JSON.stringify(partnerData));
       
       // Check if profile setup is incomplete (e.g., missing opening_time)
-      if (!data.opening_time) {
+      if (!partnerData.opening_time) {
         navigate('/partner/setup-profile');
       } else {
         navigate('/partner/dashboard');
