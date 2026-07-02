@@ -27,27 +27,26 @@ html, body {
   font-size: 16px;
   line-height: 1.4;
   overflow-x: hidden;
-  scrollbar-width: auto; /* Firefox */
-  scrollbar-color: #888 #111;
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: var(--bg) var(--bg-dark); /* Firefox */
 }
 
 /* Custom Scrollbar for Chrome, Safari and Opera */
 ::-webkit-scrollbar {
-  width: 14px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #111;
+  background: var(--bg-dark);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 10px;
-  border: 3px solid #111;
+  background: var(--bg);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #aaa;
+  background: #D68400;
 }
 
 img {
