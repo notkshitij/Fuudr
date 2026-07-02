@@ -10,7 +10,9 @@ import {
   ArrowRight,
   ChevronDown,
   Eye,
-  EyeOff
+  EyeOff,
+  AlertCircle,
+  X
 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import AuthLayout from '../../components/Partner/AuthLayout';
@@ -126,8 +128,32 @@ const SignUp = () => {
       navigate('/partner/setup-profile');
       
     } catch (err) {
-      console.error("Error signing up:", err.message);
-      setErrorMsg(err.message || "Something went wrong. Please try again.");
+      console.error("Error signing up:", err);
+
+      // Translate raw DB/network errors into friendly, user-facing messages
+      let friendlyMessage = "Something went wrong. Please try again.";
+
+      if (err?.code === '23505') {
+        if (err.message?.includes('mobile_number')) {
+          friendlyMessage = "This mobile number is already registered. Please sign in instead, or use a different number.";
+        } else if (err.message?.includes('email')) {
+          friendlyMessage = "This email is already registered. Please sign in instead, or use a different email.";
+        } else {
+          friendlyMessage = "An account with these details already exists. Please sign in instead.";
+        }
+      } else if (err?.message) {
+        // Only show messages we explicitly threw ourselves (validation errors);
+        // hide raw Supabase/Postgres errors from the user.
+        const knownValidationMessages = [
+          "Please enter a valid mobile number.",
+          "Please select your restaurant address from the suggestions list."
+        ];
+        friendlyMessage = knownValidationMessages.includes(err.message)
+          ? err.message
+          : "We couldn't create your account right now. Please check your details and try again.";
+      }
+
+      setErrorMsg(friendlyMessage);
     } finally {
       setLoading(false);
     }
@@ -140,17 +166,45 @@ const SignUp = () => {
         <meta name="description" content="Sign up your restaurant on Fuudr. List your dishes, upload food reels, and start receiving orders from local customers today." />
         <link rel="canonical" href="https://fuudr.com/partner/signup" />
       </Helmet>
+      {/* Error Popup Modal */}
+      {errorMsg && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 relative animate-[fadeIn_0.2s_ease-out]">
+            <button
+              onClick={() => setErrorMsg('')}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
+              aria-label="Close"
+            >
+              <X size={20} />
+            </button>
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center">
+                <AlertCircle className="text-red-500" size={28} />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">Couldn't Register</h3>
+              <p className="text-sm text-slate-500">{errorMsg}</p>
+              <button
+                onClick={() => setErrorMsg('')}
+                className="mt-3 w-full py-2.5 px-6 rounded-lg font-semibold text-white bg-orange-500 hover:bg-orange-600 transition-colors"
+              >
+                Okay
+              </button>
+            </div>
+          </div>
+          <style>{`
+            @keyframes fadeIn {
+              from { opacity: 0; transform: scale(0.96); }
+              to { opacity: 1; transform: scale(1); }
+            }
+          `}</style>
+        </div>
+      )}
+
       <AuthLayout 
         title="Partner With Us" 
         subtitle="Join Fuudr and grow your business today"
       >
         <form onSubmit={handleSubmit} className="space-y-5">
-        
-        {errorMsg && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm font-medium border border-red-200">
-            {errorMsg}
-          </div>
-        )}
 
         {/* Row 1: Restaurant & Owner Name */}
         <div className="flex flex-col md:flex-row gap-5">
