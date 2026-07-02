@@ -22,9 +22,28 @@ export default function TermsOfService() {
           <Link to="/" className="brutal-btn tos-back-btn">← Back to Home</Link>
         </header>
 
-        <main className="tos-card">
+        <div className="tos-container">
+          <aside className="tos-sidebar">
+            <h3>Sections</h3>
+            <a href="#eligibility">1. Eligibility</a>
+            <a href="#your-account">2. Your Account</a>
+            <a href="#what-fuudr-does">3. What Fuudr Does</a>
+            <a href="#orders-pricing">4. Orders &amp; Pricing</a>
+            <a href="#refunds">5. Refunds</a>
+            <a href="#location">6. Location Services</a>
+            <a href="#acceptable-use">7. Acceptable Use</a>
+            <a href="#content">8. App Content</a>
+            <a href="#third-party">9. Third-Party</a>
+            <a href="#disclaimers">10. Disclaimers</a>
+            <a href="#liability">11. Liability</a>
+            <a href="#termination">12. Termination</a>
+            <a href="#changes">13. Changes</a>
+            <a href="#governing-law">14. Governing Law</a>
+            <a href="#contact-us">15. Contact Us</a>
+          </aside>
+
+          <main className="tos-card">
           <h1 className="tos-title">Terms of Service</h1>
-          <p className="tos-updated">Last updated: {LAST_UPDATED}</p>
 
           <p>
             These Terms of Service ("Terms") govern your access to and use of the Fuudr mobile
@@ -33,14 +52,14 @@ export default function TermsOfService() {
             these Terms. If you do not agree, please do not use the App.
           </p>
 
-          <h2>1. Eligibility</h2>
+          <h2 id="eligibility">1. Eligibility</h2>
           <p>
             You must be at least 13 years old to create a Fuudr account. If you are under 18,
             you may only use the App with the involvement of a parent or legal guardian. By
             using the App, you confirm that you meet these requirements.
           </p>
 
-          <h2>2. Your Account</h2>
+          <h2 id="your-account">2. Your Account</h2>
           <p>
             You sign in to Fuudr using Google Sign-In. You are responsible for keeping your
             account secure and for all activity that happens under your account. Let us know
@@ -48,7 +67,7 @@ export default function TermsOfService() {
             suspect unauthorized use of your account.
           </p>
 
-          <h2>3. What Fuudr Does</h2>
+          <h2 id="what-fuudr-does">3. What Fuudr Does</h2>
           <p>
             Fuudr lets you discover food through short videos and place orders with partner
             restaurants near your location. <strong>Fuudr is a discovery and ordering
@@ -59,7 +78,7 @@ export default function TermsOfService() {
             them where we can.
           </p>
 
-          <h2>4. Orders, Pricing &amp; Payment</h2>
+          <h2 id="orders-pricing">4. Orders, Pricing &amp; Payment</h2>
           <ul>
             <li>Menu prices, availability, and delivery times are set by restaurant partners and may change without notice.</li>
             <li>Once an order is placed and accepted by a restaurant, it generally cannot be cancelled — check the order summary carefully before confirming.</li>
@@ -67,7 +86,7 @@ export default function TermsOfService() {
             <li>Delivery or platform fees, where applicable, will be shown clearly before you confirm an order.</li>
           </ul>
 
-          <h2>5. Cancellations &amp; Refunds</h2>
+          <h2 id="refunds">5. Cancellations &amp; Refunds</h2>
           <p>
             If an order is cancelled by the restaurant, delayed significantly, or arrives
             incorrect or unsafe to consume, contact us at{' '}
@@ -77,7 +96,7 @@ export default function TermsOfService() {
             or payment provider.
           </p>
 
-          <h2>6. Location Services</h2>
+          <h2 id="location">6. Location Services</h2>
           <p>
             The App uses your device's location (with your permission) to show you nearby
             restaurants and estimate delivery. You can disable location access from your
@@ -85,7 +104,7 @@ export default function TermsOfService() {
             it.
           </p>
 
-          <h2>7. Acceptable Use</h2>
+          <h2 id="acceptable-use">7. Acceptable Use</h2>
           <p>You agree not to:</p>
           <ul>
             <li>Use the App for any unlawful purpose or to place fraudulent orders</li>
@@ -98,7 +117,7 @@ export default function TermsOfService() {
             We may suspend or terminate accounts that violate these Terms.
           </p>
 
-          <h2>8. Content in the App</h2>
+          <h2 id="content">8. Content in the App</h2>
           <p>
             Food videos, photos, and descriptions shown in the App may be provided by
             restaurant partners or created by Fuudr. All App content, branding, and
@@ -106,7 +125,7 @@ export default function TermsOfService() {
             permission.
           </p>
 
-          <h2>9. Third-Party Services</h2>
+          <h2 id="third-party">9. Third-Party Services</h2>
           <p>
             The App relies on third-party services — including Google Sign-In for
             authentication, Supabase for backend infrastructure, and a payment gateway for
@@ -114,7 +133,7 @@ export default function TermsOfService() {
             respective terms and privacy policies.
           </p>
 
-          <h2>10. Disclaimers</h2>
+          <h2 id="disclaimers">10. Disclaimers</h2>
           <p>
             The App is provided "as is" and "as available." We do not guarantee that the App
             will be uninterrupted, error-free, or that restaurant partners will always fulfil
@@ -122,7 +141,7 @@ export default function TermsOfService() {
             warranties, express or implied, regarding the App and the food ordered through it.
           </p>
 
-          <h2>11. Limitation of Liability</h2>
+          <h2 id="liability">11. Limitation of Liability</h2>
           <p>
             To the fullest extent permitted by law, Fuudr will not be liable for any indirect,
             incidental, or consequential damages arising from your use of the App, including
@@ -131,33 +150,34 @@ export default function TermsOfService() {
             paid for the order giving rise to the claim.
           </p>
 
-          <h2>12. Account Termination</h2>
+          <h2 id="termination">12. Account Termination</h2>
           <p>
             You may stop using the App and delete your account at any time — see our{' '}
             <Link to="/privacy">Privacy Policy</Link> for how to request account deletion. We
             may suspend or terminate your access if you violate these Terms or misuse the App.
           </p>
 
-          <h2>13. Changes to These Terms</h2>
+          <h2 id="changes">13. Changes to These Terms</h2>
           <p>
             We may update these Terms from time to time. If we make material changes, we will
             notify you in the App or update the "Last updated" date above. Continued use of
             the App after changes take effect means you accept the revised Terms.
           </p>
 
-          <h2>14. Governing Law</h2>
+          <h2 id="governing-law">14. Governing Law</h2>
           <p>
             These Terms are governed by the laws of India, without regard to conflict-of-law
             principles. Any disputes arising from these Terms or your use of the App will be
             subject to the exclusive jurisdiction of the courts in Jaipur, Rajasthan.
           </p>
 
-          <h2>15. Contact Us</h2>
+          <h2 id="contact-us">15. Contact Us</h2>
           <p>
             Questions about these Terms? Reach us at{' '}
             <a href="mailto:solvers.real@gmail.com">solvers.real@gmail.com</a>.
           </p>
         </main>
+        </div>
 
         <footer className="tos-footer">
           © {new Date().getFullYear()} Fuudr. All rights reserved.

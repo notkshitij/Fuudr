@@ -22,9 +22,23 @@ export default function PrivacyPolicy() {
           <Link to="/" className="brutal-btn pp-back-btn">← Back to Home</Link>
         </header>
 
-        <main className="pp-card">
+        <div className="pp-container">
+          <aside className="pp-sidebar">
+            <h3>Sections</h3>
+            <a href="#info-we-collect">1. Info We Collect</a>
+            <a href="#how-we-use">2. How We Use Info</a>
+            <a href="#third-party">3. Third-Party Services</a>
+            <a href="#data-sharing">4. Data Sharing</a>
+            <a href="#data-retention">5. Data Retention</a>
+            <a href="#data-security">6. Data Security</a>
+            <a href="#children-privacy">7. Children's Privacy</a>
+            <a href="#your-choices">8. Your Choices</a>
+            <a href="#changes">9. Changes to Policy</a>
+            <a href="#contact-us">10. Contact Us</a>
+          </aside>
+
+          <main className="pp-card">
           <h1 className="pp-title">Privacy Policy</h1>
-          <p className="pp-updated">Last updated: {LAST_UPDATED}</p>
 
           <p>
             Fuudr ("we", "us", or "our") operates the Fuudr mobile application (the "App"),
@@ -37,7 +51,7 @@ export default function PrivacyPolicy() {
             information in accordance with this policy.
           </p>
 
-          <h2>1. Information We Collect</h2>
+          <h2 id="info-we-collect">1. Information We Collect</h2>
 
           <h3>a. Account information (via Google Sign-In)</h3>
           <p>
@@ -71,7 +85,7 @@ export default function PrivacyPolicy() {
             not store your full card, UPI, or bank account credentials on its own servers.
           </p>
 
-          <h2>2. How We Use Your Information</h2>
+          <h2 id="how-we-use">2. How We Use Your Information</h2>
           <ul>
             <li>To create and maintain your account</li>
             <li>To show you relevant restaurants and food content near your location</li>
@@ -81,7 +95,7 @@ export default function PrivacyPolicy() {
             <li>To maintain the security and integrity of the App</li>
           </ul>
 
-          <h2>3. Third-Party Services</h2>
+          <h2 id="third-party">3. Third-Party Services</h2>
           <p>
             We use the following third-party service providers to operate Fuudr. These
             providers process data on our behalf and are contractually required to protect it:
@@ -101,7 +115,7 @@ export default function PrivacyPolicy() {
             third parties.
           </p>
 
-          <h2>4. Data Sharing</h2>
+          <h2 id="data-sharing">4. Data Sharing</h2>
           <p>
             We share your information only where necessary: with restaurant partners to
             fulfil an order (name, delivery address, order items), with the payment gateway to
@@ -109,7 +123,7 @@ export default function PrivacyPolicy() {
             We may also disclose information if required by law.
           </p>
 
-          <h2>5. Data Retention &amp; Deletion</h2>
+          <h2 id="data-retention">5. Data Retention &amp; Deletion</h2>
           <p>
             We retain your account data for as long as your account is active. You can request
             deletion of your account and associated data at any time:
@@ -128,28 +142,28 @@ export default function PrivacyPolicy() {
             transaction records for tax purposes).
           </p>
 
-          <h2>6. Data Security</h2>
+          <h2 id="data-security">6. Data Security</h2>
           <p>
             We use industry-standard measures — including encryption in transit and access
             controls — to protect your information. However, no method of transmission or
             storage is 100% secure, and we cannot guarantee absolute security.
           </p>
 
-          <h2>7. Children's Privacy</h2>
+          <h2 id="children-privacy">7. Children's Privacy</h2>
           <p>
             Fuudr is not directed at children under 13, and we do not knowingly collect
             personal information from children under 13. If you believe a child has provided
             us with personal information, please contact us so we can remove it.
           </p>
 
-          <h2>8. Your Choices</h2>
+          <h2 id="your-choices">8. Your Choices</h2>
           <ul>
             <li>You can edit or update your profile information within the App.</li>
             <li>You can revoke location permission from your device settings at any time.</li>
             <li>You can request a copy or deletion of your data by contacting us.</li>
           </ul>
 
-          <h2>9. Changes to This Policy</h2>
+          <h2 id="changes">9. Changes to This Policy</h2>
           <p>
             We may update this Privacy Policy from time to time. If we make material changes,
             we will notify you in the App or update the "Last updated" date above. Continued
@@ -157,13 +171,14 @@ export default function PrivacyPolicy() {
             policy.
           </p>
 
-          <h2>10. Contact Us</h2>
+          <h2 id="contact-us">10. Contact Us</h2>
           <p>
             If you have questions about this Privacy Policy or how we handle your data, reach
             out to us at{' '}
             <a href="mailto:solvers.real@gmail.com">solvers.real@gmail.com</a>.
           </p>
         </main>
+        </div>
 
         <footer className="pp-footer">
           © {new Date().getFullYear()} Fuudr. All rights reserved.
