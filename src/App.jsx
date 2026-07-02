@@ -12,6 +12,8 @@ import AdminFuudr from './pages/AdminFuudr/AdminFuudr';
 import OrdersList from './pages/AdminFuudr/OrdersList';
 import ManageOrder from './pages/AdminFuudr/ManageOrder';
 import { SuperAdminRoute } from './pages/AdminFuudr/components/SuperAdminRoute';
+import PrivacyPolicy from './pages/PrivacyPolicy/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService/TermsOfService';
 import './App.css';
 
 export default function App() {
@@ -19,6 +21,11 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+
+        {/* Legal */}
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
 
         {/* Super Admin — password protected */}
         <Route path="/adminfuudr" element={

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
@@ -239,8 +240,8 @@ export function Home() {
             }}>+</span>
           </button>
 
-          <button className="brutal-btn" onClick={() => document.getElementById('partner-cta')?.scrollIntoView({ behavior: 'smooth' })} style={{ fontSize: '18px', padding: '6px 24px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            Register Restaurant
+          <Link to="/partner" className="brutal-btn" style={{ fontSize: '18px', padding: '6px 24px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: '#000' }}>
+            Register as a Restaurant
             <span style={{
               background: '#FCA311', 
               color: '#000', 
@@ -254,7 +255,7 @@ export function Home() {
             }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
             </span>
-          </button>
+          </Link>
         </div>
       </section>
 
@@ -548,7 +549,7 @@ export function Home() {
       <div style={{ width: '100%', height: '20px', backgroundImage: 'conic-gradient(#fff 90deg, #4f2e09 90deg 180deg, #fff 180deg 270deg, #4f2e09 270deg)', backgroundSize: '20px 20px' }}></div>
 
       {/* FOOTER MARQUEE */}
-      <div className="footer-marquee" style={{ background: '#4f2e09', paddingTop: '60px', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', whiteSpace: 'nowrap', display: 'flex' }}>
+      <div className="footer-marquee" style={{ background: '#4f2e09', paddingTop: '30px', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', whiteSpace: 'nowrap', display: 'flex' }}>
         <div className="marquee-track" style={{ display: 'inline-flex', alignItems: 'center', animation: 'footerMarquee 45s linear infinite', width: 'max-content' }}>
           {[...Array(16)].map((_, i) => (
             <div key={i} className="xl footer-marquee-text" style={{ color: '#cccccc', margin: 0, padding: '0 20px' }}>
@@ -559,25 +560,25 @@ export function Home() {
       </div>
 
       {/* FOOTER */}
-      <footer className="slice-footer" style={{ background: '#4f2e09', color: '#fff', position: 'relative', overflow: 'hidden', padding: '80px 40px 60px', textAlign: 'center' }}>
+      <footer className="slice-footer" style={{ background: '#4f2e09', color: '#fff', position: 'relative', overflow: 'hidden', padding: '40px 40px 30px', textAlign: 'center' }}>
         <div className="footer-content" style={{ position: 'relative', zIndex: 10, maxWidth: '1200px', margin: '0 auto' }}>
           
-          <div className="footer-badge" style={{ width: '160px', height: '160px', borderRadius: '50%', border: '4px solid #FCA311', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '0 auto 60px', background: '#4f2e09', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+          <div className="footer-badge" style={{ width: '120px', height: '120px', borderRadius: '50%', border: '3px solid #FCA311', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '0 auto 30px', background: '#4f2e09', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
             <div style={{ transform: 'rotate(-10deg)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <span style={{ color: '#FCA311', fontSize: '56px', lineHeight: 0.8, fontFamily: '"Brush Script MT", cursive', textShadow: '3px 3px 0 #2B1600' }}>
+              <span style={{ color: '#FCA311', fontSize: '42px', lineHeight: 0.8, fontFamily: '"Brush Script MT", cursive', textShadow: '3px 3px 0 #2B1600' }}>
                 fuudr
               </span>
             </div>
           </div>
 
-          <h2 className="xl" style={{ color: '#fff', fontSize: 'clamp(32px, 5vw, 48px)', marginBottom: '40px' }}>See it. Crave it. Eat it.</h2>
+          <h2 className="xl" style={{ color: '#fff', fontSize: 'clamp(32px, 5vw, 48px)', marginBottom: '20px' }}>See it. Crave it. Eat it.</h2>
 
-          <div className="footer-actions" style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '60px', flexWrap: 'wrap' }}>
+          <div className="footer-actions" style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '30px', flexWrap: 'wrap' }}>
             <button className="brutal-btn footer-join-btn" onClick={() => window.open('https://whatsapp.com/channel/0029VbCTk553QxS6ZxDutH1N', '_blank')} style={{ padding: '16px 32px', fontSize: '20px', borderRadius: '12px' }}>Join Community</button>
             <button className="brutal-btn footer-register-btn" onClick={() => document.getElementById('partner-cta')?.scrollIntoView({ behavior: 'smooth' })} style={{ padding: '16px 32px', fontSize: '20px', borderRadius: '12px' }}>Register Restaurant</button>
           </div>
 
-          <div className="footer-socials" style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '80px', flexWrap: 'wrap' }}>
+          <div className="footer-socials" style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '40px', flexWrap: 'wrap' }}>
             {[
               { name: 'LinkedIn', color: '#0077b5', url: 'https://www.linkedin.com/company/tryfuudr/', icon: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg> },
               { name: 'Instagram', gradient: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', url: 'https://www.instagram.com/tryfuudr/', icon: <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg> }
@@ -591,10 +592,11 @@ export function Home() {
             ))}
           </div>
 
-          <div className="footer-bottom" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: 'none', paddingBottom: '30px', fontSize: '14px', flexWrap: 'wrap', gap: '20px' }}>
-            <div style={{ color: '#aaa', fontFamily: 'var(--sans)' }}>Designed for <span style={{ color: '#FCA311', fontWeight: 'bold' }}>Fuudr</span></div>
+          <div className="footer-bottom" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: 'none', paddingBottom: '15px', fontSize: '14px', flexWrap: 'wrap', gap: '20px' }}>
+            <div style={{ color: '#aaa', fontFamily: 'var(--sans)' }}>Designed by <a href="https://thesolvers.online" target="_blank" rel="noopener noreferrer" style={{ color: '#FCA311', fontWeight: 'bold', textDecoration: 'none' }}>The Solvers</a></div>
             <div style={{ display: 'flex', gap: '20px', color: '#aaa', fontFamily: 'var(--sans)' }}>
-              <a href="/partner" style={{ color: '#fff', fontWeight: 'bold', textDecoration: 'none' }}>Register as a Restaurant</a>
+              <Link to="/privacy" className="footer-policy-link">Privacy Policy</Link>
+              <Link to="/terms" className="footer-policy-link">Terms of Service</Link>
             </div>
           </div>
 
@@ -609,7 +611,7 @@ export function Home() {
           className="brutal-btn"
           style={{ 
             position: 'absolute', 
-            bottom: '60px', 
+            bottom: '30px', 
             right: '40px', 
             width: '56px', 
             height: '56px', 

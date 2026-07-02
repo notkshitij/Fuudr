@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import './Navbar.css';
 
 export const Navbar = () => {
@@ -9,9 +8,6 @@ export const Navbar = () => {
         <a href="#home" className="brutal-btn nav-btn" 
         // style={{ background: 'var(--bg)' }}
         >Home App</a>
-        <Link to="/partner" className="brutal-btn nav-btn" 
-        // style={{ background: 'var(--bg)' }}
-        >Register as a Restaurant</Link>
       </div>
       
       <div className="brand-logo nav-fade-target">
