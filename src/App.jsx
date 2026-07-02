@@ -14,11 +14,13 @@ import ManageOrder from './pages/AdminFuudr/ManageOrder';
 import { SuperAdminRoute } from './pages/AdminFuudr/components/SuperAdminRoute';
 import PrivacyPolicy from './pages/PrivacyPolicy/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService/TermsOfService';
+import ScrollToTop from './components/ScrollToTop';
 import './App.css';
 
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
 
