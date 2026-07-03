@@ -37,7 +37,7 @@ const sendEmailNotification = async (order) => {
       },
       body: JSON.stringify({
         from: 'Fuudr Orders <orders@fuudr.com>',
-        to: ['solvers.real@gmail.com'],
+        to: ['harshagrawal7878@gmail.com'],
         subject: `🛍️ New Order - ${order.restaurant_name || 'Restaurant'}`,
         html: `
           <h2>New Order Received!</h2>

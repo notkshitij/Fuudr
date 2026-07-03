@@ -62,7 +62,7 @@ export default function DeleteAccount() {
             </p>
             <ul>
               <li>
-                Send an email to <a href="mailto:solvers.real@gmail.com">solvers.real@gmail.com</a>.
+                Send an email to <a href="mailto:harshagrawal7878@gmail.com">harshagrawal7878@gmail.com</a>.
               </li>
               <li>
                 Use the subject line <strong>"Delete My Account"</strong>.
@@ -104,7 +104,7 @@ export default function DeleteAccount() {
             <h2 id="contact-us">5. Contact Us</h2>
             <p>
               If you have any questions or encounter issues while deleting your account, please reach out to us 
-              directly at <a href="mailto:solvers.real@gmail.com">solvers.real@gmail.com</a>.
+              directly at <a href="mailto:harshagrawal7878@gmail.com">harshagrawal7878@gmail.com</a>.
             </p>
           </main>
         </div>

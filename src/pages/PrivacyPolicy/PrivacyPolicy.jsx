@@ -132,7 +132,7 @@ export default function PrivacyPolicy() {
             <li><strong>In-app:</strong> Go to Profile → Settings → Delete Account.</li>
             <li>
               <strong>Web request:</strong> Email us at{' '}
-              <a href="mailto:solvers.real@gmail.com">solvers.real@gmail.com</a> with the subject
+              <a href="mailto:harshagrawal7878@gmail.com">harshagrawal7878@gmail.com</a> with the subject
               "Delete My Account" from your registered email address.
             </li>
           </ul>
@@ -175,7 +175,7 @@ export default function PrivacyPolicy() {
           <p>
             If you have questions about this Privacy Policy or how we handle your data, reach
             out to us at{' '}
-            <a href="mailto:solvers.real@gmail.com">solvers.real@gmail.com</a>.
+            <a href="mailto:harshagrawal7878@gmail.com">harshagrawal7878@gmail.com</a>.
           </p>
         </main>
         </div>
