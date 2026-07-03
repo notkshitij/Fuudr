@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms of Service | Fuudr</title>
+  <meta name="description" content="Fuudr's Terms of Service — the rules for using the Fuudr app to discover, order, and receive food.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Calistoga&family=Pacifico&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FCA311; /* Vibrant Slice Town Orange */
+      --bg-light: #FFFBF2;
+      --bg-dark: #14213D;
+      --fg: #000000;
+      --mute: #00000088;
+      --line: #000000;
+      --acc: #E63946; /* Slice Town Red */
+      --xl: 'Calistoga', sans-serif;
+      --sans: 'Inter', sans-serif;
+      --cursive: 'Pacifico', cursive;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.4;
+      overflow-x: hidden;
+      scrollbar-width: thin; /* Firefox */
+      scrollbar-color: var(--bg) var(--bg-dark); /* Firefox */
+    }
+
+    /* Custom Scrollbar for Chrome, Safari and Opera */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-dark);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--bg);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #D68400;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* Brutalist UI Utilities */
+    .brutal-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: #fff;
+      color: #000;
+      font-family: var(--xl);
+      font-weight: 400;
+      font-size: 16px;
+      padding: 10px 24px;
+      border: 3px solid #000;
+      border-radius: 12px;
+      box-shadow: 4px 4px 0px #000;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      text-decoration: none;
+    }
+
+    .brutal-btn:hover {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0px #000;
+      background: var(--bg);
+    }
+
+    .brutal-btn:active {
+      transform: translate(4px, 4px);
+      box-shadow: 0px 0px 0px #000;
+    }
+
+    .tos-page {
+      min-height: 100vh;
+      background: var(--bg);
+      padding: 24px 16px 64px;
+    }
+
+    .tos-header {
+      max-width: 1100px;
+      margin: 0 auto 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .tos-logo {
+      font-family: var(--xl);
+      font-size: 28px;
+      text-transform: uppercase;
+      color: var(--fg);
+    }
+
+    .tos-back-btn {
+      font-size: 14px;
+      padding: 8px 18px;
+    }
+
+    .tos-container {
+      display: flex;
+      gap: 32px;
+      max-width: 1100px;
+      margin: 0 auto;
+      align-items: flex-start;
+    }
+
+    .tos-sidebar {
+      width: 250px;
+      position: sticky;
+      top: 40px;
+      background: var(--bg-light);
+      border: 3px solid #000;
+      border-radius: 20px;
+      box-shadow: 6px 6px 0px #000;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .tos-sidebar h3 {
+      font-family: var(--xl);
+      font-size: 18px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      border-bottom: 2px solid #000;
+      padding-bottom: 4px;
+      color: var(--fg);
+    }
+
+    .tos-sidebar a {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--fg);
+      text-decoration: none;
+      transition: all 0.2s ease;
+      padding: 4px 0;
+    }
+
+    .tos-sidebar a:hover {
+      color: var(--acc);
+      padding-left: 4px;
+    }
+
+    .tos-card {
+      flex: 1;
+      max-width: 820px;
+      background: var(--bg-light);
+      border: 3px solid #000;
+      border-radius: 24px;
+      box-shadow: 8px 8px 0px #000;
+      padding: 40px 36px;
+    }
+
+    .tos-title {
+      font-family: var(--xl);
+      font-size: 42px;
+      text-transform: uppercase;
+      color: var(--fg);
+      margin-bottom: 4px;
+    }
+
+    .tos-updated {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--mute);
+      margin-bottom: 28px;
+    }
+
+    .tos-card h2 {
+      font-family: var(--xl);
+      font-size: 22px;
+      text-transform: uppercase;
+      color: var(--bg-dark);
+      margin-top: 32px;
+      margin-bottom: 12px;
+      border-bottom: 2px solid #000;
+      padding-bottom: 6px;
+    }
+
+    .tos-card h3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--fg);
+      margin-top: 20px;
+      margin-bottom: 8px;
+    }
+
+    .tos-card p {
+      font-size: 15.5px;
+      line-height: 1.65;
+      color: #222;
+      margin-bottom: 14px;
+    }
+
+    .tos-card ul {
+      margin: 0 0 14px 20px;
+      padding: 0;
+    }
+
+    .tos-card li {
+      font-size: 15.5px;
+      line-height: 1.6;
+      color: #222;
+      margin-bottom: 6px;
+    }
+
+    .tos-card a {
+      color: var(--acc);
+      font-weight: 600;
+      text-decoration: underline;
+    }
+
+    .tos-footer {
+      max-width: 1100px;
+      margin: 32px auto 0;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--fg);
+      opacity: 0.7;
+    }
+
+    @media (max-width: 900px) {
+      .tos-container {
+        flex-direction: column;
+        gap: 24px;
+        align-items: stretch;
+      }
+      .tos-sidebar {
+        width: 100%;
+        position: static;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .tos-card {
+        padding: 28px 20px;
+      }
+      .tos-title {
+        font-size: 32px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="tos-page">
+    <header class="tos-header">
+      <a href="/" class="tos-logo">Fuudr</a>
+      <a href="/" class="brutal-btn tos-back-btn">← Back to Home</a>
+    </header>
+
+    <div class="tos-container">
+      <aside class="tos-sidebar">
+        <h3>Sections</h3>
+        <a href="#eligibility">1. Eligibility</a>
+        <a href="#your-account">2. Your Account</a>
+        <a href="#what-fuudr-does">3. What Fuudr Does</a>
+        <a href="#orders-pricing">4. Orders &amp; Pricing</a>
+        <a href="#refunds">5. Refunds</a>
+        <a href="#location">6. Location Services</a>
+        <a href="#acceptable-use">7. Acceptable Use</a>
+        <a href="#content">8. App Content</a>
+        <a href="#third-party">9. Third-Party</a>
+        <a href="#disclaimers">10. Disclaimers</a>
+        <a href="#liability">11. Liability</a>
+        <a href="#termination">12. Termination</a>
+        <a href="#changes">13. Changes</a>
+        <a href="#governing-law">14. Governing Law</a>
+        <a href="#contact-us">15. Contact Us</a>
+      </aside>
+
+      <main class="tos-card">
+        <h1 class="tos-title">Terms of Service</h1>
+        <div class="tos-updated">Last updated: July 2, 2026</div>
+
+        <p>
+          These Terms of Service ("Terms") govern your access to and use of the Fuudr mobile
+          application and related services (together, the "App"), operated by Fuudr ("we",
+          "us", or "our"). By creating an account or using the App, you agree to be bound by
+          these Terms. If you do not agree, please do not use the App.
+        </p>
+
+        <h2 id="eligibility">1. Eligibility</h2>
+        <p>
+          You must be at least 13 years old to create a Fuudr account. If you are under 18,
+          you may only use the App with the involvement of a parent or legal guardian. By
+          using the App, you confirm that you meet these requirements.
+        </p>
+
+        <h2 id="your-account">2. Your Account</h2>
+        <p>
+          You sign in to Fuudr using Google Sign-In. You are responsible for keeping your
+          account secure and for all activity that happens under your account. Let us know
+          immediately at <a href="mailto:solvers.real@gmail.com">solvers.real@gmail.com</a> if you
+          suspect unauthorized use of your account.
+        </p>
+
+        <h2 id="what-fuudr-does">3. What Fuudr Does</h2>
+        <p>
+          Fuudr lets you discover food through short videos and place orders with partner
+          restaurants near your location. <strong>Fuudr is a discovery and ordering
+          platform — the food itself is prepared and, in most cases, delivered by
+          independent restaurant partners</strong>, not by Fuudr directly. We are not
+          responsible for the quality, safety, or preparation of food prepared by restaurant
+          partners, though we take reports of issues seriously and will assist in resolving
+          them where we can.
+        </p>
+
+        <h2 id="orders-pricing">4. Orders, Pricing &amp; Payment</h2>
+        <ul>
+          <li>Menu prices, availability, and delivery times are set by restaurant partners and may change without notice.</li>
+          <li>Once an order is placed and accepted by a restaurant, it generally cannot be cancelled — check the order summary carefully before confirming.</li>
+          <li>Payments are processed securely through our third-party payment gateway. Fuudr does not store your full card or bank details.</li>
+          <li>Delivery or platform fees, where applicable, will be shown clearly before you confirm an order.</li>
+        </ul>
+
+        <h2 id="refunds">5. Cancellations &amp; Refunds</h2>
+        <p>
+          If an order is cancelled by the restaurant, delayed significantly, or arrives
+          incorrect or unsafe to consume, contact us at
+          <a href="mailto:solvers.real@gmail.com">solvers.real@gmail.com</a> within 24 hours with your
+          order details. Refunds, where approved, are processed back to your original
+          payment method and may take 5–7 business days to reflect, depending on your bank
+          or payment provider.
+        </p>
+
+        <h2 id="location">6. Location Services</h2>
+        <p>
+          The App uses your device's location (with your permission) to show you nearby
+          restaurants and estimate delivery. You can disable location access from your
+          device settings at any time, though some features may not work correctly without
+          it.
+        </p>
+
+        <h2 id="acceptable-use">7. Acceptable Use</h2>
+        <p>You agree not to:</p>
+        <ul>
+          <li>Use the App for any unlawful purpose or to place fraudulent orders</li>
+          <li>Attempt to interfere with, disrupt, or gain unauthorized access to the App or its systems</li>
+          <li>Impersonate another person or misrepresent your affiliation with anyone</li>
+          <li>Upload or share content through the App that is abusive, obscene, or infringes on someone else's rights</li>
+          <li>Reverse-engineer, scrape, or resell any part of the App without our written permission</li>
+        </ul>
+        <p>
+          We may suspend or terminate accounts that violate these Terms.
+        </p>
+
+        <h2 id="content">8. Content in the App</h2>
+        <p>
+          Food videos, photos, and descriptions shown in the App may be provided by
+          restaurant partners or created by Fuudr. All App content, branding, and
+          trademarks belong to Fuudr or its partners and may not be copied or reused without
+          permission.
+        </p>
+
+        <h2 id="third-party">9. Third-Party Services</h2>
+        <p>
+          The App relies on third-party services — including Google Sign-In for
+          authentication, Supabase for backend infrastructure, and a payment gateway for
+          processing payments. Your use of these services is also subject to their
+          respective terms and privacy policies.
+        </p>
+
+        <h2 id="disclaimers">10. Disclaimers</h2>
+        <p>
+          The App is provided "as is" and "as available." We do not guarantee that the App
+          will be uninterrupted, error-free, or that restaurant partners will always fulfil
+          orders as expected. To the fullest extent permitted by law, Fuudr disclaims all
+          warranties, express or implied, regarding the App and the food ordered through it.
+        </p>
+
+        <h2 id="liability">11. Limitation of Liability</h2>
+        <p>
+          To the fullest extent permitted by law, Fuudr will not be liable for any indirect,
+          incidental, or consequential damages arising from your use of the App, including
+          issues with food quality, delivery delays, or actions of restaurant partners. Our
+          total liability for any claim relating to the App will not exceed the amount you
+          paid for the order giving rise to the claim.
+        </p>
+
+        <h2 id="termination">12. Account Termination</h2>
+        <p>
+          You may stop using the App and delete your account at any time — see our
+          <a href="/privacy">Privacy Policy</a> for how to request account deletion. We
+          may suspend or terminate your access if you violate these Terms or misuse the App.
+        </p>
+
+        <h2 id="changes">13. Changes to These Terms</h2>
+        <p>
+          We may update these Terms from time to time. If we make material changes, we will
+          notify you in the App or update the "Last updated" date above. Continued use of
+          the App after changes take effect means you accept the revised Terms.
+        </p>
+
+        <h2 id="governing-law">14. Governing Law</h2>
+        <p>
+          These Terms are governed by the laws of India, without regard to conflict-of-law
+          principles. Any disputes arising from these Terms or your use of the App will be
+          subject to the exclusive jurisdiction of the courts in Jaipur, Rajasthan.
+        </p>
+
+        <h2 id="contact-us">15. Contact Us</h2>
+        <p>
+          Questions about these Terms? Reach us at
+          <a href="mailto:solvers.real@gmail.com">solvers.real@gmail.com</a>.
+        </p>
+      </main>
+    </div>
+
+    <footer class="tos-footer">
+      © 2026 Fuudr. All rights reserved.
+    </footer>
+  </div>
+</body>
+</html>

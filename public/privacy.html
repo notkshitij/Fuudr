@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy | Fuudr</title>
+  <meta name="description" content="Fuudr's privacy policy — what data we collect, why we collect it, and how you can control or delete it.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Calistoga&family=Pacifico&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FCA311; /* Vibrant Slice Town Orange */
+      --bg-light: #FFFBF2;
+      --bg-dark: #14213D;
+      --fg: #000000;
+      --mute: #00000088;
+      --line: #000000;
+      --acc: #E63946; /* Slice Town Red */
+      --xl: 'Calistoga', sans-serif;
+      --sans: 'Inter', sans-serif;
+      --cursive: 'Pacifico', cursive;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    html, body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.4;
+      overflow-x: hidden;
+      scrollbar-width: thin; /* Firefox */
+      scrollbar-color: var(--bg) var(--bg-dark); /* Firefox */
+    }
+
+    /* Custom Scrollbar for Chrome, Safari and Opera */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-dark);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--bg);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #D68400;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* Brutalist UI Utilities */
+    .brutal-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: #fff;
+      color: #000;
+      font-family: var(--xl);
+      font-weight: 400;
+      font-size: 16px;
+      padding: 10px 24px;
+      border: 3px solid #000;
+      border-radius: 12px;
+      box-shadow: 4px 4px 0px #000;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      text-decoration: none;
+    }
+
+    .brutal-btn:hover {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0px #000;
+      background: var(--bg);
+    }
+
+    .brutal-btn:active {
+      transform: translate(4px, 4px);
+      box-shadow: 0px 0px 0px #000;
+    }
+
+    .pp-page {
+      min-height: 100vh;
+      background: var(--bg);
+      padding: 24px 16px 64px;
+    }
+
+    .pp-header {
+      max-width: 1100px;
+      margin: 0 auto 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .pp-logo {
+      font-family: var(--xl);
+      font-size: 28px;
+      text-transform: uppercase;
+      color: var(--fg);
+    }
+
+    .pp-back-btn {
+      font-size: 14px;
+      padding: 8px 18px;
+    }
+
+    .pp-container {
+      display: flex;
+      gap: 32px;
+      max-width: 1100px;
+      margin: 0 auto;
+      align-items: flex-start;
+    }
+
+    .pp-sidebar {
+      width: 250px;
+      position: sticky;
+      top: 40px;
+      background: var(--bg-light);
+      border: 3px solid #000;
+      border-radius: 20px;
+      box-shadow: 6px 6px 0px #000;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .pp-sidebar h3 {
+      font-family: var(--xl);
+      font-size: 18px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      border-bottom: 2px solid #000;
+      padding-bottom: 4px;
+      color: var(--fg);
+    }
+
+    .pp-sidebar a {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--fg);
+      text-decoration: none;
+      transition: all 0.2s ease;
+      padding: 4px 0;
+    }
+
+    .pp-sidebar a:hover {
+      color: var(--acc);
+      padding-left: 4px;
+    }
+
+    .pp-card {
+      flex: 1;
+      max-width: 820px;
+      background: var(--bg-light);
+      border: 3px solid #000;
+      border-radius: 24px;
+      box-shadow: 8px 8px 0px #000;
+      padding: 40px 36px;
+    }
+
+    .pp-title {
+      font-family: var(--xl);
+      font-size: 42px;
+      text-transform: uppercase;
+      color: var(--fg);
+      margin-bottom: 4px;
+    }
+
+    .pp-updated {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--mute);
+      margin-bottom: 28px;
+    }
+
+    .pp-card h2 {
+      font-family: var(--xl);
+      font-size: 22px;
+      text-transform: uppercase;
+      color: var(--bg-dark);
+      margin-top: 32px;
+      margin-bottom: 12px;
+      border-bottom: 2px solid #000;
+      padding-bottom: 6px;
+    }
+
+    .pp-card h3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--fg);
+      margin-top: 20px;
+      margin-bottom: 8px;
+    }
+
+    .pp-card p {
+      font-size: 15.5px;
+      line-height: 1.65;
+      color: #222;
+      margin-bottom: 14px;
+    }
+
+    .pp-card ul {
+      margin: 0 0 14px 20px;
+      padding: 0;
+    }
+
+    .pp-card li {
+      font-size: 15.5px;
+      line-height: 1.6;
+      color: #222;
+      margin-bottom: 6px;
+    }
+
+    .pp-card a {
+      color: var(--acc);
+      font-weight: 600;
+      text-decoration: underline;
+    }
+
+    .pp-footer {
+      max-width: 1100px;
+      margin: 32px auto 0;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--fg);
+      opacity: 0.7;
+    }
+
+    @media (max-width: 900px) {
+      .pp-container {
+        flex-direction: column;
+        gap: 24px;
+        align-items: stretch;
+      }
+      .pp-sidebar {
+        width: 100%;
+        position: static;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .pp-card {
+        padding: 28px 20px;
+      }
+      .pp-title {
+        font-size: 32px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="pp-page">
+    <header class="pp-header">
+      <a href="/" class="pp-logo">Fuudr</a>
+      <a href="/" class="brutal-btn pp-back-btn">← Back to Home</a>
+    </header>
+
+    <div class="pp-container">
+      <aside class="pp-sidebar">
+        <h3>Sections</h3>
+        <a href="#info-we-collect">1. Info We Collect</a>
+        <a href="#how-we-use">2. How We Use Info</a>
+        <a href="#third-party">3. Third-Party Services</a>
+        <a href="#data-sharing">4. Data Sharing</a>
+        <a href="#data-retention">5. Data Retention</a>
+        <a href="#data-security">6. Data Security</a>
+        <a href="#children-privacy">7. Children's Privacy</a>
+        <a href="#your-choices">8. Your Choices</a>
+        <a href="#changes">9. Changes to Policy</a>
+        <a href="#contact-us">10. Contact Us</a>
+      </aside>
+
+      <main class="pp-card">
+        <h1 class="pp-title">Privacy Policy</h1>
+        <div class="pp-updated">Last updated: July 2, 2026</div>
+
+        <p>
+          Fuudr ("we", "us", or "our") operates the Fuudr mobile application (the "App"),
+          a short-video-first food discovery and ordering platform. This Privacy Policy
+          explains what information we collect from you, how we use it, who we share it
+          with, and the choices you have — including how to delete your data.
+        </p>
+        <p>
+          By creating an account or using the App, you agree to the collection and use of
+          information in accordance with this policy.
+        </p>
+
+        <h2 id="info-we-collect">1. Information We Collect</h2>
+
+        <h3>a. Account information (via Google Sign-In)</h3>
+        <p>
+          When you sign in with your Google account, we receive your <strong>name</strong>,
+          <strong>email address</strong>, and <strong>profile picture</strong> from Google.
+          We use this to create and identify your Fuudr account. We do not receive or store
+          your Google password.
+        </p>
+
+        <h3>b. Location information</h3>
+        <p>
+          With your permission, we collect your device's <strong>precise (GPS) location</strong>
+          while the App is open, so we can show you restaurants and food near you (within a
+          configurable radius). We do not collect your location in the background when the
+          App is closed, and you can disable location access at any time from your device
+          settings — though some features (like "near you" recommendations) may not work
+          without it.
+        </p>
+
+        <h3>c. Profile &amp; usage information</h3>
+        <p>
+          We store information you add to your profile — such as phone number, date of
+          birth, and saved addresses — along with basic usage data (orders placed, videos
+          viewed, app interactions) to operate and improve the App.
+        </p>
+
+        <h3>d. Order &amp; payment information</h3>
+        <p>
+          When you place an order, we collect the order details and delivery address needed
+          to fulfil it. Payments are processed by a third-party payment gateway; Fuudr does
+          not store your full card, UPI, or bank account credentials on its own servers.
+        </p>
+
+        <h2 id="how-we-use">2. How We Use Your Information</h2>
+        <ul>
+          <li>To create and maintain your account</li>
+          <li>To show you relevant restaurants and food content near your location</li>
+          <li>To process and deliver your orders</li>
+          <li>To personalize your experience and recommendations</li>
+          <li>To communicate with you about your orders or account</li>
+          <li>To maintain the security and integrity of the App</li>
+        </ul>
+
+        <h2 id="third-party">3. Third-Party Services</h2>
+        <p>
+          We use the following third-party service providers to operate Fuudr. These
+          providers process data on our behalf and are contractually required to protect it:
+        </p>
+        <ul>
+          <li>
+            <strong>Supabase</strong> — our backend infrastructure provider. Supabase hosts
+            our database and handles authentication; all data in transit is encrypted (HTTPS).
+          </li>
+          <li>
+            <strong>Google Sign-In</strong> — used for authentication. Google's own privacy
+            policy applies to the data it collects as part of the sign-in process.
+          </li>
+        </ul>
+        <p>
+          We do <strong>not</strong> sell your personal information to advertisers or other
+          third parties.
+        </p>
+
+        <h2 id="data-sharing">4. Data Sharing</h2>
+        <p>
+          We share your information only where necessary: with restaurant partners to
+          fulfil an order (name, delivery address, order items), with the payment gateway to
+          process payment, and with service providers listed above who help us run the App.
+          We may also disclose information if required by law.
+        </p>
+
+        <h2 id="data-retention">5. Data Retention &amp; Deletion</h2>
+        <p>
+          We retain your account data for as long as your account is active. You can request
+          deletion of your account and associated data at any time:
+        </p>
+        <ul>
+          <li><strong>In-app:</strong> Go to Profile → Settings → Delete Account.</li>
+          <li>
+            <strong>Web request:</strong> Email us at
+            <a href="mailto:solvers.real@gmail.com">solvers.real@gmail.com</a> with the subject
+            "Delete My Account" from your registered email address.
+          </li>
+        </ul>
+        <p>
+          We will delete or anonymize your personal data within 30 days of a verified
+          request, except where we are required to retain certain records by law (e.g.
+          transaction records for tax purposes).
+        </p>
+
+        <h2 id="data-security">6. Data Security</h2>
+        <p>
+          We use industry-standard measures — including encryption in transit and access
+          controls — to protect your information. However, no method of transmission or
+          storage is 100% secure, and we cannot guarantee absolute security.
+        </p>
+
+        <h2 id="children-privacy">7. Children's Privacy</h2>
+        <p>
+          Fuudr is not directed at children under 13, and we do not knowingly collect
+          personal information from children under 13. If you believe a child has provided
+          us with personal information, please contact us so we can remove it.
+        </p>
+
+        <h2 id="your-choices">8. Your Choices</h2>
+        <ul>
+          <li>You can edit or update your profile information within the App.</li>
+          <li>You can revoke location permission from your device settings at any time.</li>
+          <li>You can request a copy or deletion of your data by contacting us.</li>
+        </ul>
+
+        <h2 id="changes">9. Changes to This Policy</h2>
+        <p>
+          We may update this Privacy Policy from time to time. If we make material changes,
+          we will notify you in the App or update the "Last updated" date above. Continued
+          use of the App after changes take effect constitutes acceptance of the revised
+          policy.
+        </p>
+
+        <h2 id="contact-us">10. Contact Us</h2>
+        <p>
+          If you have questions about this Privacy Policy or how we handle your data, reach
+          out to us at
+          <a href="mailto:solvers.real@gmail.com">solvers.real@gmail.com</a>.
+        </p>
+      </main>
+    </div>
+
+    <footer class="pp-footer">
+      © 2026 Fuudr. All rights reserved.
+    </footer>
+  </div>
+</body>
+</html>
