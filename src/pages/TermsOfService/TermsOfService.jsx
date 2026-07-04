@@ -63,7 +63,7 @@ export default function TermsOfService() {
           <p>
             You sign in to Fuudr using Google Sign-In. You are responsible for keeping your
             account secure and for all activity that happens under your account. Let us know
-            immediately at <a href="mailto:harshagrawal7878@gmail.com">harshagrawal7878@gmail.com</a> if you
+            immediately at <a href="mailto:solvers.real@gmail.com">solvers.real@gmail.com</a> if you
             suspect unauthorized use of your account.
           </p>
 
@@ -90,7 +90,7 @@ export default function TermsOfService() {
           <p>
             If an order is cancelled by the restaurant, delayed significantly, or arrives
             incorrect or unsafe to consume, contact us at{' '}
-            <a href="mailto:harshagrawal7878@gmail.com">harshagrawal7878@gmail.com</a> within 24 hours with your
+            <a href="mailto:solvers.real@gmail.com">solvers.real@gmail.com</a> within 24 hours with your
             order details. Refunds, where approved, are processed back to your original
             payment method and may take 5–7 business days to reflect, depending on your bank
             or payment provider.
@@ -174,7 +174,7 @@ export default function TermsOfService() {
           <h2 id="contact-us">15. Contact Us</h2>
           <p>
             Questions about these Terms? Reach us at{' '}
-            <a href="mailto:harshagrawal7878@gmail.com">harshagrawal7878@gmail.com</a>.
+            <a href="mailto:solvers.real@gmail.com">solvers.real@gmail.com</a>.
           </p>
         </main>
         </div>

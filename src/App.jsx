@@ -12,7 +12,7 @@ import AdminFuudr from './pages/AdminFuudr/AdminFuudr';
 import OrdersList from './pages/AdminFuudr/OrdersList';
 import ManageOrder from './pages/AdminFuudr/ManageOrder';
 import { SuperAdminRoute } from './pages/AdminFuudr/components/SuperAdminRoute';
-import PrivacyPolicy from './pages/PrivacyPolicy/PrivacyPolicy';
+import Privacy from './pages/Privacy/Privacy';
 import TermsOfService from './pages/TermsOfService/TermsOfService';
 import DeleteAccount from './pages/DeleteAccount/DeleteAccount';
 import ScrollToTop from './components/ScrollToTop';
@@ -26,7 +26,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
 
         {/* Legal */}
-        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route path="/delete-account" element={<DeleteAccount />} />
