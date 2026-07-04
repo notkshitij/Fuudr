@@ -1,11 +1,52 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { ChefHat, ArrowRight } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 
 const AuthLayout = ({ children, title, subtitle }) => {
-  const location = useLocation();
-  const isSignIn = location.pathname === '/signin';
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleLoaded = () => {
+      setIsVideoLoaded(true);
+    };
+
+    const handleError = () => {
+      // If the video fails to load, hide the spinner and fall back to the CSS background
+      setIsVideoLoaded(true);
+    };
+
+    // Programmatically ensure the video is muted so browser autoplay policies allow it
+    video.muted = true;
+
+    // Listen to load, play, and error events
+    video.addEventListener('canplay', handleLoaded);
+    video.addEventListener('canplaythrough', handleLoaded);
+    video.addEventListener('playing', handleLoaded);
+    video.addEventListener('error', handleError);
+
+    // If the browser already has the video cached and ready
+    if (video.readyState >= 3) {
+      handleLoaded();
+    }
+
+    // Force play the video programmatically
+    video.play()
+      .then(handleLoaded)
+      .catch((err) => {
+        console.warn("Autoplay check:", err);
+        // If autoplay is blocked by browser policy, hide the spinner anyway to reveal the layout
+        handleLoaded();
+      });
+
+    return () => {
+      video.removeEventListener('canplay', handleLoaded);
+      video.removeEventListener('canplaythrough', handleLoaded);
+      video.removeEventListener('playing', handleLoaded);
+      video.removeEventListener('error', handleError);
+    };
+  }, []);
 
   return (
     <div className="h-screen w-full bg-[#FAFAFA] font-outfit text-slate-800 flex overflow-hidden">
@@ -26,12 +67,12 @@ const AuthLayout = ({ children, title, subtitle }) => {
         )}
 
         <video 
+          ref={videoRef}
           autoPlay 
           loop 
           muted 
           playsInline
           preload="auto"
-          onCanPlay={() => setIsVideoLoaded(true)}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 z-0 ${isVideoLoaded ? 'opacity-100' : 'opacity-0'}`}
         >
           {/* Note: External stock video URLs block direct streaming. 
@@ -39,6 +80,7 @@ const AuthLayout = ({ children, title, subtitle }) => {
           <source src="/food-bg.mp4" type="video/mp4" />
         </video>
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10"></div>
+
         
         <div className="relative z-10 flex flex-col justify-between h-full p-12">
           <div className="flex items-center gap-3 text-white">
