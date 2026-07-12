@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import './Privacy.css';
 
-const LAST_UPDATED = 'July 2, 2026';
+const LAST_UPDATED = 'July 12, 2026';
 
 export default function Privacy() {
   return (
@@ -81,8 +81,8 @@ export default function Privacy() {
             <h3>d. Order &amp; payment information</h3>
             <p>
               When you place an order, we collect the order details and delivery address needed
-              to fulfil it. Payments are processed by a third-party payment gateway; Fuudr does
-              not store your full card, UPI, or bank account credentials on its own servers.
+              to fulfil it. We currently only support Pay on Delivery. Fuudr does not collect,
+              process, or store your card, bank, or other payment credentials.
             </p>
 
             <h2 id="how-we-use">2. How We Use Your Information</h2>
@@ -118,9 +118,8 @@ export default function Privacy() {
             <h2 id="data-sharing">4. Data Sharing</h2>
             <p>
               We share your information only where necessary: with restaurant partners to
-              fulfil an order (name, delivery address, order items), with the payment gateway to
-              process payment, and with service providers listed above who help us run the App.
-              We may also disclose information if required by law.
+              fulfil an order (name, delivery address, order items), and with service providers
+              listed above who help us run the App. We may also disclose information if required by law.
             </p>
 
             <h2 id="data-retention">5. Data Retention &amp; Deletion</h2>
