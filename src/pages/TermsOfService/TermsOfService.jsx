@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import './TermsOfService.css';
 
-const LAST_UPDATED = 'July 2, 2026';
+const LAST_UPDATED = 'July 12, 2026';
 
 export default function TermsOfService() {
   return (
@@ -71,11 +71,11 @@ export default function TermsOfService() {
           <p>
             Fuudr lets you discover food through short videos and place orders with partner
             restaurants near your location. <strong>Fuudr is a discovery and ordering
-            platform — the food itself is prepared and, in most cases, delivered by
-            independent restaurant partners</strong>, not by Fuudr directly. We are not
-            responsible for the quality, safety, or preparation of food prepared by restaurant
-            partners, though we take reports of issues seriously and will assist in resolving
-            them where we can.
+            platform — the food itself is prepared by independent restaurant partners.
+            Delivery is primarily handled by Fuudr, though in some cases, the restaurant
+            partner may handle the delivery directly.</strong> We are not responsible for the
+            quality, safety, or preparation of food prepared by restaurant partners, though we
+            take reports of issues seriously and will assist in resolving them where we can.
           </p>
 
           <h2 id="orders-pricing">4. Orders, Pricing &amp; Payment</h2>
