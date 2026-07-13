@@ -1,11 +1,12 @@
 import React from 'react';
 import './WaitlistFooter.css';
 
-export const WaitlistFooter = () => {
+export const WaitlistFooter = ({ hideWaitlist = false }) => {
   return (
     <>
-      <section className="waitlist" id="waitlist">
-        <h2>the future of food is <span className="it">here.</span><br/>request <span className="it">early access.</span></h2>
+      {!hideWaitlist && (
+        <section className="waitlist" id="waitlist">
+        <h2>watch reels. <span className="it">discover food.</span><br/>order <span className="it">instantly.</span></h2>
         <form onSubmit={(e) => {
           e.preventDefault();
           const btn = e.target.querySelector('button');
@@ -16,6 +17,7 @@ export const WaitlistFooter = () => {
         </form>
         <div className="meta">2,400+ foodies already on the list</div>
       </section>
+      )}
 
       <footer>
         <div>© 2026 fuudr · made hungry</div>

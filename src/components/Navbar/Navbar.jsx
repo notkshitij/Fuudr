@@ -11,9 +11,11 @@ export const Navbar = () => {
       </div>
       
       <div className="brand-logo nav-fade-target">
-        <div className="logo-circle">
-          <span className="logo-text">Fuudr</span>
-        </div>
+        <Link to="/" className="block hover:scale-105 active:scale-95 transition-all duration-200" style={{ textDecoration: 'none' }}>
+          <div className="logo-circle">
+            <span className="logo-text">Fuudr</span>
+          </div>
+        </Link>
       </div>
 
       <div className="nav-group r nav-fade-target">
