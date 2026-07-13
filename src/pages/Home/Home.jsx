@@ -601,27 +601,6 @@ export function Home() {
         </div>
       </section>
 
-      {/* FAQ SECTION */}
-      <section className="slice-faq" id="faq-section" style={{ position: 'relative', padding: '100px 20px', background: '#FFFBF2', overflow: 'hidden', borderTop: '4px solid #000' }}>
-        <div className="faq-container" style={{ maxWidth: '800px', margin: '0 auto', position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <h2 className="xl" style={{ color: '#000', fontSize: 'clamp(36px, 5vw, 64px)', marginBottom: '40px', textTransform: 'uppercase', textAlign: 'center', fontFamily: 'var(--xl)' }}>
-            Frequently Asked Questions
-          </h2>
-          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {[
-              { q: "What is Fuudr?", a: "Fuudr is a short-form video food discovery and ordering platform where you can watch video reels of real dishes from local restaurants and order instantly." },
-              { q: "How do restaurant partners sign up?", a: "Restaurants can register for the partner program by going to the Partner Portal at fuudr.com/partner/signup, completing their profile, and uploading their menu and food reels." },
-              { q: "Is Fuudr free to use?", a: "Yes, the Fuudr app is free to download and use for customers discovering and ordering food." },
-              { q: "Which cities is Fuudr available in?", a: "Fuudr is currently launching in major cities. Check the app or enter your location to find active restaurant partners near you." }
-            ].map((faq, index) => (
-              <div key={index} className="faq-item" style={{ background: '#fff', border: '3px solid #000', borderRadius: '12px', padding: '24px', boxShadow: '4px 4px 0 #000' }}>
-                <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#000', marginBottom: '10px', fontFamily: 'var(--sans)' }}>{faq.q}</h3>
-                <p style={{ fontSize: '16px', color: '#555', lineHeight: 1.6, fontWeight: 600, fontFamily: 'var(--sans)' }}>{faq.a}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* CHECKER DIVIDER */}
       <div style={{ width: '100%', height: '20px', backgroundImage: 'conic-gradient(#fff 90deg, #4f2e09 90deg 180deg, #fff 180deg 270deg, #4f2e09 270deg)', backgroundSize: '20px 20px' }}></div>
