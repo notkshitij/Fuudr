@@ -9,11 +9,43 @@ export default function Privacy() {
   return (
     <>
       <Helmet>
-        <title>Privacy Policy | Fuudr</title>
-        <meta
-          name="description"
-          content="Fuudr's privacy policy — what data we collect, why we collect it, and how you can control or delete it."
-        />
+        <title>Privacy Policy | Fuudr — Food Reel App</title>
+        <meta name="description" content="Fuudr's privacy policy — what data we collect, why we collect it, and how you can control or delete it." />
+        <link rel="canonical" href="https://fuudr.com/privacy" />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://fuudr.com/privacy" />
+        <meta property="og:title" content="Privacy Policy | Fuudr — Food Reel App" />
+        <meta property="og:description" content="Fuudr's privacy policy — what data we collect, why we collect it, and how you can control or delete it." />
+        <meta property="og:image" content="https://fuudr.com/banner.png" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="https://fuudr.com/privacy" />
+        <meta name="twitter:title" content="Privacy Policy | Fuudr — Food Reel App" />
+        <meta name="twitter:description" content="Fuudr's privacy policy — what data we collect, why we collect it, and how you can control or delete it." />
+        <meta name="twitter:image" content="https://fuudr.com/banner.png" />
+        <meta name="twitter:site" content="@tryfuudr" />
+
+        {/* JSON-LD Schemas */}
+        <script type="application/ld+json">{`
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [{
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://fuudr.com/"
+            },{
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Privacy Policy",
+              "item": "https://fuudr.com/privacy"
+            }]
+          }
+        `}</script>
       </Helmet>
 
       <div className="pp-page">

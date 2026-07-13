@@ -139,9 +139,48 @@ const SignUp = () => {
   return (
     <>
       <Helmet>
-        <title>Register Restaurant | Fuudr Partner Program</title>
+        <title>Register Restaurant Partner | Fuudr Program</title>
         <meta name="description" content="Sign up your restaurant on Fuudr. List your dishes, upload food reels, and start receiving orders from local customers today." />
         <link rel="canonical" href="https://fuudr.com/partner/signup" />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://fuudr.com/partner/signup" />
+        <meta property="og:title" content="Register Restaurant Partner | Fuudr Program" />
+        <meta property="og:description" content="Sign up your restaurant on Fuudr. List your dishes, upload food reels, and start receiving orders from local customers today." />
+        <meta property="og:image" content="https://fuudr.com/banner.png" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="https://fuudr.com/partner/signup" />
+        <meta name="twitter:title" content="Register Restaurant Partner | Fuudr Program" />
+        <meta name="twitter:description" content="Sign up your restaurant on Fuudr. List your dishes, upload food reels, and start receiving orders from local customers today." />
+        <meta name="twitter:image" content="https://fuudr.com/banner.png" />
+        <meta name="twitter:site" content="@tryfuudr" />
+
+        {/* JSON-LD Schemas */}
+        <script type="application/ld+json">{`
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [{
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://fuudr.com/"
+            },{
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Partner Portal",
+              "item": "https://fuudr.com/partner"
+            },{
+              "@type": "ListItem",
+              "position": 3,
+              "name": "Register",
+              "item": "https://fuudr.com/partner/signup"
+            }]
+          }
+        `}</script>
       </Helmet>
       {/* Error Popup Modal */}
       {errorMsg && (

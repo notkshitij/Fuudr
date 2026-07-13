@@ -9,11 +9,43 @@ export default function TermsOfService() {
   return (
     <>
       <Helmet>
-        <title>Terms of Service | Fuudr</title>
-        <meta
-          name="description"
-          content="Fuudr's Terms of Service — the rules for using the Fuudr app to discover, order, and receive food."
-        />
+        <title>Terms of Service | Fuudr — Food Reel App</title>
+        <meta name="description" content="Fuudr's Terms of Service — the rules for using the Fuudr app to discover, order, and receive food." />
+        <link rel="canonical" href="https://fuudr.com/terms" />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://fuudr.com/terms" />
+        <meta property="og:title" content="Terms of Service | Fuudr — Food Reel App" />
+        <meta property="og:description" content="Fuudr's Terms of Service — the rules for using the Fuudr app to discover, order, and receive food." />
+        <meta property="og:image" content="https://fuudr.com/banner.png" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="https://fuudr.com/terms" />
+        <meta name="twitter:title" content="Terms of Service | Fuudr — Food Reel App" />
+        <meta name="twitter:description" content="Fuudr's Terms of Service — the rules for using the Fuudr app to discover, order, and receive food." />
+        <meta name="twitter:image" content="https://fuudr.com/banner.png" />
+        <meta name="twitter:site" content="@tryfuudr" />
+
+        {/* JSON-LD Schemas */}
+        <script type="application/ld+json">{`
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [{
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://fuudr.com/"
+            },{
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Terms of Service",
+              "item": "https://fuudr.com/terms"
+            }]
+          }
+        `}</script>
       </Helmet>
 
       <div className="tos-page">

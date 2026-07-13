@@ -59,9 +59,43 @@ const SignIn = () => {
   return (
     <>
       <Helmet>
-        <title>Fuudr Partner | Grow Your Restaurant Revenue with Food Reels</title>
+        <title>Restaurant Partner Sign In | Fuudr Program</title>
         <meta name="description" content="Join the Fuudr Partner Program. Reach more customers through video reels and get orders instantly. Log in to your restaurant dashboard." />
         <link rel="canonical" href="https://fuudr.com/partner" />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://fuudr.com/partner" />
+        <meta property="og:title" content="Restaurant Partner Sign In | Fuudr Program" />
+        <meta property="og:description" content="Log in to your Fuudr partner dashboard. Reach more customers through video reels and get orders instantly." />
+        <meta property="og:image" content="https://fuudr.com/banner.png" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="https://fuudr.com/partner" />
+        <meta name="twitter:title" content="Restaurant Partner Sign In | Fuudr Program" />
+        <meta name="twitter:description" content="Log in to your Fuudr partner dashboard. Reach more customers through video reels and get orders instantly." />
+        <meta name="twitter:image" content="https://fuudr.com/banner.png" />
+        <meta name="twitter:site" content="@tryfuudr" />
+
+        {/* JSON-LD Schemas */}
+        <script type="application/ld+json">{`
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [{
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://fuudr.com/"
+            },{
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Partner Portal",
+              "item": "https://fuudr.com/partner"
+            }]
+          }
+        `}</script>
       </Helmet>
       <AuthLayout 
         title="Welcome Back" 

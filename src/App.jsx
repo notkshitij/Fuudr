@@ -1,24 +1,26 @@
-import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Suspense } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import { Home } from './pages/Home/Home';
 import { ProtectedRoute } from './pages/AdminPortal/ProtectedRoute';
 import { SuperAdminRoute } from './pages/AdminFuudr/components/SuperAdminRoute';
 import ScrollToTop from './components/ScrollToTop';
 import './App.css';
 
-// Lazy load route pages to improve initial load time and reduce chunk size
-const AdminPortal = lazy(() => import('./pages/AdminPortal/AdminPortal').then(module => ({ default: module.AdminPortal })));
-const SignIn = lazy(() => import('./pages/Partner/SignIn'));
-const SignUp = lazy(() => import('./pages/Partner/SignUp'));
-const ProfileSetup = lazy(() => import('./pages/Partner/ProfileSetup'));
-const DashboardLayout = lazy(() => import('./pages/Partner/Dashboard/DashboardLayout'));
-const AdminFuudrLayout = lazy(() => import('./pages/AdminFuudr/AdminFuudrLayout'));
-const AdminFuudr = lazy(() => import('./pages/AdminFuudr/AdminFuudr'));
-const OrdersList = lazy(() => import('./pages/AdminFuudr/OrdersList'));
-const ManageOrder = lazy(() => import('./pages/AdminFuudr/ManageOrder'));
-const Privacy = lazy(() => import('./pages/Privacy/Privacy'));
-const TermsOfService = lazy(() => import('./pages/TermsOfService/TermsOfService'));
-const DeleteAccount = lazy(() => import('./pages/DeleteAccount/DeleteAccount'));
+// Synchronous imports to allow proper static HTML pre-rendering
+import { AdminPortal } from './pages/AdminPortal/AdminPortal';
+import SignIn from './pages/Partner/SignIn';
+import SignUp from './pages/Partner/SignUp';
+import ProfileSetup from './pages/Partner/ProfileSetup';
+import DashboardLayout from './pages/Partner/Dashboard/DashboardLayout';
+import AdminFuudrLayout from './pages/AdminFuudr/AdminFuudrLayout';
+import AdminFuudr from './pages/AdminFuudr/AdminFuudr';
+import OrdersList from './pages/AdminFuudr/OrdersList';
+import ManageOrder from './pages/AdminFuudr/ManageOrder';
+import Privacy from './pages/Privacy/Privacy';
+import TermsOfService from './pages/TermsOfService/TermsOfService';
+import DeleteAccount from './pages/DeleteAccount/DeleteAccount';
+import { BlogList } from './pages/Blog/BlogList';
+import { BlogPost } from './pages/Blog/BlogPost';
 
 // A premium Brutalist-styled fallback loader that matches the application's design language
 function PageLoader() {
@@ -34,7 +36,7 @@ function PageLoader() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <>
       <ScrollToTop />
       <Suspense fallback={<PageLoader />}>
         <Routes>
@@ -45,6 +47,10 @@ export default function App() {
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/delete-account" element={<DeleteAccount />} />
+
+          {/* Blog Content System */}
+          <Route path="/blog" element={<BlogList />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
 
           {/* Super Admin — password protected */}
           <Route path="/adminfuudr" element={
@@ -70,7 +76,7 @@ export default function App() {
           <Route path="/partner/dashboard/*" element={<DashboardLayout />} />
         </Routes>
       </Suspense>
-    </BrowserRouter>
+    </>
   );
 }
 

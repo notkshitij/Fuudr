@@ -1,21 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://fuudr.com/</loc>
-    <lastmod>2026-06-08</lastmod>
+    <lastmod>2026-07-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://fuudr.com/pizza.avif</image:loc>
+      <image:title>Fuudr App Pizza Base</image:title>
+      <image:caption>Interactive scrolling pizza base animation on Fuudr mobile app hero block.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://fuudr.com/hero_pizza.avif</image:loc>
+      <image:title>Fuudr App Pizza Slice</image:title>
+      <image:caption>Scrolling pizza slice animation showing visual food ordering.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://fuudr.com/banner.png</image:loc>
+      <image:title>Fuudr Social Sharing Banner</image:title>
+      <image:caption>Brutalist social preview showing food reels ordering app concept.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://fuudr.com/images/fuudr-gourmet-pizza-slice-order.webp</image:loc>
+      <image:title>Gourmet Pizza Slice Order</image:title>
+      <image:caption>Watch and order delicious pizzas directly on Fuudr.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://fuudr.com/images/fuudr-brutal-burger-double-cheese.webp</image:loc>
+      <image:title>Brutal Double Cheeseburger</image:title>
+      <image:caption>Sizzling burger reviews and visual orders on Fuudr feed.</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://fuudr.com/partner</loc>
-    <lastmod>2026-06-17</lastmod>
+    <lastmod>2026-07-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://fuudr.com/partner/signup</loc>
-    <lastmod>2026-06-17</lastmod>
+    <lastmod>2026-07-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://fuudr.com/privacy</loc>
+    <lastmod>2026-07-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://fuudr.com/terms</loc>
+    <lastmod>2026-07-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://fuudr.com/delete-account</loc>
+    <lastmod>2026-07-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
   </url>
 </urlset>

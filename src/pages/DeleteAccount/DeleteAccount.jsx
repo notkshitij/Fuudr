@@ -9,11 +9,64 @@ export default function DeleteAccount() {
   return (
     <>
       <Helmet>
-        <title>Delete Your Account | Fuudr</title>
-        <meta
-          name="description"
-          content="Learn how to delete your Fuudr account and request deletion of your personal data."
-        />
+        <title>Delete Your Account | Fuudr — Food Reel App</title>
+        <meta name="description" content="Learn how to delete your Fuudr account and request deletion of your personal data." />
+        <link rel="canonical" href="https://fuudr.com/delete-account" />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://fuudr.com/delete-account" />
+        <meta property="og:title" content="Delete Your Account | Fuudr — Food Reel App" />
+        <meta property="og:description" content="Learn how to delete your Fuudr account and request deletion of your personal data." />
+        <meta property="og:image" content="https://fuudr.com/banner.png" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="https://fuudr.com/delete-account" />
+        <meta name="twitter:title" content="Delete Your Account | Fuudr — Food Reel App" />
+        <meta name="twitter:description" content="Learn how to delete your Fuudr account and request deletion of your personal data." />
+        <meta name="twitter:image" content="https://fuudr.com/banner.png" />
+        <meta name="twitter:site" content="@tryfuudr" />
+
+        {/* JSON-LD Schemas */}
+        <script type="application/ld+json">{`
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [{
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://fuudr.com/"
+            },{
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Delete Account",
+              "item": "https://fuudr.com/delete-account"
+            }]
+          }
+        `}</script>
+        <script type="application/ld+json">{`
+          {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [{
+              "@type": "Question",
+              "name": "How do I delete my Fuudr account?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "You can delete your account directly inside the Fuudr mobile app by going to Profile > Settings > Help & Support > Delete Account. Alternatively, email solvers.real@gmail.com with the subject 'Delete My Account' from your registered email address."
+              }
+            },{
+              "@type": "Question",
+              "name": "What data is deleted when I request account deletion?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Your account information (name, email, Google profile picture), profile data (phone, saved addresses), order history, and interactions (reels saved/liked, preferences) are permanently removed."
+              }
+            }]
+          }
+        `}</script>
       </Helmet>
 
       <div className="da-page">

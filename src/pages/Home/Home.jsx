@@ -11,14 +11,14 @@ import './Home.css';
 gsap.registerPlugin(ScrollTrigger);
 
 const galleryImages = [
-  { src: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=400&q=60", alt: "Pizza", likes: "1.2k", comments: "84" },
-  { src: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=60", alt: "Burger", likes: "8.4k", comments: "120" },
-  { src: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=400&q=60", alt: "Pasta", likes: "2.1k", comments: "310" },
-  { src: "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?auto=format&fit=crop&w=400&q=60", alt: "Momos and Dumplings", likes: "3.4k", comments: "67" },
-  { src: "https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=400&q=60", alt: "Manchurian Asian Bowl", likes: "9.2k", comments: "430" },
-  { src: "https://images.unsplash.com/photo-1574484284002-952d92456975?auto=format&fit=crop&w=400&q=60", alt: "Italian Spread", likes: "1.8k", comments: "92" },
-  { src: "https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=400&q=60", alt: "Chinese Noodles", likes: "4.2k", comments: "150" },
-  { src: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=400&q=60", alt: "Mexican Tacos", likes: "2.7k", comments: "115" }
+  { src: "/images/fuudr-gourmet-pizza-slice-order.webp", alt: "Fuudr gourmet pizza slice being ordered directly from local pizzeria", likes: "1.2k", comments: "84" },
+  { src: "/images/fuudr-brutal-burger-double-cheese.webp", alt: "Fuudr double cheeseburger with melting cheddar on a toasted bun", likes: "8.4k", comments: "120" },
+  { src: "/images/fuudr-fresh-pasta-italian-dish.webp", alt: "Fuudr fresh homemade Italian pasta dish with rich tomato marinara sauce", likes: "2.1k", comments: "310" },
+  { src: "/images/fuudr-chinese-momos-dumplings.webp", alt: "Fuudr steamed hot Chinese momos dumplings served in a bamboo basket", likes: "3.4k", comments: "67" },
+  { src: "/images/fuudr-asian-manchurian-noodle-bowl.webp", alt: "Fuudr sizzling Asian Manchurian noodles served in a hot stone bowl", likes: "9.2k", comments: "430" },
+  { src: "/images/fuudr-italian-spread-bruschetta-pasta.webp", alt: "Fuudr complete Italian dinner spread featuring bruschetta and fresh pasta", likes: "1.8k", comments: "92" },
+  { src: "/images/fuudr-spicy-chinese-noodles.webp", alt: "Fuudr hot and spicy stir-fried Chinese noodles with mixed vegetables", likes: "4.2k", comments: "150" },
+  { src: "/images/fuudr-mexican-tacos-avocado-lime.webp", alt: "Fuudr authentic Mexican street tacos loaded with fresh avocado and lime", likes: "2.7k", comments: "115" }
 ];
 
 export function Home() {
@@ -193,8 +193,72 @@ export function Home() {
     <div className="slice-home">
       <Helmet>
         <title>Fuudr | See it. Crave it. Order it. — Food Reel App</title>
-        <meta name="description" content="Fuudr is a short-form food reel app. Watch video reels of dishes from restaurants near you and order instantly. Think TikTok meets Zomato." />
+        <meta name="description" content="Fuudr is the ultimate short-form food reel app. Watch video reels of dishes from restaurants near you and order instantly. Think TikTok meets Zomato." />
         <link rel="canonical" href="https://fuudr.com/" />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://fuudr.com/" />
+        <meta property="og:title" content="Fuudr | See it. Crave it. Order it. — Food Reel App" />
+        <meta property="og:description" content="Fuudr is the ultimate short-form food reel app. Watch video reels of dishes from restaurants near you and order instantly." />
+        <meta property="og:image" content="https://fuudr.com/banner.png" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="https://fuudr.com/" />
+        <meta name="twitter:title" content="Fuudr | See it. Crave it. Order it. — Food Reel App" />
+        <meta name="twitter:description" content="Fuudr is the ultimate short-form food reel app. Watch video reels of dishes from restaurants near you and order instantly." />
+        <meta name="twitter:image" content="https://fuudr.com/banner.png" />
+        <meta name="twitter:site" content="@tryfuudr" />
+
+        {/* JSON-LD Schemas */}
+        <script type="application/ld+json">{`
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [{
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://fuudr.com/"
+            }]
+          }
+        `}</script>
+        <script type="application/ld+json">{`
+          {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [{
+              "@type": "Question",
+              "name": "What is Fuudr?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Fuudr is a short-form video food discovery and ordering platform where you can watch video reels of real dishes from local restaurants and order instantly."
+              }
+            },{
+              "@type": "Question",
+              "name": "How do restaurant partners sign up?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Restaurants can register for the partner program by going to the Partner Portal at fuudr.com/partner/signup, completing their profile, and uploading their menu and food reels."
+              }
+            },{
+              "@type": "Question",
+              "name": "Is Fuudr free to use?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes, the Fuudr app is free to download and use for customers discovering and ordering food."
+              }
+            },{
+              "@type": "Question",
+              "name": "Which cities is Fuudr available in?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Fuudr is currently launching in major cities. Check the app or enter your location to find active restaurant partners near you."
+              }
+            }]
+          }
+        `}</script>
       </Helmet>
       <Navbar />
 
@@ -282,8 +346,8 @@ export function Home() {
 
       {/* ABOUT US */}
       <section className="slice-about" id="about" style={{ position: 'relative', overflow: 'hidden' }}>
-        <img src="/img1.avif" alt="Floating ingredient" className="floating-img-1" style={{ position: 'absolute', top: '15%', left: '8%', width: 'clamp(80px, 10vw, 120px)', filter: 'drop-shadow(5px 5px 15px rgba(0,0,0,0.2))', zIndex: 5, transform: 'rotate(-10deg)' }} />
-        <img src="/img2.avif" alt="Floating ingredient" className="floating-img-2" style={{ position: 'absolute', top: '45%', right: '8%', width: 'clamp(80px, 10vw, 120px)', filter: 'drop-shadow(5px 5px 15px rgba(0,0,0,0.2))', zIndex: 5, transform: 'rotate(15deg)' }} />
+        <img src="/img1.avif" alt="Floating ingredient" className="floating-img-1" loading="lazy" decoding="async" style={{ position: 'absolute', top: '15%', left: '8%', width: 'clamp(80px, 10vw, 120px)', filter: 'drop-shadow(5px 5px 15px rgba(0,0,0,0.2))', zIndex: 5, transform: 'rotate(-10deg)' }} />
+        <img src="/img2.avif" alt="Floating ingredient" className="floating-img-2" loading="lazy" decoding="async" style={{ position: 'absolute', top: '45%', right: '8%', width: 'clamp(80px, 10vw, 120px)', filter: 'drop-shadow(5px 5px 15px rgba(0,0,0,0.2))', zIndex: 5, transform: 'rotate(15deg)' }} />
 
         <div className="about-header" style={{textAlign: 'center', position: 'relative', zIndex: 10, maxWidth: '800px', margin: '0 auto', padding: '0 20px'}}>
           <h2 className="xl about-title" style={{ fontSize: 'clamp(32px, 5vw, 80px)', lineHeight: 1.1, color: '#3D2101', textShadow: '2px 2px 0 #fff', textTransform: 'none', marginBottom: '24px' }}>
@@ -367,7 +431,7 @@ export function Home() {
           <div className="polaroid-photo" style={{ top: '15%', left: '50%', transform: 'translateX(-50%) rotate(-5deg)', zIndex: 2, width: '320px', position: 'relative' }}>
             <div className="tape" style={{ top: '-25px', left: '45%', width: '40px', height: '80px', transform: 'rotate(2deg)', background: '#CFCBAE' }}></div>
             <div style={{ position: 'relative', width: '100%', height: '300px', overflow: 'hidden' }}>
-              <img src="https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=600&q=80" alt="Exotic Sushi Platter" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src="/images/fuudr-japanese-sushi-platter-note.webp" alt="Fresh Japanese sushi platter recommended on Fuudr user testimonial polaroid card" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)' }}>
                 <span style={{ color: '#FCA311', fontSize: '72px', lineHeight: 0.8, fontFamily: '"Brush Script MT", cursive', textShadow: '3px 3px 0 #2B1600', transform: 'rotate(-5deg)' }}>
                   fuudr
@@ -393,7 +457,7 @@ export function Home() {
           {/* Right Polaroid */}
           <div className="polaroid-photo" style={{ bottom: '0%', right: '8%', transform: 'rotate(6deg)', zIndex: 4, width: '280px' }}>
             <div className="pin red" style={{ top: '15px', left: '15px' }}></div>
-            <img src="https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&w=600&q=80" alt="Gourmet Tacos" style={{ height: '260px', objectFit: 'cover' }} />
+            <img src="/images/fuudr-gourmet-mexican-tacos-note.webp" alt="Locally sourced Mexican tacos featured on Fuudr app partner review testimonial" loading="lazy" decoding="async" style={{ height: '260px', objectFit: 'cover' }} />
           </div>
           
         </div>
@@ -403,10 +467,10 @@ export function Home() {
       <section className="slice-waitlist" id="partner-cta" style={{ position: 'relative', padding: '120px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden' }}>
         {/* BACKGROUND COLLAGE */}
         <div className="bg-collage" style={{ position: 'absolute', inset: 0, zIndex: 0, background: '#3b2207' }}>
-          <img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80" style={{ position: 'absolute', top: '-10%', left: '-10%', width: '45vw', height: '60%', objectFit: 'cover', transform: 'rotate(-5deg)', border: '12px solid #3b2207' }} alt="" />
-          <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80" style={{ position: 'absolute', top: '-5%', right: '-10%', width: '50vw', height: '55%', objectFit: 'cover', transform: 'rotate(4deg)', border: '12px solid #3b2207' }} alt="" />
-          <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80" style={{ position: 'absolute', bottom: '-10%', left: '-5%', width: '40vw', height: '60%', objectFit: 'cover', transform: 'rotate(6deg)', border: '12px solid #3b2207' }} alt="" />
-          <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80" style={{ position: 'absolute', bottom: '-15%', right: '-5%', width: '55vw', height: '65%', objectFit: 'cover', transform: 'rotate(-4deg)', border: '12px solid #3b2207' }} alt="" />
+          <img src="/images/fuudr-brand-pizza-base-collage.webp" loading="lazy" decoding="async" style={{ position: 'absolute', top: '-10%', left: '-10%', width: '45vw', height: '60%', objectFit: 'cover', transform: 'rotate(-5deg)', border: '12px solid #3b2207' }} alt="Freshly baked hot brick oven cheese pizza on Fuudr waitlist background" />
+          <img src="/images/fuudr-restaurant-kitchen-chef-counter.webp" loading="lazy" decoding="async" style={{ position: 'absolute', top: '-5%', right: '-10%', width: '50vw', height: '55%', objectFit: 'cover', transform: 'rotate(4deg)', border: '12px solid #3b2207' }} alt="Busy restaurant kitchen cooking counter with chefs preparing direct food orders" />
+          <img src="/images/fuudr-italian-spaghetti-cooking-collage.webp" loading="lazy" decoding="async" style={{ position: 'absolute', bottom: '-10%', left: '-5%', width: '40vw', height: '60%', objectFit: 'cover', transform: 'rotate(6deg)', border: '12px solid #3b2207' }} alt="Hot serving of traditional Italian spaghetti pasta with basil garnish" />
+          <img src="/images/fuudr-healthy-food-spread-collage.webp" loading="lazy" decoding="async" style={{ position: 'absolute', bottom: '-15%', right: '-5%', width: '55vw', height: '65%', objectFit: 'cover', transform: 'rotate(-4deg)', border: '12px solid #3b2207' }} alt="Organic fresh salad and food spread items highlighting local restaurant menus" />
         </div>
 
         <h2 className="xl" style={{ position: 'relative', zIndex: 10, color: '#FCA311', fontSize: 'clamp(48px, 6vw, 80px)', marginBottom: '40px', textTransform: 'none', textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>Grow Your Business</h2>
@@ -417,18 +481,18 @@ export function Home() {
             Join the Fuudr Partner Program. Upload food reels, manage your menu, track operating hours, and start receiving direct orders from hungry local customers.
           </p>
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', width: '100%', justifyContent: 'center' }}>
-            <button 
-              onClick={() => window.location.href = '/partner/signup'}
-              style={{ flex: '1 1 200px', background: '#FCA311', color: '#000', fontSize: '18px', fontWeight: 800, padding: '16px 24px', borderRadius: '8px', border: '3px solid #000', boxShadow: '4px 4px 0 #000', cursor: 'pointer', transition: 'all 0.2s', fontFamily: 'var(--sans)' }}
+            <Link 
+              to="/partner/signup"
+              style={{ flex: '1 1 200px', background: '#FCA311', color: '#000', fontSize: '18px', fontWeight: 800, padding: '16px 24px', borderRadius: '8px', border: '3px solid #000', boxShadow: '4px 4px 0 #000', cursor: 'pointer', transition: 'all 0.2s', fontFamily: 'var(--sans)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
             >
-              Register Restaurant
-            </button>
-            <button 
-              onClick={() => window.location.href = '/partner'}
-              style={{ flex: '1 1 200px', background: '#fff', color: '#000', fontSize: '18px', fontWeight: 800, padding: '16px 24px', borderRadius: '8px', border: '3px solid #000', boxShadow: '4px 4px 0 #000', cursor: 'pointer', transition: 'all 0.2s', fontFamily: 'var(--sans)' }}
+              Join Restaurant Partner Program
+            </Link>
+            <Link 
+              to="/partner"
+              style={{ flex: '1 1 200px', background: '#fff', color: '#000', fontSize: '18px', fontWeight: 800, padding: '16px 24px', borderRadius: '8px', border: '3px solid #000', boxShadow: '4px 4px 0 #000', cursor: 'pointer', transition: 'all 0.2s', fontFamily: 'var(--sans)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
             >
-              Partner Sign In
-            </button>
+              Restaurant Partner Sign In
+            </Link>
           </div>
         </div>
       </section>
@@ -455,7 +519,7 @@ export function Home() {
           <div className="discovery-group" style={{ display: 'flex', gap: '20px' }}>
             {/* Card 1 */}
             <div className="discovery-card brutal-card" style={{ width: '240px', height: '340px', borderRadius: '16px', border: '4px solid #000', overflow: 'hidden', position: 'relative', background: '#ccc', boxShadow: '6px 6px 0 #000' }}>
-              <img src="https://images.unsplash.com/photo-1544148103-0773bf10d330?auto=format&fit=crop&w=400&q=80" alt="Video Placeholder 1" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src="/images/fuudr-discovery-avocado-salad-reel.webp" alt="Watch a fresh avocado salad preparation reel on Fuudr" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               <div style={{ position: 'absolute', bottom: '85px', right: '12px', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', zIndex: 5 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" style={{ filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.8))' }}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
@@ -478,7 +542,7 @@ export function Home() {
 
             {/* Card 2 */}
             <div className="discovery-card brutal-card" style={{ width: '240px', height: '340px', borderRadius: '16px', border: '4px solid #000', overflow: 'hidden', position: 'relative', background: '#ccc', boxShadow: '6px 6px 0 #000' }}>
-              <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=400&q=80" alt="Video Placeholder 2" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src="/images/fuudr-discovery-barbecue-grilled-chicken-reel.webp" alt="Watch a hot barbecue grilled chicken restaurant cooking reel on Fuudr" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               <div style={{ position: 'absolute', bottom: '85px', right: '12px', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', zIndex: 5 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" style={{ filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.8))' }}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
@@ -513,7 +577,7 @@ export function Home() {
           <div className="discovery-group" style={{ display: 'flex', gap: '20px' }}>
             {/* Card 3 */}
             <div className="discovery-card brutal-card" style={{ width: '240px', height: '340px', borderRadius: '16px', border: '4px solid #000', overflow: 'hidden', position: 'relative', background: '#ccc', boxShadow: '6px 6px 0 #000' }}>
-              <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=400&q=80" alt="Video Placeholder 3" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src="/images/fuudr-discovery-creamy-pasta-reel.webp" alt="Watch a creamy Italian pasta tossing cooking video reel on Fuudr" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               <div style={{ position: 'absolute', bottom: '85px', right: '12px', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', zIndex: 5 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" style={{ filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.8))' }}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
@@ -536,7 +600,7 @@ export function Home() {
 
             {/* Card 4 */}
             <div className="discovery-card brutal-card" style={{ width: '240px', height: '340px', borderRadius: '16px', border: '4px solid #000', overflow: 'hidden', position: 'relative', background: '#ccc', boxShadow: '6px 6px 0 #000' }}>
-              <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80" alt="Video Placeholder 4" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src="/images/fuudr-discovery-american-breakfast-spread-reel.webp" alt="Watch a hearty loaded American breakfast spread cooking reel on Fuudr" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               <div style={{ position: 'absolute', bottom: '85px', right: '12px', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', zIndex: 5 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" style={{ filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.8))' }}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
@@ -558,6 +622,28 @@ export function Home() {
             </div>
           </div>
 
+        </div>
+      </section>
+
+      {/* FAQ SECTION */}
+      <section className="slice-faq" id="faq-section" style={{ position: 'relative', padding: '100px 20px', background: '#FFFBF2', overflow: 'hidden', borderTop: '4px solid #000' }}>
+        <div className="faq-container" style={{ maxWidth: '800px', margin: '0 auto', position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <h2 className="xl" style={{ color: '#000', fontSize: 'clamp(36px, 5vw, 64px)', marginBottom: '40px', textTransform: 'uppercase', textAlign: 'center', fontFamily: 'var(--xl)' }}>
+            Frequently Asked Questions
+          </h2>
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {[
+              { q: "What is Fuudr?", a: "Fuudr is a short-form video food discovery and ordering platform where you can watch video reels of real dishes from local restaurants and order instantly." },
+              { q: "How do restaurant partners sign up?", a: "Restaurants can register for the partner program by going to the Partner Portal at fuudr.com/partner/signup, completing their profile, and uploading their menu and food reels." },
+              { q: "Is Fuudr free to use?", a: "Yes, the Fuudr app is free to download and use for customers discovering and ordering food." },
+              { q: "Which cities is Fuudr available in?", a: "Fuudr is currently launching in major cities. Check the app or enter your location to find active restaurant partners near you." }
+            ].map((faq, index) => (
+              <div key={index} className="faq-item" style={{ background: '#fff', border: '3px solid #000', borderRadius: '12px', padding: '24px', boxShadow: '4px 4px 0 #000' }}>
+                <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#000', marginBottom: '10px', fontFamily: 'var(--sans)' }}>{faq.q}</h3>
+                <p style={{ fontSize: '16px', color: '#555', lineHeight: 1.6, fontWeight: 600, fontFamily: 'var(--sans)' }}>{faq.a}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -613,6 +699,7 @@ export function Home() {
             <div style={{ display: 'flex', gap: '20px', color: '#aaa', fontFamily: 'var(--sans)' }}>
               <Link to="/privacy" className="footer-policy-link">Privacy Policy</Link>
               <Link to="/terms" className="footer-policy-link">Terms of Service</Link>
+              <Link to="/delete-account" className="footer-policy-link">Delete Account Request</Link>
             </div>
           </div>
 
