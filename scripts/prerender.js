@@ -47,7 +47,7 @@ async function run() {
     { path: '/terms', file: 'terms/index.html' },
     { path: '/delete-account', file: 'delete-account/index.html' },
     { path: '/blog', file: 'blog/index.html' },
-    { path: '/blog/best-food-reels-app-mumbai', file: 'blog/best-food-reels-app-mumbai/index.html' },
+    { path: '/blog/best-food-reels-app-jaipur', file: 'blog/best-food-reels-app-jaipur/index.html' },
     { path: '/blog/how-fuudr-helps-restaurants-grow', file: 'blog/how-fuudr-helps-restaurants-grow/index.html' }
   ];
 
