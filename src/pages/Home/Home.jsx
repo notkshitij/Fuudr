@@ -168,21 +168,21 @@ export function Home() {
   return (
     <div className="slice-home">
       <Helmet>
-        <title>Fuudr | See it. Crave it. Order it. — Food Reel App</title>
-        <meta name="description" content="Fuudr is the ultimate short-form food reel app. Watch video reels of dishes from restaurants near you and order instantly. Think TikTok meets Zomato." />
+        <title>Fuudr | Watch Reels. Discover Food. Order Instantly.</title>
+        <meta name="description" content="Fuudr is the ultimate short-form food reel app. Watch video reels of dishes from restaurants near you and order instantly. Watch Reels. Discover Food. Order Instantly." />
         <link rel="canonical" href="https://fuudr.com/" />
         
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://fuudr.com/" />
-        <meta property="og:title" content="Fuudr | See it. Crave it. Order it. — Food Reel App" />
+        <meta property="og:title" content="Fuudr | Watch Reels. Discover Food. Order Instantly." />
         <meta property="og:description" content="Fuudr is the ultimate short-form food reel app. Watch video reels of dishes from restaurants near you and order instantly." />
         <meta property="og:image" content="https://fuudr.com/banner.png" />
         
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:url" content="https://fuudr.com/" />
-        <meta name="twitter:title" content="Fuudr | See it. Crave it. Order it. — Food Reel App" />
+        <meta name="twitter:title" content="Fuudr | Watch Reels. Discover Food. Order Instantly." />
         <meta name="twitter:description" content="Fuudr is the ultimate short-form food reel app. Watch video reels of dishes from restaurants near you and order instantly." />
         <meta name="twitter:image" content="https://fuudr.com/banner.png" />
         <meta name="twitter:site" content="@tryfuudr" />

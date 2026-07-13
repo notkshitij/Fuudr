@@ -1,6 +1,6 @@
 # Fuudr
 
-> Fuudr is a short-form food reel app — watch bite-sized video reels of real dishes from local restaurants, discover hidden gems nearby, and order instantly. Think TikTok meets food delivery.
+> Fuudr is a short-form food reel app — watch bite-sized video reels of real dishes from local restaurants, discover hidden gems nearby, and order instantly. Watch Reels. Discover Food. Order Instantly.
 
 Fuudr helps people decide what to eat by showing real, honest video content of dishes instead of static menu photos, and lets them order directly. It also runs a Restaurant Partner Program where local restaurants can list their menu, upload food reels, manage operating hours, and receive direct orders from nearby customers.
 
