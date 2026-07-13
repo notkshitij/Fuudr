@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 
-const GMAIL_USER = 'solvers.real@gmail.com';
+const GMAIL_USER = 'harshagrawal7878@gmail.com';
 
 export default async function handler(req, res) {
   // Set CORS headers

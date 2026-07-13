@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import './TermsOfService.css';
 
-const LAST_UPDATED = 'July 2, 2026';
+const LAST_UPDATED = 'July 12, 2026';
 
 export default function TermsOfService() {
   return (
@@ -71,18 +71,18 @@ export default function TermsOfService() {
           <p>
             Fuudr lets you discover food through short videos and place orders with partner
             restaurants near your location. <strong>Fuudr is a discovery and ordering
-            platform — the food itself is prepared and, in most cases, delivered by
-            independent restaurant partners</strong>, not by Fuudr directly. We are not
-            responsible for the quality, safety, or preparation of food prepared by restaurant
-            partners, though we take reports of issues seriously and will assist in resolving
-            them where we can.
+            platform — the food itself is prepared by independent restaurant partners.
+            Delivery is primarily handled by Fuudr, though in some cases, the restaurant
+            partner may handle the delivery directly.</strong> We are not responsible for the
+            quality, safety, or preparation of food prepared by restaurant partners, though we
+            take reports of issues seriously and will assist in resolving them where we can.
           </p>
 
           <h2 id="orders-pricing">4. Orders, Pricing &amp; Payment</h2>
           <ul>
             <li>Menu prices, availability, and delivery times are set by restaurant partners and may change without notice.</li>
             <li>Once an order is placed and accepted by a restaurant, it generally cannot be cancelled — check the order summary carefully before confirming.</li>
-            <li>Payments are processed securely through our third-party payment gateway. Fuudr does not store your full card or bank details.</li>
+            <li>Payments are made on delivery (Pay on Delivery) via cash, UPI, or other accepted methods. Fuudr does not currently process online payments or store bank details.</li>
             <li>Delivery or platform fees, where applicable, will be shown clearly before you confirm an order.</li>
           </ul>
 
@@ -128,9 +128,8 @@ export default function TermsOfService() {
           <h2 id="third-party">9. Third-Party Services</h2>
           <p>
             The App relies on third-party services — including Google Sign-In for
-            authentication, Supabase for backend infrastructure, and a payment gateway for
-            processing payments. Your use of these services is also subject to their
-            respective terms and privacy policies.
+            authentication and Supabase for backend infrastructure. Your use of these
+            services is also subject to their respective terms and privacy policies.
           </p>
 
           <h2 id="disclaimers">10. Disclaimers</h2>

@@ -332,12 +332,19 @@ const MenuManager = ({ user }) => {
       const selectedCategory = categories.find(c => c.name === formData.category_name);
       const categoryId = selectedCategory ? selectedCategory.id : null;
 
-      let imageUrl = editItem?.image_url || null;
+      // Start image and video uploads to Cloudinary in parallel
+      const imageUploadPromise = imageFile
+        ? uploadToCloudinary(imageFile, 'image')
+        : Promise.resolve(editItem?.image_url || null);
 
-      // Upload new image if provided
-      if (imageFile) {
-        imageUrl = await uploadToCloudinary(imageFile, 'image');
-      }
+      const videosUploadPromise = Promise.all(
+        videoFiles.map(f => uploadToCloudinary(f, 'video'))
+      );
+
+      const [imageUrl, newVideoUrls] = await Promise.all([
+        imageUploadPromise,
+        videosUploadPromise
+      ]);
 
       if (isAddMode) {
         // INSERT
@@ -357,10 +364,9 @@ const MenuManager = ({ user }) => {
           .single();
         if (menuError) throw menuError;
 
-        // Upload and insert all reels — dish data lives on menu_items now,
+        // Insert all reels — dish data lives on menu_items now,
         // so reels only store the link + video.
-        const videoUrls = await Promise.all(videoFiles.map(f => uploadToCloudinary(f, 'video')));
-        await supabase.from('reels').insert(videoUrls.map(videoUrl => ({
+        await supabase.from('reels').insert(newVideoUrls.map(videoUrl => ({
           partner_id: user.id,
           menu_item_id: menuItem.id,
           video_url: videoUrl,
@@ -389,9 +395,8 @@ const MenuManager = ({ user }) => {
         // Dish metadata (name, price, description, category) lives on menu_items —
         // already updated above. Reels carry no dish data, so nothing to update here.
 
-        // Upload and insert new reels
-        if (videoFiles.length > 0) {
-          const newVideoUrls = await Promise.all(videoFiles.map(f => uploadToCloudinary(f, 'video')));
+        // Insert new reels
+        if (newVideoUrls.length > 0) {
           await supabase.from('reels').insert(newVideoUrls.map(videoUrl => ({
             partner_id: user.id,
             menu_item_id: editItem.id,
