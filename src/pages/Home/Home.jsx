@@ -48,30 +48,6 @@ export function Home() {
         duration: 1,
         ease: 'power3.out'
       });
-
-      // Horizontal parallax on hero text when scrolling
-      gsap.to('.hero-line-1', {
-        xPercent: -20,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: '.slice-hero',
-          start: 'top top',
-          end: 'bottom top',
-          scrub: true
-        }
-      });
-      
-      gsap.to('.hero-line-2', {
-        xPercent: 20,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: '.slice-hero',
-          start: 'top top',
-          end: 'bottom top',
-          scrub: true
-        }
-      });
-
       // Pull out the pizza slice when scrolling
       gsap.to('.hero-center-img-slice-scroll-wrapper', {
         x: '25vw',
@@ -265,8 +241,8 @@ export function Home() {
       {/* HERO SECTION */}
       <section className="slice-hero">
         <div className="hero-bg-text">
-          <div className="xl hero-line-1">REAL REELS. NO REGRETS.</div>
-          <div className="xl hero-line-2">REAL REELS. NO REGRETS.</div>
+          <div className="xl hero-line-1">REELS</div>
+          <div className="xl hero-line-2">MEALS</div>
         </div>
         <div className="hero-text-block">
           <h1 className="hero-heading">
@@ -276,7 +252,7 @@ export function Home() {
           </h1>
           <p className="hero-subtext">
             Short videos of real dishes.<br />
-            Real cravings. Real fast.
+            Real cravings. Ordered in a tap.
           </p>
           <div className="hero-squiggle-wrapper">
             <svg width="120" height="12" viewBox="0 0 120 12" fill="none" xmlns="http://www.w3.org/2000/svg">
