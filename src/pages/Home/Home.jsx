@@ -204,7 +204,23 @@ export function Home() {
           <div className="xl hero-line-1">REAL REELS. NO REGRETS.</div>
           <div className="xl hero-line-2">REAL REELS. NO REGRETS.</div>
         </div>
-        
+        <div className="hero-text-block">
+          <h1 className="hero-heading">
+            <span className="hero-heading-line dark">WATCH REELS.</span>
+            <span className="hero-heading-line light">DISCOVER FOOD.</span>
+            <span className="hero-heading-line dark">ORDER INSTANTLY.</span>
+          </h1>
+          <p className="hero-subtext">
+            Short videos of real dishes.<br />
+            Real cravings. Real fast.
+          </p>
+          <div className="hero-squiggle-wrapper">
+            <svg width="120" height="12" viewBox="0 0 120 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 9C30 3 60 3 90 7C105 9 113 9 117 6" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
+            </svg>
+          </div>
+        </div>
+
         <div className="hero-pizza-wrapper">
           <img 
             src="/pizza.avif" 
