@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import { ArrowLeft, MapPin, CreditCard, Clock, Package, Flame, Bike, CheckCircle, ChevronRight, IndianRupee, UtensilsCrossed, Printer, Navigation } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Clock, Package, Flame, Bike, CheckCircle, ChevronRight, IndianRupee, UtensilsCrossed, Printer, Navigation, Phone } from 'lucide-react';
 
 const STEPS = [
   { key: 'placed',     label: 'Placed',     icon: Package, desc: 'Order placed' },
@@ -69,8 +69,17 @@ export default function ManageOrder() {
   const [videoUrls, setVideoUrls] = useState({});
   const [activeVideoList, setActiveVideoList] = useState([]);
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
+  const [partnerMobileInput, setPartnerMobileInput] = useState('');
+  const [editingPartnerMobile, setEditingPartnerMobile] = useState(false);
+  const [savingPartnerMobile, setSavingPartnerMobile] = useState(false);
 
   useEffect(() => { fetchOrderDetails(); }, [id]);
+
+  useEffect(() => {
+    if (order) {
+      setPartnerMobileInput(order.delivery_partner_mobile || '');
+    }
+  }, [order?.id]);
 
   useEffect(() => {
     if (order) {
@@ -241,6 +250,27 @@ export default function ManageOrder() {
     setUpdating(false);
   };
 
+  const handleSaveDeliveryPartnerMobile = async () => {
+    const trimmed = partnerMobileInput.trim();
+    if (!/^\d{10}$/.test(trimmed)) {
+      alert('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    setSavingPartnerMobile(true);
+    const { error } = await supabase
+      .from('orders')
+      .update({ delivery_partner_mobile: trimmed })
+      .eq('id', id);
+    if (error) {
+      console.error('[handleSaveDeliveryPartnerMobile] Supabase Error:', error);
+      alert(`Database Error: ${error.message || JSON.stringify(error)}\nCode: ${error.code || 'None'}`);
+    } else {
+      setOrder(prev => ({ ...prev, delivery_partner_mobile: trimmed }));
+      setEditingPartnerMobile(false);
+    }
+    setSavingPartnerMobile(false);
+  };
+
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     const items = getOrderItems(order);
@@ -409,6 +439,58 @@ export default function ManageOrder() {
           </div>
         )}
       </div>
+
+      {/* ── Delivery Partner Mobile Number ── */}
+      {order.status !== 'cancelled' && currentStep >= STEP_INDEX.preparing && (
+        <div className="bg-white rounded-2xl border border-slate-200 p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+              <Bike size={16} />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-sm">Delivery Partner</h3>
+              <p className="text-xs text-slate-400 mt-0.5">Mobile number of the rider assigned to this order</p>
+            </div>
+          </div>
+
+          {order.delivery_partner_mobile && !editingPartnerMobile ? (
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                <Phone size={14} className="text-slate-400" />
+                <span className="font-bold text-slate-900 text-sm">{order.delivery_partner_mobile}</span>
+              </div>
+              <button
+                onClick={() => {
+                  setPartnerMobileInput(order.delivery_partner_mobile);
+                  setEditingPartnerMobile(true);
+                }}
+                className="text-xs font-bold text-orange-600 hover:text-orange-700"
+              >
+                Change Number
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="tel"
+                inputMode="numeric"
+                maxLength={10}
+                placeholder="Enter 10-digit mobile number"
+                value={partnerMobileInput}
+                onChange={e => setPartnerMobileInput(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 placeholder-slate-400 outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+              />
+              <button
+                onClick={handleSaveDeliveryPartnerMobile}
+                disabled={savingPartnerMobile || partnerMobileInput.length !== 10}
+                className="px-5 py-2.5 bg-orange-500 text-white rounded-xl font-bold text-sm hover:bg-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {savingPartnerMobile ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Tracking Timeline or Cancelled Banner ── */}
       {order.status === 'cancelled' ? (
