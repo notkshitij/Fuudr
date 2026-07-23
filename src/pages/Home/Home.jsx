@@ -277,42 +277,6 @@ export function Home() {
             />
           </div>
         </div>
-        
-        <div className="hero-bottom-actions">
-          <button className="brutal-btn" onClick={() => window.open('https://whatsapp.com/channel/0029VbCTk553QxS6ZxDutH1N', '_blank')} style={{ fontSize: '18px', padding: '6px 24px', borderRadius: '12px' }}>
-            Join Community 
-            <span style={{
-              background: '#FCA311', 
-              color: '#000', 
-              width: '24px', 
-              height: '24px', 
-              borderRadius: '50%', 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              fontSize: '20px', 
-              fontWeight: 'bold',
-              border: '2px solid #000'
-            }}>+</span>
-          </button>
-
-          <Link to="/partner" className="brutal-btn" style={{ fontSize: '18px', padding: '6px 24px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: '#000' }}>
-            Register as a Restaurant
-            <span style={{
-              background: '#FCA311', 
-              color: '#000', 
-              width: '24px', 
-              height: '24px', 
-              borderRadius: '50%', 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              border: '2px solid #000'
-            }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
-            </span>
-          </Link>
-        </div>
       </section>
 
       {/* CHECKER DIVIDER */}
@@ -440,35 +404,31 @@ export function Home() {
       </section>
 
       {/* PARTNER CTA SECTION */}
-      <section className="slice-waitlist" id="partner-cta" style={{ position: 'relative', padding: '120px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden' }}>
+      <section className="slice-waitlist partner-cta-section" id="partner-cta">
         {/* BACKGROUND COLLAGE */}
-        <div className="bg-collage" style={{ position: 'absolute', inset: 0, zIndex: 0, background: '#3b2207' }}>
+        <div className="bg-collage">
           <img src="/images/fuudr-brand-pizza-base-collage.webp" loading="lazy" decoding="async" style={{ position: 'absolute', top: '-10%', left: '-10%', width: '45vw', height: '60%', objectFit: 'cover', transform: 'rotate(-5deg)', border: '12px solid #3b2207' }} alt="Freshly baked hot brick oven cheese pizza on Fuudr waitlist background" />
           <img src="/images/fuudr-restaurant-kitchen-chef-counter.webp" loading="lazy" decoding="async" style={{ position: 'absolute', top: '-5%', right: '-10%', width: '50vw', height: '55%', objectFit: 'cover', transform: 'rotate(4deg)', border: '12px solid #3b2207' }} alt="Busy restaurant kitchen cooking counter with chefs preparing direct food orders" />
           <img src="/images/fuudr-italian-spaghetti-cooking-collage.webp" loading="lazy" decoding="async" style={{ position: 'absolute', bottom: '-10%', left: '-5%', width: '40vw', height: '60%', objectFit: 'cover', transform: 'rotate(6deg)', border: '12px solid #3b2207' }} alt="Hot serving of traditional Italian spaghetti pasta with basil garnish" />
           <img src="/images/fuudr-healthy-food-spread-collage.webp" loading="lazy" decoding="async" style={{ position: 'absolute', bottom: '-15%', right: '-5%', width: '55vw', height: '65%', objectFit: 'cover', transform: 'rotate(-4deg)', border: '12px solid #3b2207' }} alt="Organic fresh salad and food spread items highlighting local restaurant menus" />
         </div>
 
-        <h2 className="xl" style={{ position: 'relative', zIndex: 10, color: '#FCA311', fontSize: 'clamp(48px, 6vw, 80px)', marginBottom: '40px', textTransform: 'none', textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>Grow Your Business</h2>
+        <h2 className="xl partner-cta-heading">Grow Your Business</h2>
 
-        <div className="reservation-card" style={{ position: 'relative', zIndex: 10, background: '#F5F0E6', padding: '60px 40px', borderRadius: '16px', width: '100%', maxWidth: '550px', borderLeft: '8px solid #000', borderBottom: '8px solid #000', boxShadow: '0 20px 40px rgba(0,0,0,0.3)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <h3 style={{ fontSize: '24px', fontWeight: 800, color: '#3b2207', marginBottom: '16px' }}>Are you a Restaurant Owner?</h3>
-          <p style={{ color: '#555', fontSize: '16px', fontWeight: 600, lineHeight: 1.5, marginBottom: '32px' }}>
+        <div className="reservation-card partner-card">
+          <h3 className="partner-card-title">Are you a Restaurant Owner?</h3>
+          <p className="partner-card-desc">
             Join the Fuudr Partner Program. Upload food reels, manage your menu, track operating hours, and start receiving direct orders from hungry local customers.
           </p>
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', width: '100%', justifyContent: 'center' }}>
-            <Link 
-              to="/partner/signup"
-              style={{ flex: '1 1 200px', background: '#FCA311', color: '#000', fontSize: '18px', fontWeight: 800, padding: '16px 24px', borderRadius: '8px', border: '3px solid #000', boxShadow: '4px 4px 0 #000', cursor: 'pointer', transition: 'all 0.2s', fontFamily: 'var(--sans)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+          <div className="partner-btn-container">
+            <a 
+              href="https://wa.me/919950388998"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="partner-link-btn primary"
             >
-              Join Restaurant Partner Program
-            </Link>
-            <Link 
-              to="/partner"
-              style={{ flex: '1 1 200px', background: '#fff', color: '#000', fontSize: '18px', fontWeight: 800, padding: '16px 24px', borderRadius: '8px', border: '3px solid #000', boxShadow: '4px 4px 0 #000', cursor: 'pointer', transition: 'all 0.2s', fontFamily: 'var(--sans)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-            >
-              Restaurant Partner Sign In
-            </Link>
+              Request Partnership
+            </a>
           </div>
         </div>
       </section>
@@ -632,7 +592,15 @@ export function Home() {
 
           <div className="footer-actions" style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '30px', flexWrap: 'wrap' }}>
             <button className="brutal-btn footer-join-btn" onClick={() => window.open('https://whatsapp.com/channel/0029VbCTk553QxS6ZxDutH1N', '_blank')} style={{ padding: '16px 32px', fontSize: '20px', borderRadius: '12px' }}>Join Community</button>
-            <button className="brutal-btn footer-register-btn" onClick={() => document.getElementById('partner-cta')?.scrollIntoView({ behavior: 'smooth' })} style={{ padding: '16px 32px', fontSize: '20px', borderRadius: '12px' }}>Register Restaurant</button>
+            <a 
+              href="https://wa.me/919950388998"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="brutal-btn footer-register-btn" 
+              style={{ padding: '16px 32px', fontSize: '20px', borderRadius: '12px', textDecoration: 'none', color: '#000', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              Request Partnership
+            </a>
           </div>
 
           <div className="footer-socials" style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '40px', flexWrap: 'wrap' }}>

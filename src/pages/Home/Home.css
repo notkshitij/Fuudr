@@ -475,6 +475,112 @@
   margin-bottom: 60px;
 }
 
+/* PARTNER CTA & CARD STYLES */
+.bg-collage {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: #3b2207;
+}
+
+.partner-cta-section {
+  position: relative;
+  padding: 120px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+
+.partner-cta-heading {
+  position: relative;
+  z-index: 10;
+  color: #FCA311;
+  font-size: clamp(36px, 6vw, 80px);
+  margin-bottom: 40px;
+  text-transform: none;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  text-align: center;
+}
+
+.partner-card {
+  position: relative;
+  z-index: 10;
+  background: #F5F0E6;
+  padding: 60px 40px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 550px;
+  border-left: 8px solid #000;
+  border-bottom: 8px solid #000;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.partner-card-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #3b2207;
+  margin-bottom: 16px;
+}
+
+.partner-card-desc {
+  color: #555;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+  margin-bottom: 32px;
+}
+
+.partner-btn-container {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  width: 100%;
+  justify-content: center;
+}
+
+.partner-link-btn {
+  flex: 1 1 200px;
+  font-size: 18px;
+  font-weight: 800;
+  padding: 16px 24px;
+  border-radius: 8px;
+  border: 3px solid #000;
+  box-shadow: 4px 4px 0 #000;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--sans);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.partner-link-btn.primary {
+  background: #FCA311;
+  color: #000;
+}
+
+.partner-link-btn.secondary {
+  background: #fff;
+  color: #000;
+}
+
+.partner-link-btn:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #000;
+}
+
+.partner-link-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0px 0px 0 #000;
+}
+
 .brutal-form {
   display: flex;
   flex-direction: column;
@@ -777,6 +883,49 @@
   .testimonials-canvas .sticky-note:nth-child(even) { transform: rotate(2deg) !important; }
   .testimonials-canvas .polaroid-photo:nth-child(odd) { transform: rotate(3deg) !important; }
   .testimonials-canvas .polaroid-photo:nth-child(even) { transform: rotate(-3deg) !important; }
+
+  /* PARTNER CTA MOBILE OVERRIDES */
+  .partner-cta-section {
+    padding: 60px 16px;
+  }
+  .bg-collage img {
+    display: none !important;
+  }
+  .partner-cta-heading {
+    font-size: clamp(28px, 8vw, 42px);
+    margin-bottom: 24px;
+  }
+  .partner-card {
+    padding: 32px 20px;
+    border-left: 6px solid #000;
+    border-bottom: 6px solid #000;
+  }
+  .partner-card-title {
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+  .partner-card-desc {
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+  .partner-btn-container {
+    gap: 12px;
+  }
+  .partner-link-btn {
+    flex: 1 1 100%;
+    font-size: 14px;
+    padding: 12px 16px;
+    border-width: 2px;
+    box-shadow: 3px 3px 0 #000;
+  }
+  .partner-link-btn:hover {
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0 #000;
+  }
+  .partner-link-btn:active {
+    transform: translate(3px, 3px);
+    box-shadow: 0px 0px 0 #000;
+  }
 }
 
 .footer-policy-link {
