@@ -588,7 +588,7 @@ export function Home() {
             </div>
           </div>
 
-          <h2 className="xl" style={{ color: '#fff', fontSize: 'clamp(32px, 5vw, 48px)', marginBottom: '20px' }}>See it. Crave it. Eat it.</h2>
+
 
           <div className="footer-actions" style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '30px', flexWrap: 'wrap' }}>
             <button className="brutal-btn footer-join-btn" onClick={() => window.open('https://whatsapp.com/channel/0029VbCTk553QxS6ZxDutH1N', '_blank')} style={{ padding: '16px 32px', fontSize: '20px', borderRadius: '12px' }}>Join Community</button>
@@ -619,7 +619,7 @@ export function Home() {
 
           <div className="footer-bottom" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: 'none', paddingBottom: '15px', fontSize: '14px', flexWrap: 'wrap', gap: '20px' }}>
             <div style={{ color: '#aaa', fontFamily: 'var(--sans)' }}>Designed by <a href="https://thesolvers.online" target="_blank" rel="noopener noreferrer" style={{ color: '#FCA311', fontWeight: 'bold', textDecoration: 'none' }}>The Solvers</a></div>
-            <div style={{ display: 'flex', gap: '20px', color: '#aaa', fontFamily: 'var(--sans)' }}>
+            <div className="footer-policy-container" style={{ display: 'flex', gap: '20px', color: '#aaa', fontFamily: 'var(--sans)' }}>
               <Link to="/privacy" className="footer-policy-link">Privacy Policy</Link>
               <Link to="/terms" className="footer-policy-link">Terms of Service</Link>
               <Link to="/delete-account" className="footer-policy-link">Delete Account Request</Link>

@@ -769,7 +769,8 @@
     flex-wrap: nowrap !important;
     width: 100%;
   }
-  .footer-actions button {
+  .footer-actions button,
+  .footer-actions a {
     padding: 12px 8px !important;
     font-size: 14px !important;
     flex: 1;
@@ -781,7 +782,8 @@
     flex-wrap: nowrap !important;
     width: 100%;
   }
-  .footer-socials button {
+  .footer-socials button,
+  .footer-socials a {
     padding: 10px 8px !important;
     font-size: 14px !important;
     flex: 1;
@@ -789,8 +791,19 @@
     white-space: nowrap;
   }
   .footer-bottom {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 16px !important;
     padding-bottom: 16px !important;
-    gap: 12px !important;
+  }
+  .footer-policy-container {
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 8px 16px !important;
+  }
+  .footer-policy-link {
+    font-size: 11px !important;
   }
   .slice-footer > .brutal-btn {
     display: none !important;
