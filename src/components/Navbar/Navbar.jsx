@@ -26,7 +26,7 @@ export const Navbar = () => {
 
       <div className="nav-group r nav-fade-target">
         <a 
-          href="https://wa.me/919950388998"
+          href="https://wa.me/919413973399"
           target="_blank"
           rel="noopener noreferrer"
           className="brutal-btn nav-btn waitlist-btn"
@@ -86,7 +86,7 @@ export const Navbar = () => {
         </button>
 
         <a 
-          href="https://wa.me/919950388998"
+          href="https://wa.me/919413973399"
           target="_blank"
           rel="noopener noreferrer"
           className="brutal-btn"

@@ -423,7 +423,7 @@ export function Home() {
           </p>
           <div className="partner-btn-container">
             <a 
-              href="https://wa.me/919950388998"
+              href="https://wa.me/919413973399"
               target="_blank"
               rel="noopener noreferrer"
               className="partner-link-btn primary"
@@ -594,7 +594,7 @@ export function Home() {
           <div className="footer-actions" style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '30px', flexWrap: 'wrap' }}>
             <button className="brutal-btn footer-join-btn" onClick={() => window.open('https://whatsapp.com/channel/0029VbCTk553QxS6ZxDutH1N', '_blank')} style={{ padding: '16px 32px', fontSize: '20px', borderRadius: '12px' }}>Join Community</button>
             <a 
-              href="https://wa.me/919950388998"
+              href="https://wa.me/919413973399"
               target="_blank"
               rel="noopener noreferrer"
               className="brutal-btn footer-register-btn" 
