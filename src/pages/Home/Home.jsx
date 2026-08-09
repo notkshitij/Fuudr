@@ -296,7 +296,7 @@ export function Home() {
             }}>+</span>
           </button>
 
-          <Link to="/partner" className="brutal-btn" style={{ fontSize: '18px', padding: '6px 24px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: '#000' }}>
+          <a href="https://wa.me/919413973399" target="_blank" rel="noopener noreferrer" className="brutal-btn" style={{ fontSize: '18px', padding: '6px 24px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: '#000' }}>
             Register as a Restaurant
             <span style={{
               background: '#FCA311', 
@@ -311,7 +311,7 @@ export function Home() {
             }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
             </span>
-          </Link>
+          </a>
         </div>
       </section>
 
@@ -457,12 +457,14 @@ export function Home() {
             Join the Fuudr Partner Program. Upload food reels, manage your menu, track operating hours, and start receiving direct orders from hungry local customers.
           </p>
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', width: '100%', justifyContent: 'center' }}>
-            <Link 
-              to="/partner/signup"
+            <a 
+              href="https://wa.me/919413973399"
+              target="_blank"
+              rel="noopener noreferrer"
               style={{ flex: '1 1 200px', background: '#FCA311', color: '#000', fontSize: '18px', fontWeight: 800, padding: '16px 24px', borderRadius: '8px', border: '3px solid #000', boxShadow: '4px 4px 0 #000', cursor: 'pointer', transition: 'all 0.2s', fontFamily: 'var(--sans)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
             >
               Join Restaurant Partner Program
-            </Link>
+            </a>
             <Link 
               to="/partner"
               style={{ flex: '1 1 200px', background: '#fff', color: '#000', fontSize: '18px', fontWeight: 800, padding: '16px 24px', borderRadius: '8px', border: '3px solid #000', boxShadow: '4px 4px 0 #000', cursor: 'pointer', transition: 'all 0.2s', fontFamily: 'var(--sans)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}

@@ -70,8 +70,10 @@ export const Navbar = () => {
           }}>+</span>
         </button>
 
-        <Link 
-          to="/partner" 
+        <a 
+          href="https://wa.me/919413973399"
+          target="_blank"
+          rel="noopener noreferrer"
           className="brutal-btn" 
           onClick={() => setIsOpen(false)}
           style={{ 
@@ -102,7 +104,7 @@ export const Navbar = () => {
           }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
           </span>
-        </Link>
+        </a>
       </div>
 
       {/* Overlay backdrop */}
