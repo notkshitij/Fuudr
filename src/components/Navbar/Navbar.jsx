@@ -8,6 +8,12 @@ export const Navbar = () => {
   return (
     <nav className="brutal-nav">
       <div className="nav-group l nav-fade-target">
+        <button 
+          className="brutal-btn nav-btn" 
+          onClick={() => window.open('https://whatsapp.com/channel/0029VbCTk553QxS6ZxDutH1N', '_blank')}
+        >
+          Join Community
+        </button>
       </div>
       
       <div className="brand-logo nav-fade-target">
@@ -19,6 +25,15 @@ export const Navbar = () => {
       </div>
 
       <div className="nav-group r nav-fade-target">
+        <a 
+          href="https://wa.me/919950388998"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="brutal-btn nav-btn waitlist-btn"
+          style={{ textDecoration: 'none', color: '#000' }}
+        >
+          Request Partnership
+        </a>
       </div>
 
       <div className="mobile-menu-btn">
@@ -71,10 +86,10 @@ export const Navbar = () => {
         </button>
 
         <a 
-          href="https://wa.me/919413973399"
+          href="https://wa.me/919950388998"
           target="_blank"
           rel="noopener noreferrer"
-          className="brutal-btn" 
+          className="brutal-btn"
           onClick={() => setIsOpen(false)}
           style={{ 
             fontSize: '18px', 
@@ -86,10 +101,11 @@ export const Navbar = () => {
             gap: '8px', 
             textDecoration: 'none', 
             color: '#000', 
-            width: '100%' 
+            width: '100%',
+            background: '#fff'
           }}
         >
-          Register as a Restaurant
+          Request Partnership
           <span style={{
             background: '#FCA311', 
             color: '#000', 
