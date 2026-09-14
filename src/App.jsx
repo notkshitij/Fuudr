@@ -19,8 +19,6 @@ import ManageOrder from './pages/AdminFuudr/ManageOrder';
 import Privacy from './pages/Privacy/Privacy';
 import TermsOfService from './pages/TermsOfService/TermsOfService';
 import DeleteAccount from './pages/DeleteAccount/DeleteAccount';
-import { BlogList } from './pages/Blog/BlogList';
-import { BlogPost } from './pages/Blog/BlogPost';
 
 // A premium Brutalist-styled fallback loader that matches the application's design language
 function PageLoader() {
@@ -48,9 +46,6 @@ export default function App() {
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/delete-account" element={<DeleteAccount />} />
 
-          {/* Blog Content System */}
-          <Route path="/blog" element={<BlogList />} />
-          <Route path="/blog/:slug" element={<BlogPost />} />
 
           {/* Super Admin — password protected */}
           <Route path="/adminfuudr" element={

@@ -627,7 +627,8 @@
   color: #000;
 }
 
-.brutal-btn.footer-register-btn {
+.brutal-btn.footer-register-btn,
+.brutal-btn.footer-playstore-btn {
   background: #fff;
   color: #000;
 }
@@ -638,7 +639,9 @@
 }
 
 .brutal-btn.footer-register-btn:hover,
-.brutal-btn.footer-register-btn:active {
+.brutal-btn.footer-register-btn:active,
+.brutal-btn.footer-playstore-btn:hover,
+.brutal-btn.footer-playstore-btn:active {
   background: #fff;
 }
 

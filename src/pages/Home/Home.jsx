@@ -592,6 +592,21 @@ export function Home() {
 
 
           <div className="footer-actions" style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '30px', flexWrap: 'wrap' }}>
+            <a 
+              href="https://play.google.com/store/search?q=fuudr&c=apps&hl=en_IN"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="brutal-btn footer-playstore-btn" 
+              style={{ padding: '16px 32px', fontSize: '20px', borderRadius: '12px', textDecoration: 'none', color: '#000', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="24" height="24">
+                <path fill="#3bccff" d="M51.8 13.9C45.3 21 41 33.3 41 49.3v413.3c0 16.1 4.3 28.3 10.8 35.4l2.5 2.4 228.3-228.3v-12.5L54.3 11.5l-2.5 2.4z"/>
+                <path fill="#54e26f" d="M362.4 316.5l-79.8-79.8v-12.5l79.8-79.8 2.5 1.5 94.6 53.7c26.9 15.3 26.9 40.5 0 55.8l-94.6 53.7-2.5 7.4z"/>
+                <path fill="#ff3a44" d="M362.4 316.5l-79.8-79.8-230.8 230.8c16.3 17.3 43.1 18.5 72.1 2l238.5-135.3z"/>
+                <path fill="#ffc100" d="M362.4 195.5l-238.5-135.3c-29-16.5-55.8-15.3-72.1 2L282.6 293l79.8-97.5z"/>
+              </svg>
+              Download on Play Store
+            </a>
             <button className="brutal-btn footer-join-btn" onClick={() => window.open('https://whatsapp.com/channel/0029VbCTk553QxS6ZxDutH1N', '_blank')} style={{ padding: '16px 32px', fontSize: '20px', borderRadius: '12px' }}>Join Community</button>
             <a 
               href="https://wa.me/919413973399"
