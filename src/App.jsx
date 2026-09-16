@@ -19,6 +19,7 @@ import ManageOrder from './pages/AdminFuudr/ManageOrder';
 import Privacy from './pages/Privacy/Privacy';
 import TermsOfService from './pages/TermsOfService/TermsOfService';
 import DeleteAccount from './pages/DeleteAccount/DeleteAccount';
+import { NotFound } from './pages/NotFound/NotFound';
 
 // A premium Brutalist-styled fallback loader that matches the application's design language
 function PageLoader() {
@@ -69,6 +70,9 @@ export default function App() {
           <Route path="/partner/signup" element={<SignUp />} />
           <Route path="/partner/setup-profile" element={<ProfileSetup />} />
           <Route path="/partner/dashboard/*" element={<DashboardLayout />} />
+
+          {/* 404 Catch-All */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
     </>
