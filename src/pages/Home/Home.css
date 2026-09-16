@@ -3,7 +3,7 @@
 .slice-home {
   background-color: var(--bg);
   min-height: 100vh;
-  overflow: hidden;
+  overflow-x: clip;
 }
 
 /* SECTION 1: HERO */
@@ -13,7 +13,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: visible;
   background-color: var(--bg);
 }
 
