@@ -259,6 +259,41 @@ export function Home() {
               <path d="M3 9C30 3 60 3 90 7C105 9 113 9 117 6" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
             </svg>
           </div>
+          <div style={{ marginTop: '56px', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
+            {/* Google Play Button */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', position: 'relative' }}>
+              <a
+                href="https://play.google.com/store/search?q=fuudr&c=apps&hl=en_IN"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  background: '#1a1a1a',
+                  color: '#fff',
+                  borderRadius: '14px',
+                  padding: '10px 18px 10px 14px',
+                  textDecoration: 'none',
+                  flexShrink: 0,
+                }}
+              >
+                {/* Play Store Icon */}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28" height="28" style={{ flexShrink: 0 }}>
+                  <path fill="#3bccff" d="M51.8 13.9C45.3 21 41 33.3 41 49.3v413.3c0 16.1 4.3 28.3 10.8 35.4l2.5 2.4 228.3-228.3v-12.5L54.3 11.5l-2.5 2.4z"/>
+                  <path fill="#54e26f" d="M362.4 316.5l-79.8-79.8v-12.5l79.8-79.8 2.5 1.5 94.6 53.7c26.9 15.3 26.9 40.5 0 55.8l-94.6 53.7-2.5 7.4z"/>
+                  <path fill="#ff3a44" d="M362.4 316.5l-79.8-79.8-230.8 230.8c16.3 17.3 43.1 18.5 72.1 2l238.5-135.3z"/>
+                  <path fill="#ffc100" d="M362.4 195.5l-238.5-135.3c-29-16.5-55.8-15.3-72.1 2L282.6 293l79.8-97.5z"/>
+                </svg>
+                <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
+                  <span style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.06em', color: '#aaa', textTransform: 'uppercase', fontFamily: 'var(--sans)' }}>GET IT ON</span>
+                  <span style={{ fontSize: '20px', fontWeight: 700, color: '#fff', fontFamily: 'var(--sans)', lineHeight: 1.1 }}>Google Play</span>
+                </div>
+                {/* Simple chevron */}
+                <span style={{ color: '#fff', fontSize: '20px', fontWeight: 700, marginLeft: '4px', lineHeight: 1 }}>›</span>
+              </a>
+            </div>
+          </div>
         </div>
 
         <div className="hero-pizza-wrapper">
