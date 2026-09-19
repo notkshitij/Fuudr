@@ -15,6 +15,8 @@ const Overview = ({ user }) => {
     totalReviews: 0
   });
   const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(null);
+  const [toggleLoading, setToggleLoading] = useState(false);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -26,7 +28,7 @@ const Overview = ({ user }) => {
 
         const { data: partnerData } = await supabase
           .from('partners')
-          .select('avg_rating, total_reviews')
+          .select('avg_rating, total_reviews, is_open')
           .eq('id', user.id)
           .single();
 
@@ -35,6 +37,9 @@ const Overview = ({ user }) => {
           avgRating: partnerData?.avg_rating || null,
           totalReviews: partnerData?.total_reviews || 0
         });
+
+        // Default to true if column is null (before migration)
+        setIsOpen(partnerData?.is_open !== false);
       } catch (err) {
         console.error("Error fetching stats:", err);
       } finally {
@@ -44,6 +49,26 @@ const Overview = ({ user }) => {
 
     fetchStats();
   }, [user.id]);
+
+  const handleToggle = async () => {
+    const newValue = !isOpen;
+    setToggleLoading(true);
+    try {
+      const { error } = await supabase
+        .from('partners')
+        .update({ is_open: newValue })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      setIsOpen(newValue);
+    } catch (err) {
+      console.error('Failed to update store status:', err);
+      // Revert on error
+      setIsOpen(isOpen);
+    } finally {
+      setToggleLoading(false);
+    }
+  };
 
   const statCards = [
     { 
@@ -91,6 +116,26 @@ const Overview = ({ user }) => {
           </Link>
         </div>
       </div>
+
+      {/* Store Status Toggle */}
+      {isOpen !== null && (
+        <div className="mb-8 flex items-center justify-between bg-white border border-slate-200 rounded-xl px-5 py-4">
+          <div>
+            <p className="text-sm font-semibold text-slate-800">Store Status</p>
+            <p className="text-xs text-slate-400 mt-0.5">{isOpen ? 'Open — Accepting orders' : 'Closed — Not accepting orders'}</p>
+          </div>
+          <button
+            onClick={handleToggle}
+            disabled={toggleLoading}
+            className={`relative inline-flex items-center w-12 h-6 rounded-full transition-colors duration-200 focus:outline-none ${
+              toggleLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+            } ${isOpen ? 'bg-green-500' : 'bg-slate-300'}`}
+            aria-label="Toggle store"
+          >
+            <span className={`inline-block w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${isOpen ? 'translate-x-6' : 'translate-x-0.5'}`} />
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center items-center h-40">
