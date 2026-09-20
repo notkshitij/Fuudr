@@ -151,6 +151,7 @@ const MenuManager = ({ user }) => {
     category_name: '',
     is_veg: true
   });
+  const [quantities, setQuantities] = useState([]);
   const [imageFile, setImageFile] = useState(null);
   const [videoFiles, setVideoFiles] = useState([]);
   const [existingReels, setExistingReels] = useState([]);
@@ -249,6 +250,7 @@ const MenuManager = ({ user }) => {
     setVideoFiles([]);
     setErrorMsg('');
     setSuccessMsg('');
+    setQuantities([]);
     setFormData({ name: '', description: '', price: '', category_name: categories[0]?.name || '', is_veg: true });
     setIsModalOpen(true);
   };
@@ -267,6 +269,7 @@ const MenuManager = ({ user }) => {
       category_name: item.category_name,
       is_veg: item.is_veg
     });
+    setQuantities(item.quantities || []);
     // Fetch all saved reels for this item
     const { data } = await supabase.from('reels').select('id, video_url').eq('menu_item_id', item.id);
     setExistingReels(data || []);
@@ -282,8 +285,13 @@ const MenuManager = ({ user }) => {
     setVideoFiles([]);
     setExistingReels([]);
     setDeletedReelIds([]);
+    setQuantities([]);
     setFormData({ name: '', description: '', price: '', category_name: categories[0]?.name || '', is_veg: true });
   };
+
+  const addQuantityRow = () => setQuantities(prev => [...prev, { name: '', price: '' }]);
+  const removeQuantityRow = (i) => setQuantities(prev => prev.filter((_, idx) => idx !== i));
+  const updateQuantityRow = (i, field, value) => setQuantities(prev => prev.map((q, idx) => idx === i ? { ...q, [field]: value } : q));
 
   // Toggle availability
   const handleToggleAvailability = async (item) => {
@@ -359,6 +367,7 @@ const MenuManager = ({ user }) => {
             price: parseFloat(formData.price),
             is_veg: formData.is_veg,
             image_url: imageUrl,
+            quantities: quantities.filter(q => q.name.trim() && q.price !== '').map(q => ({ name: q.name.trim(), price: parseFloat(q.price) })),
           }])
           .select()
           .single();
@@ -384,6 +393,7 @@ const MenuManager = ({ user }) => {
             price: parseFloat(formData.price),
             is_veg: formData.is_veg,
             image_url: imageUrl,
+            quantities: quantities.filter(q => q.name.trim() && q.price !== '').map(q => ({ name: q.name.trim(), price: parseFloat(q.price) })),
           })
           .eq('id', editItem.id);
         if (updateError) throw updateError;
@@ -660,6 +670,52 @@ const MenuManager = ({ user }) => {
                       <div className="w-3 h-3 rounded-full bg-red-500"></div>
                     </label>
                   </div>
+                </div>
+
+                {/* Quantities / Varieties */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-slate-700">Quantities / Varieties <span className="text-slate-400 font-normal">(optional)</span></label>
+                    <button
+                      type="button"
+                      onClick={addQuantityRow}
+                      className="flex items-center gap-1 text-xs font-semibold text-orange-500 hover:text-orange-600 border border-orange-200 hover:border-orange-400 px-2.5 py-1 rounded-lg transition-colors"
+                    >
+                      <Plus size={13} /> Add
+                    </button>
+                  </div>
+                  {quantities.length === 0 ? (
+                    <p className="text-xs text-slate-400 py-2">e.g. Half / Full, Small / Medium / Large</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {quantities.map((q, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            placeholder="Name (e.g. Full)"
+                            value={q.name}
+                            onChange={e => updateQuantityRow(i, 'name', e.target.value)}
+                            className="flex-1 py-2 px-3 border-2 border-slate-200 rounded-lg focus:outline-none focus:border-orange-500 transition-colors text-sm"
+                          />
+                          <input
+                            type="number"
+                            placeholder="Price (₹)"
+                            min="0"
+                            value={q.price}
+                            onChange={e => updateQuantityRow(i, 'price', e.target.value)}
+                            className="w-28 py-2 px-3 border-2 border-slate-200 rounded-lg focus:outline-none focus:border-orange-500 transition-colors text-sm"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeQuantityRow(i)}
+                            className="p-1.5 text-slate-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Photo + Reel */}
