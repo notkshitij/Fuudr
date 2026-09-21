@@ -1,5 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Image as ImageIcon, X, Upload, UtensilsCrossed, Video, Trash2, Pencil, ToggleLeft, ToggleRight, Play } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Plus, 
+  Image as ImageIcon, 
+  X, 
+  Upload, 
+  UtensilsCrossed, 
+  Video, 
+  Trash2, 
+  Pencil, 
+  ToggleLeft, 
+  ToggleRight, 
+  Play, 
+  Layers, 
+  Check, 
+  Sparkles, 
+  Search,
+  ExternalLink 
+} from 'lucide-react';
 import { supabase } from '../../../supabaseClient';
 import { uploadToCloudinary } from '../../../utils/cloudinary';
 
@@ -83,8 +101,6 @@ const ReelPlayer = ({ item, onClose }) => {
           ))}
         </div>
 
-
-
         {/* Left / Right tap zones */}
         <div className="absolute inset-y-0 left-0 w-1/3 z-10" onClick={(e) => { e.stopPropagation(); goTo(currentIdx - 1); }} />
         <div className="absolute inset-y-0 right-0 w-1/3 z-10" onClick={(e) => { e.stopPropagation(); goTo(currentIdx + 1); }} />
@@ -131,8 +147,14 @@ const ReelPlayer = ({ item, onClose }) => {
 };
 
 const MenuManager = ({ user }) => {
+  const navigate = useNavigate();
   const [menuItems, setMenuItems] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [partnerAddons, setPartnerAddons] = useState([]);
+  const [selectedAddonIds, setSelectedAddonIds] = useState([]);
+  const [addonSearchTerm, setAddonSearchTerm] = useState('');
+  const [loadingEditId, setLoadingEditId] = useState(null);
+
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editItem, setEditItem] = useState(null); 
@@ -160,17 +182,42 @@ const MenuManager = ({ user }) => {
   const fetchMenu = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Fetch menu items along with reels and linked addons
+      let { data, error } = await supabase
         .from('menu_items')
-        .select('*, reels(video_url)')
+        .select('*, reels(video_url), menu_item_addons(id, addon_id, dish_addons(*))')
         .eq('partner_id', user.id)
         .order('created_at', { ascending: false });
-      if (error) throw error;
+
+      if (error) {
+        // Graceful fallback if junction table is still being initialized
+        const fallback = await supabase
+          .from('menu_items')
+          .select('*, reels(video_url)')
+          .eq('partner_id', user.id)
+          .order('created_at', { ascending: false });
+        data = fallback.data;
+      }
       setMenuItems(data || []);
     } catch (err) {
       console.error("Error fetching menu:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPartnerAddons = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('dish_addons')
+        .select('*')
+        .eq('partner_id', user.id)
+        .order('name', { ascending: true });
+      if (!error && data) {
+        setPartnerAddons(data);
+      }
+    } catch (err) {
+      console.error("Error fetching partner addons:", err);
     }
   };
 
@@ -193,6 +240,7 @@ const MenuManager = ({ user }) => {
   useEffect(() => {
     fetchMenu();
     fetchCategories();
+    fetchPartnerAddons();
   }, [user.id]);
 
   useEffect(() => {
@@ -251,29 +299,53 @@ const MenuManager = ({ user }) => {
     setErrorMsg('');
     setSuccessMsg('');
     setQuantities([]);
+    setSelectedAddonIds([]);
+    setAddonSearchTerm('');
     setFormData({ name: '', description: '', price: '', category_name: categories[0]?.name || '', is_veg: true });
     setIsModalOpen(true);
   };
 
   const openEditModal = async (item) => {
-    setEditItem(item);
-    setImageFile(null);
-    setVideoFiles([]);
-    setDeletedReelIds([]);
-    setErrorMsg('');
-    setSuccessMsg('');
-    setFormData({
-      name: item.name,
-      description: item.description || '',
-      price: item.price,
-      category_name: item.category_name,
-      is_veg: item.is_veg
-    });
-    setQuantities(item.quantities || []);
-    // Fetch all saved reels for this item
-    const { data } = await supabase.from('reels').select('id, video_url').eq('menu_item_id', item.id);
-    setExistingReels(data || []);
-    setIsModalOpen(true);
+    setLoadingEditId(item.id);
+    try {
+      setEditItem(item);
+      setImageFile(null);
+      setVideoFiles([]);
+      setDeletedReelIds([]);
+      setErrorMsg('');
+      setSuccessMsg('');
+      setAddonSearchTerm('');
+      setFormData({
+        name: item.name,
+        description: item.description || '',
+        price: item.price,
+        category_name: item.category_name,
+        is_veg: item.is_veg
+      });
+      setQuantities(item.quantities || []);
+
+      // Fetch linked addons and saved reels in parallel
+      const [addonsRes, reelsRes] = await Promise.all([
+        supabase.from('menu_item_addons').select('addon_id').eq('menu_item_id', item.id),
+        supabase.from('reels').select('id, video_url').eq('menu_item_id', item.id)
+      ]);
+
+      if (addonsRes.data && addonsRes.data.length > 0) {
+        setSelectedAddonIds(addonsRes.data.map(l => l.addon_id));
+      } else if (item.menu_item_addons && Array.isArray(item.menu_item_addons)) {
+        setSelectedAddonIds(item.menu_item_addons.map(a => a.addon_id || a.dish_addons?.id).filter(Boolean));
+      } else {
+        setSelectedAddonIds([]);
+      }
+
+      setExistingReels(reelsRes.data || []);
+      setIsModalOpen(true);
+    } catch (err) {
+      console.error("Error opening edit modal:", err);
+      setIsModalOpen(true);
+    } finally {
+      setLoadingEditId(null);
+    }
   };
 
   const resetModal = () => {
@@ -286,7 +358,17 @@ const MenuManager = ({ user }) => {
     setExistingReels([]);
     setDeletedReelIds([]);
     setQuantities([]);
+    setSelectedAddonIds([]);
+    setAddonSearchTerm('');
     setFormData({ name: '', description: '', price: '', category_name: categories[0]?.name || '', is_veg: true });
+  };
+
+  const toggleAddonSelection = (addonId) => {
+    setSelectedAddonIds(prev => 
+      prev.includes(addonId) 
+        ? prev.filter(id => id !== addonId) 
+        : [...prev, addonId]
+    );
   };
 
   const addQuantityRow = () => setQuantities(prev => [...prev, { name: '', price: '' }]);
@@ -381,6 +463,20 @@ const MenuManager = ({ user }) => {
           video_url: videoUrl,
         })));
 
+        // Link selected accompaniments
+        if (selectedAddonIds.length > 0) {
+          try {
+            await supabase.from('menu_item_addons').insert(
+              selectedAddonIds.map(addonId => ({
+                menu_item_id: menuItem.id,
+                addon_id: addonId
+              }))
+            );
+          } catch (addonErr) {
+            console.warn("Could not link accompaniments:", addonErr);
+          }
+        }
+
       } else {
         // UPDATE menu item
         const { error: updateError } = await supabase
@@ -412,6 +508,21 @@ const MenuManager = ({ user }) => {
             menu_item_id: editItem.id,
             video_url: videoUrl,
           })));
+        }
+
+        // Sync linked accompaniments
+        try {
+          await supabase.from('menu_item_addons').delete().eq('menu_item_id', editItem.id);
+          if (selectedAddonIds.length > 0) {
+            await supabase.from('menu_item_addons').insert(
+              selectedAddonIds.map(addonId => ({
+                menu_item_id: editItem.id,
+                addon_id: addonId
+              }))
+            );
+          }
+        } catch (addonErr) {
+          console.warn("Could not sync accompaniments:", addonErr);
         }
       }
 
@@ -532,8 +643,16 @@ const MenuManager = ({ user }) => {
                   <div className="text-orange-400 font-black text-xs uppercase tracking-widest mb-1">{item.category_name}</div>
                   <h3 className="text-white font-bold text-xl leading-tight mb-1 drop-shadow-md">{item.name}</h3>
                   {item.description && <p className="text-white/70 text-xs leading-snug mb-2 line-clamp-2">{item.description}</p>}
-                  <div className="bg-orange-500 text-white font-bold px-3 py-1 rounded-lg w-max text-sm mb-4 shadow-lg shadow-orange-500/20">
-                    ₹{item.price}
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="bg-orange-500 text-white font-bold px-3 py-1 rounded-lg w-max text-sm shadow-lg shadow-orange-500/20">
+                      ₹{item.price}
+                    </div>
+                    {item.menu_item_addons && item.menu_item_addons.length > 0 && (
+                      <div className="inline-flex items-center gap-1 bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-lg text-xs font-bold text-orange-200 border border-white/10">
+                        <Layers size={12} />
+                        <span>{item.menu_item_addons.length} Add-on{item.menu_item_addons.length > 1 ? 's' : ''}</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Delete Confirmation Inline */}
@@ -554,9 +673,15 @@ const MenuManager = ({ user }) => {
                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0 duration-300">
                       <button
                         onClick={(e) => { e.stopPropagation(); openEditModal(item); }}
-                        className="p-2.5 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white transition-colors flex-1 flex justify-center"
+                        disabled={loadingEditId === item.id}
+                        className="p-2.5 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white transition-colors flex-1 flex justify-center items-center"
+                        title="Edit Dish"
                       >
-                        <Pencil size={18} />
+                        {loadingEditId === item.id ? (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Pencil size={18} />
+                        )}
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); handleToggleAvailability(item); }}
@@ -584,36 +709,46 @@ const MenuManager = ({ user }) => {
 
       {/* Add / Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-[2rem] w-full max-w-lg my-4 relative animate-slideUp">
-            <button onClick={resetModal} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-100 p-2 rounded-full transition-colors">
-              <X size={18} />
-            </button>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2rem] w-full max-w-lg max-h-[90vh] flex flex-col relative animate-slideUp shadow-2xl overflow-hidden">
+            
+            {/* Modal Header */}
+            <div className="p-6 sm:px-8 sm:pt-6 sm:pb-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 mb-0.5">
+                  {editItem ? 'Edit Dish' : 'Add New Dish'}
+                </h2>
+                <p className="text-slate-400 text-xs">
+                  {editItem ? 'Update dish details and accompaniments.' : 'All fields are required.'}
+                </p>
+              </div>
+              <button 
+                type="button" 
+                onClick={resetModal} 
+                className="text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
 
-            <div className="p-6 sm:p-8">
-              <h2 className="text-xl font-bold text-slate-900 mb-1">
-                {editItem ? 'Edit Dish' : 'Add New Dish'}
-              </h2>
-              <p className="text-slate-400 text-sm mb-4">
-                {editItem ? 'Update dish details. Upload new files to replace existing ones.' : 'All fields are required.'}
-              </p>
+            {/* Modal Scrollable Body */}
+            <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              <div className="p-6 sm:p-8 overflow-y-auto overscroll-contain flex-1 space-y-6">
+                {errorMsg && (
+                  <div className="bg-red-50 text-red-600 p-3.5 rounded-xl text-xs font-medium border border-red-200">
+                    {errorMsg}
+                  </div>
+                )}
 
-              {errorMsg && (
-                <div className="mb-4 bg-red-50 text-red-600 p-3 rounded-xl text-sm font-medium border border-red-200">
-                  {errorMsg}
-                </div>
-              )}
+                {successMsg && (
+                  <div className="bg-green-50 text-green-600 p-3.5 rounded-xl text-xs font-medium border border-green-200 flex items-center justify-between">
+                    <span>{successMsg}</span>
+                    <button type="button" onClick={() => setSuccessMsg('')} className="text-green-500 hover:text-green-700">
+                      <X size={16} />
+                    </button>
+                  </div>
+                )}
 
-              {successMsg && (
-                <div className="mb-6 bg-green-50 text-green-600 p-4 rounded-xl text-sm font-medium border border-green-200 flex items-center justify-between">
-                  <span>{successMsg}</span>
-                  <button type="button" onClick={() => setSuccessMsg('')} className="text-green-500 hover:text-green-700">
-                    <X size={16} />
-                  </button>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="sm:col-span-2">
                     <label className="block text-sm font-medium mb-2 text-slate-700">Dish Name</label>
@@ -718,6 +853,123 @@ const MenuManager = ({ user }) => {
                   )}
                 </div>
 
+                {/* Linked Accompaniments / Add-ons */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                        <Layers size={16} className="text-orange-500" />
+                        Linked Accompaniments
+                      </label>
+                      {selectedAddonIds.length > 0 && (
+                        <span className="bg-orange-100 text-orange-600 text-[11px] font-bold px-2 py-0.5 rounded-full">
+                          {selectedAddonIds.length} selected
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        resetModal();
+                        navigate('/partner/dashboard/addons');
+                      }}
+                      className="flex items-center gap-1 text-xs font-semibold text-orange-500 hover:text-orange-600 bg-white border border-orange-200 hover:border-orange-400 px-2.5 py-1 rounded-lg transition-colors shadow-sm"
+                      title="Navigate to Accompaniments page to create or manage add-ons"
+                    >
+                      <Plus size={13} />
+                      <span>Manage in Add-ons</span>
+                      <ExternalLink size={11} className="text-orange-400 ml-0.5" />
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-500 mb-3">
+                    Select accompaniments (e.g. Butter Roti, Naan, Rice, Raita) to offer when customers add this dish to cart.
+                  </p>
+
+                  {/* Addon Selector List */}
+                  {partnerAddons.length === 0 ? (
+                    <div className="text-center py-6 px-4 bg-white/70 rounded-xl border border-dashed border-slate-300 flex flex-col items-center justify-center">
+                      <p className="text-xs text-slate-500 mb-3 font-medium">No accompaniments created yet.</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          resetModal();
+                          navigate('/partner/dashboard/addons');
+                        }}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-xs font-bold transition-all shadow-sm shadow-orange-500/20"
+                      >
+                        <Plus size={14} /> Create your first accompaniment
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      {partnerAddons.length > 4 && (
+                        <div className="relative mb-2">
+                          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={13} />
+                          <input
+                            type="text"
+                            placeholder="Filter add-ons..."
+                            value={addonSearchTerm}
+                            onChange={e => setAddonSearchTerm(e.target.value)}
+                            className="w-full pl-7 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-orange-500"
+                          />
+                        </div>
+                      )}
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+                        {partnerAddons
+                          .filter(a => a.name.toLowerCase().includes(addonSearchTerm.toLowerCase()))
+                          .map((addon) => {
+                            const isSelected = selectedAddonIds.includes(addon.id);
+                            return (
+                              <div
+                                key={addon.id}
+                                onClick={() => toggleAddonSelection(addon.id)}
+                                className={`flex items-center justify-between p-2 rounded-xl border cursor-pointer transition-all select-none ${
+                                  isSelected 
+                                    ? 'bg-orange-50/60 border-orange-500 shadow-sm text-slate-900' 
+                                    : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5 overflow-hidden">
+                                  {/* Addon thumbnail */}
+                                  <div className="w-9 h-9 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center">
+                                    {addon.image_url ? (
+                                      <img src={addon.image_url} alt={addon.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <ImageIcon size={14} className="text-slate-300" />
+                                    )}
+                                  </div>
+
+                                  <div className="overflow-hidden">
+                                    <div className="flex items-center gap-1.5">
+                                      <div className={`w-2.5 h-2.5 rounded-full flex items-center justify-center border shrink-0 ${
+                                        addon.is_veg ? 'border-green-500' : 'border-red-500'
+                                      }`}>
+                                        <div className={`w-1 h-1 rounded-full ${addon.is_veg ? 'bg-green-500' : 'bg-red-500'}`} />
+                                      </div>
+                                      <span className="text-xs font-bold truncate">{addon.name}</span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 shrink-0 ml-2">
+                                  <span className="text-xs font-black text-slate-900">+₹{addon.price}</span>
+                                  <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition-colors ${
+                                    isSelected 
+                                      ? 'bg-orange-500 border-orange-500 text-white' 
+                                      : 'border-slate-300 bg-white'
+                                  }`}>
+                                    {isSelected && <Check size={11} strokeWidth={3} />}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {/* Photo + Reel */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -756,7 +1008,7 @@ const MenuManager = ({ user }) => {
                       </div>
                     ) : (
                       <label htmlFor="dishImage" className="flex flex-col items-center justify-center w-full p-4 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer h-24 hover:bg-orange-50 hover:border-orange-400 transition-colors">
-                        <Upload className="text-slate-400 mb-1" size={22} />
+                        <ImageIcon className="text-slate-400 mb-1" size={22} />
                         <span className="text-sm font-semibold text-slate-500">Upload Photo</span>
                         <p className="text-xs text-slate-400 mt-0.5">JPG / PNG, Max 5MB</p>
                       </label>
@@ -767,31 +1019,38 @@ const MenuManager = ({ user }) => {
                     <div className="flex items-center justify-between mb-2">
                       <label className="block text-sm font-medium text-slate-700">
                         Dish Reel {!editItem && <span className="text-red-400">*</span>}
-                        {editItem && <span className="text-slate-400 font-normal"> (replace)</span>}
+                        {editItem && <span className="text-slate-400 font-normal"> (add more)</span>}
                       </label>
                       {(existingReels.length > 0 || videoFiles.length > 0) && (
                         <label htmlFor="dishVideo" className="cursor-pointer p-1 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors">
-                          <Plus size={16} className="text-blue-500" />
+                          <Plus size={14} className="text-blue-500" />
                         </label>
                       )}
                     </div>
+
                     <input type="file" id="dishVideo" accept="video/mp4,video/quicktime" multiple onChange={handleVideoChange} className="hidden" />
 
-                    {/* Video previews */}
                     {(existingReels.length > 0 || videoFiles.length > 0) ? (
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex gap-2 overflow-x-auto pb-1">
+                        {/* Saved reels */}
                         {existingReels.map((reel) => (
-                          <div key={reel.id} className="relative w-14 h-14 overflow-hidden border-2 border-green-300 bg-black flex-shrink-0 cursor-pointer" style={{borderRadius: '10px'}} onClick={() => setPreviewVideoUrl(reel.video_url)}>
+                          <div key={reel.id} className="relative w-14 h-14 overflow-hidden border-2 border-green-400 bg-black flex-shrink-0 cursor-pointer" style={{borderRadius: '10px'}} onClick={() => setPreviewVideoUrl(reel.video_url)}>
                             <video src={reel.video_url} className="absolute inset-0 w-full h-full object-cover opacity-80" muted playsInline />
                             <button
                               type="button"
-                              onClick={(e) => { e.stopPropagation(); setDeletedReelIds(prev => [...prev, reel.id]); setExistingReels(prev => prev.filter(r => r.id !== reel.id)); }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeletedReelIds(prev => [...prev, reel.id]);
+                                setExistingReels(prev => prev.filter(r => r.id !== reel.id));
+                              }}
                               className="absolute top-0.5 right-0.5 bg-black/60 text-white rounded-full p-0.5 hover:bg-red-500 transition-colors z-10"
                             >
                               <X size={10} />
                             </button>
+                            <span className="absolute bottom-0.5 left-0.5 text-[9px] bg-green-500 text-white font-bold px-1 rounded">saved</span>
                           </div>
                         ))}
+                        {/* New reels */}
                         {videoFiles.map((file, idx) => (
                           <div key={idx} className="relative w-14 h-14 overflow-hidden border-2 border-blue-300 bg-black flex-shrink-0 cursor-pointer" style={{borderRadius: '10px'}} onClick={() => setPreviewVideoUrl(URL.createObjectURL(file))}>
                             <video src={URL.createObjectURL(file)} className="absolute inset-0 w-full h-full object-cover opacity-80" muted playsInline />
@@ -802,7 +1061,7 @@ const MenuManager = ({ user }) => {
                             >
                               <X size={10} />
                             </button>
-                            <p className="absolute bottom-0 left-0 right-0 text-white text-[9px] bg-black/50 text-center truncate px-1 py-0.5">{file.name}</p>
+                            <span className="absolute bottom-0.5 left-0.5 text-[9px] bg-blue-500 text-white font-bold px-1 rounded">new</span>
                           </div>
                         ))}
                       </div>
@@ -815,23 +1074,30 @@ const MenuManager = ({ user }) => {
                     )}
                   </div>
                 </div>
+              </div>
 
-                <div className="pt-4 flex flex-col sm:flex-row gap-4">
-                  <button type="button" onClick={resetModal} className="flex-1 py-3 px-4 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">
-                    Cancel
-                  </button>
+              {/* Modal Fixed Footer */}
+              <div className="p-4 sm:px-8 border-t border-slate-100 bg-slate-50 shrink-0 flex items-center gap-3">
+                <button 
+                  type="button" 
+                  onClick={resetModal} 
+                  className="flex-1 py-3 px-4 rounded-xl font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition-colors text-sm"
+                >
+                  Cancel
+                </button>
 
-                  <button
-                    type="submit" name="save" disabled={isSubmitting}
-                    className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-orange-500 hover:bg-orange-600 transition-colors disabled:opacity-70 flex items-center justify-center gap-2 whitespace-nowrap"
-                  >
-                    {isSubmitting ? (
-                      <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>Saving...</>
-                    ) : editItem ? 'Save Changes' : 'Save Dish'}
-                  </button>
-                </div>
-              </form>
-            </div>
+                <button
+                  type="submit" 
+                  name="save" 
+                  disabled={isSubmitting}
+                  className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-orange-500 hover:bg-orange-600 transition-colors disabled:opacity-70 flex items-center justify-center gap-2 whitespace-nowrap text-sm shadow-lg shadow-orange-500/20"
+                >
+                  {isSubmitting ? (
+                    <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>Saving...</>
+                  ) : editItem ? 'Save Changes' : 'Save Dish'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

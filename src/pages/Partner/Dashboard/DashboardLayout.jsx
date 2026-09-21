@@ -3,6 +3,7 @@ import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom'
 import { 
   LayoutDashboard, 
   UtensilsCrossed, 
+  Layers,
   LogOut,
   Menu as MenuIcon,
   X,
@@ -10,6 +11,7 @@ import {
 } from 'lucide-react';
 import Overview from './Overview';
 import MenuManager from './MenuManager';
+import AddonsManager from './AddonsManager';
 import Settings from './Settings';
 
 const DashboardLayout = () => {
@@ -37,6 +39,7 @@ const DashboardLayout = () => {
   const navItems = [
     { name: 'Overview', path: '/partner/dashboard', icon: LayoutDashboard },
     { name: 'Menu', path: '/partner/dashboard/menu', icon: UtensilsCrossed },
+    { name: 'Accompaniments', path: '/partner/dashboard/addons', icon: Layers },
     { name: 'Settings', path: '/partner/dashboard/settings', icon: SettingsIcon },
   ];
 
@@ -142,6 +145,7 @@ const DashboardLayout = () => {
             <Routes>
               <Route path="/" element={<Overview user={user} />} />
               <Route path="/menu" element={<MenuManager user={user} />} />
+              <Route path="/addons" element={<AddonsManager user={user} />} />
               <Route path="/settings" element={<Settings user={user} />} />
             </Routes>
           </div>
