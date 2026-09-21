@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, ShoppingBag, CheckCircle, Clock, Bike, Package, TrendingUp, Zap } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
+import { PlatformStatusToggle } from './components/PlatformStatusToggle';
 
 const STATUS_CONFIG = {
   placed:     { label: 'Placed',      color: 'text-slate-700',   bg: 'bg-slate-100',   dot: 'bg-slate-500',   icon: Package },
@@ -96,6 +97,9 @@ export default function AdminFuudr() {
           <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
         </button>
       </div>
+
+      {/* ── Master Platform ON/OFF Switch ── */}
+      <PlatformStatusToggle />
 
       {/* ── Stat Cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
