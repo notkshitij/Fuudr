@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, ShoppingBag, CheckCircle, Clock, Bike, Package, TrendingUp, Zap } from 'lucide-react';
+import { ArrowRight, ShoppingBag, CheckCircle, Clock, Bike, Package, TrendingUp, Zap, Store, GraduationCap } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 import { PlatformStatusToggle } from './components/PlatformStatusToggle';
 
@@ -15,40 +15,60 @@ const STATUS_CONFIG = {
 export default function AdminFuudr() {
   const navigate = useNavigate();
   const [stats, setStats] = useState({ total: 0, placed: 0, preparing: 0, on_the_way: 0, delivered: 0, cancelled: 0, revenue: 0 });
+  const [partnerStats, setPartnerStats] = useState({ total: 0, poornima: 0 });
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchDashboardData = async () => {
-    const { data } = await supabase
-      .from('orders')
-      .select(`
-        id,
-        status,
-        bill,
-        delivery_name,
-        created_at,
-        partners!orders_partner_id_fkey (
-          restaurant_name
-        )
-      `)
-      .order('created_at', { ascending: false });
+    try {
+      const [ordersRes, partnersRes] = await Promise.all([
+        supabase
+          .from('orders')
+          .select(`
+            id,
+            status,
+            bill,
+            delivery_name,
+            created_at,
+            partners!orders_partner_id_fkey (
+              restaurant_name,
+              is_poornima
+            )
+          `)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('partners')
+          .select('id, is_poornima')
+      ]);
 
-    if (data) {
-      const s = { total: data.length, placed: 0, preparing: 0, on_the_way: 0, delivered: 0, cancelled: 0, revenue: 0 };
-      data.forEach(o => {
-        if (s[o.status] !== undefined) s[o.status]++;
-        if (o.status !== 'cancelled') {
-          const totalPrice = o.bill?.total ?? o.total_price ?? 0;
-          s.revenue += Number(totalPrice) || 0;
-        }
-      });
-      setStats(s);
-      setRecentOrders(data.slice(0, 5).map(o => ({
-        ...o,
-        restaurant_name: o.partners?.restaurant_name ?? o.restaurant_name
-      })));
+      if (partnersRes.data) {
+        const totalP = partnersRes.data.length;
+        const poornimaP = partnersRes.data.filter(p => p.is_poornima).length;
+        setPartnerStats({ total: totalP, poornima: poornimaP });
+      }
+
+      if (ordersRes.data) {
+        const data = ordersRes.data;
+        const s = { total: data.length, placed: 0, preparing: 0, on_the_way: 0, delivered: 0, cancelled: 0, revenue: 0 };
+        data.forEach(o => {
+          if (s[o.status] !== undefined) s[o.status]++;
+          if (o.status !== 'cancelled') {
+            const totalPrice = o.bill?.total ?? o.total_price ?? 0;
+            s.revenue += Number(totalPrice) || 0;
+          }
+        });
+        setStats(s);
+        setRecentOrders(data.slice(0, 5).map(o => ({
+          ...o,
+          restaurant_name: o.partners?.restaurant_name ?? o.restaurant_name,
+          is_poornima: o.partners?.is_poornima ?? o.is_poornima ?? false
+        })));
+      }
+    } catch (err) {
+      console.error('Error fetching admin dashboard data:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -56,6 +76,7 @@ export default function AdminFuudr() {
     const sub = supabase
       .channel('admin_dash')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, fetchDashboardData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'partners' }, fetchDashboardData)
       .subscribe();
     return () => supabase.removeChannel(sub);
   }, []);
@@ -83,19 +104,33 @@ export default function AdminFuudr() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Super Admin Dashboard</h1>
-          <p className="text-slate-500 mt-1 font-medium">Real-time overview of all Fuudr orders & deliveries.</p>
+          <p className="text-slate-500 mt-1 font-medium">Real-time overview of all Fuudr orders, partner outlets & deliveries.</p>
         </div>
-        <button
-          onClick={() => navigate('/adminfuudr/orders')}
-          className="group self-start md:self-auto flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-xl font-bold shadow-md shadow-orange-500/25 hover:bg-orange-600 hover:-translate-y-0.5 transition-all"
-        >
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-          </span>
-          View Live Orders
-          <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-        </button>
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            onClick={() => navigate('/adminfuudr/restaurants')}
+            className="flex items-center gap-2 px-5 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold shadow-sm hover:bg-slate-50 hover:-translate-y-0.5 transition-all"
+          >
+            <Store size={18} className="text-orange-500" />
+            <span>Restaurants</span>
+            {partnerStats.total > 0 && (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-extrabold">
+                {partnerStats.total}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => navigate('/adminfuudr/orders')}
+            className="group flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-xl font-bold shadow-md shadow-orange-500/25 hover:bg-orange-600 hover:-translate-y-0.5 transition-all"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+            </span>
+            View Live Orders
+            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
       </div>
 
       {/* ── Master Platform ON/OFF Switch ── */}
@@ -203,7 +238,14 @@ export default function AdminFuudr() {
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-slate-900 text-sm truncate">{order.delivery_name || 'Unknown'}</p>
                       {order.restaurant_name && (
-                        <p className="text-xs text-slate-400 truncate">{order.restaurant_name}</p>
+                        <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                          <p className="text-xs text-slate-500 truncate">{order.restaurant_name}</p>
+                          {order.is_poornima && (
+                            <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                              <GraduationCap size={9} /> Inside Poornima
+                            </span>
+                          )}
+                        </div>
                       )}
                       <p className="text-xs text-slate-400 mt-0.5">#{order.id.split('-').pop().toUpperCase()} · {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                     </div>

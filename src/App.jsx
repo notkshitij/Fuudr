@@ -16,6 +16,7 @@ import AdminFuudrLayout from './pages/AdminFuudr/AdminFuudrLayout';
 import AdminFuudr from './pages/AdminFuudr/AdminFuudr';
 import OrdersList from './pages/AdminFuudr/OrdersList';
 import ManageOrder from './pages/AdminFuudr/ManageOrder';
+import RestaurantsList from './pages/AdminFuudr/RestaurantsList';
 import Privacy from './pages/Privacy/Privacy';
 import TermsOfService from './pages/TermsOfService/TermsOfService';
 import DeleteAccount from './pages/DeleteAccount/DeleteAccount';
@@ -57,6 +58,7 @@ export default function App() {
             <Route index element={<AdminFuudr />} />
             <Route path="orders" element={<OrdersList />} />
             <Route path="orders/:id" element={<ManageOrder />} />
+            <Route path="restaurants" element={<RestaurantsList />} />
           </Route>
 
           <Route path="/fuudr-backstage" element={

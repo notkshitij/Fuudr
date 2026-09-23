@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import { ArrowLeft, MapPin, CreditCard, Clock, Package, Flame, Bike, CheckCircle, ChevronRight, IndianRupee, UtensilsCrossed, Printer, Navigation, Phone } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Clock, Package, Flame, Bike, CheckCircle, ChevronRight, IndianRupee, UtensilsCrossed, Printer, Navigation, Phone, GraduationCap } from 'lucide-react';
 
 const STEPS = [
   { key: 'placed',     label: 'Placed',     icon: Package, desc: 'Order placed' },
@@ -222,7 +222,8 @@ export default function ManageOrder() {
           address,
           latitude,
           longitude,
-          google_map_link
+          google_map_link,
+          is_poornima
         )
       `)
       .eq('id', id)
@@ -230,7 +231,8 @@ export default function ManageOrder() {
     if (!error && data) {
       setOrder({
         ...data,
-        restaurant_name: data.partners?.restaurant_name ?? data.restaurant_name
+        restaurant_name: data.partners?.restaurant_name ?? data.restaurant_name,
+        is_poornima: data.partners?.is_poornima ?? data.is_poornima ?? false
       });
     }
     setLoading(false);
@@ -558,7 +560,14 @@ export default function ManageOrder() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Restaurant Source</p>
-                  <p className="text-sm font-black text-slate-900 mt-0.5">{order.restaurant_name}</p>
+                  <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                    <p className="text-sm font-black text-slate-900">{order.restaurant_name}</p>
+                    {order.is_poornima && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                        <GraduationCap size={11} /> Inside Poornima Campus
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-slate-500 mt-0.5 line-clamp-2 leading-relaxed">{order.partners?.address || 'Restaurant Address'}</p>
                   <div className="mt-2.5">
                     <a

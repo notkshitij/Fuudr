@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import { Eye, Search, Filter, Package, Clock, Bike, CheckCircle, RefreshCw } from 'lucide-react';
+import { Eye, Search, Filter, Package, Clock, Bike, CheckCircle, RefreshCw, GraduationCap } from 'lucide-react';
 
 const STATUS_CONFIG = {
   all:        { label: 'All Orders',  color: 'text-slate-700',   bg: 'bg-slate-100',  dot: 'bg-slate-400' },
@@ -17,6 +17,7 @@ export default function OrdersList() {
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState('');
   const [dateFilter, setDateFilter] = useState('');
+  const [campusFilter, setCampusFilter] = useState('all'); // 'all', 'poornima_only'
   const [activeTab, setActiveTab] = useState('all');
   const navigate = useNavigate();
 
@@ -26,14 +27,16 @@ export default function OrdersList() {
       .select(`
         *,
         partners!orders_partner_id_fkey (
-          restaurant_name
+          restaurant_name,
+          is_poornima
         )
       `)
       .order('created_at', { ascending: false });
     if (!error && data) {
       const normalized = data.map(o => ({
         ...o,
-        restaurant_name: o.partners?.restaurant_name ?? o.restaurant_name
+        restaurant_name: o.partners?.restaurant_name ?? o.restaurant_name,
+        is_poornima: o.partners?.is_poornima ?? o.is_poornima ?? false
       }));
       setOrders(normalized);
     }
@@ -56,10 +59,18 @@ export default function OrdersList() {
     return c;
   }, [orders]);
 
+  const poornimaOrderCount = useMemo(() => {
+    return orders.filter(o => o.is_poornima).length;
+  }, [orders]);
+
   // Filtered list
   const filtered = useMemo(() => {
     return orders.filter(o => {
       const matchTab = activeTab === 'all' || o.status === activeTab;
+      
+      // Campus filter
+      if (campusFilter === 'poornima_only' && !o.is_poornima) return false;
+
       const q = search.toLowerCase();
       const matchSearch = !q ||
         o.delivery_name?.toLowerCase().includes(q) ||
@@ -69,17 +80,13 @@ export default function OrdersList() {
       
       let matchDate = true;
       if (dateFilter) {
-        // Handle timezone properly or just simple prefix match
-        const orderDateStr = new Date(o.created_at).toISOString().split('T')[0];
-        // However, localDate might be different. Let's use local timezone formatting to match input type="date"
         const localDateParts = new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(o.created_at));
-        // en-CA outputs YYYY-MM-DD
         matchDate = localDateParts === dateFilter;
       }
 
       return matchTab && matchSearch && matchDate;
     });
-  }, [orders, activeTab, search, dateFilter]);
+  }, [orders, activeTab, campusFilter, search, dateFilter]);
 
   const activeOrders = counts.placed + counts.preparing + counts.on_the_way;
 
@@ -142,8 +149,29 @@ export default function OrdersList() {
             </button>
           )}
         </div>
+        {/* Campus Filter Toggle */}
+        <button
+          onClick={() => setCampusFilter(prev => prev === 'poornima_only' ? 'all' : 'poornima_only')}
+          className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all border ${
+            campusFilter === 'poornima_only'
+              ? 'bg-purple-600 text-white border-purple-600 shadow-sm shadow-purple-500/20'
+              : 'bg-white border-slate-200 text-purple-700 hover:bg-purple-50 hover:border-purple-200'
+          }`}
+          title="Filter only orders from cafes inside Poornima campus"
+        >
+          <GraduationCap size={16} />
+          <span>Inside Poornima</span>
+          {poornimaOrderCount > 0 && (
+            <span className={`text-xs px-1.5 py-0.2 rounded-full font-extrabold ${
+              campusFilter === 'poornima_only' ? 'bg-purple-800 text-white' : 'bg-purple-100 text-purple-800'
+            }`}>
+              {poornimaOrderCount}
+            </span>
+          )}
+        </button>
+
         {/* Status tabs */}
-        <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl p-1">
+        <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl p-1 overflow-x-auto">
           {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
             <button
               key={key}
@@ -225,7 +253,14 @@ export default function OrdersList() {
                         <div className="text-xs text-slate-400 mt-0.5 truncate max-w-[180px]">{order.delivery_address || '—'}</div>
                       </td>
                       <td className="px-5 py-4">
-                        <div className="font-bold text-slate-900 text-sm truncate max-w-[150px]">{order.restaurant_name || '—'}</div>
+                        <div className="font-bold text-slate-900 text-sm truncate max-w-[160px]">{order.restaurant_name || '—'}</div>
+                        {order.is_poornima && (
+                          <div className="mt-1">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                              <GraduationCap size={10} /> Inside Poornima
+                            </span>
+                          </div>
+                        )}
                       </td>
                       <td className="px-5 py-4">
                         <div className="text-sm text-slate-600 max-w-[160px] truncate">{preview}{extra ? <span className="text-slate-400">{extra} more</span> : ''}</div>

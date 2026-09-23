@@ -7,7 +7,8 @@ import {
   ArrowRight,
   ArrowLeft,
   Image as ImageIcon,
-  CalendarDays
+  CalendarDays,
+  GraduationCap
 } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 import { uploadToCloudinary } from '../../utils/cloudinary';
@@ -28,7 +29,8 @@ const ProfileSetup = () => {
     openingTime: '',
     closingTime: '',
     gstNumber: '',
-    operatingDays: []
+    operatingDays: [],
+    isPoornima: false
   });
 
   const [files, setFiles] = useState({
@@ -41,13 +43,17 @@ const ProfileSetup = () => {
     if (!storedUser) {
       navigate('/partner');
     } else {
-      setUser(JSON.parse(storedUser));
+      const parsed = JSON.parse(storedUser);
+      setUser(parsed);
+      if (parsed.is_poornima !== undefined) {
+        setFormData(prev => ({ ...prev, isPoornima: Boolean(parsed.is_poornima) }));
+      }
     }
   }, [navigate]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
   const handleFileChange = (e) => {
@@ -112,6 +118,7 @@ const ProfileSetup = () => {
         closing_time: formData.closingTime,
         gst_number: formData.gstNumber || null,
         operating_days: formData.operatingDays,
+        is_poornima: formData.isPoornima
       };
 
       if (logoUrl) updateData.logo_url = logoUrl;
@@ -293,20 +300,58 @@ const ProfileSetup = () => {
       case 4:
         return (
           <div className="animate-fadeIn">
-            <h2 className="text-2xl font-bold mb-2 text-slate-900 text-center">GST Information</h2>
-            <p className="text-slate-500 mb-8 text-center">Enter your GST number if you have one. (Optional)</p>
-            <div className="max-w-md mx-auto">
-              <label className="block text-sm font-medium mb-2 text-slate-700">GST Number</label>
-              <div className="relative flex items-center">
-                <FileText className="absolute left-4 text-slate-400 pointer-events-none" size={20} />
-                <input 
-                  type="text" 
-                  name="gstNumber"
-                  value={formData.gstNumber}
-                  onChange={handleChange}
-                  className="w-full py-4 pl-12 pr-4 border-2 border-slate-200 rounded-xl bg-slate-50 text-slate-900 text-lg transition duration-200 focus:outline-none focus:border-orange-500 focus:bg-white uppercase placeholder-normal" 
-                  placeholder="e.g. 22AAAAA0000A1Z5" 
-                />
+            <h2 className="text-2xl font-bold mb-2 text-slate-900 text-center">Campus & Tax Information</h2>
+            <p className="text-slate-500 mb-6 text-center">Set your campus location and optional tax information.</p>
+            
+            <div className="max-w-md mx-auto space-y-5">
+              {/* Inside Poornima Toggle Card */}
+              <div className="p-5 rounded-2xl border-2 border-orange-200 bg-orange-50/60 transition-all hover:bg-orange-50">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center shrink-0 shadow-sm shadow-orange-500/20">
+                      <GraduationCap size={22} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-slate-900 text-base">Inside Poornima Campus</span>
+                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-orange-200 text-orange-800">Campus Cafe</span>
+                      </div>
+                      <p className="text-xs text-slate-600 mt-1">Is this cafe located inside the Poornima campus?</p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={formData.isPoornima}
+                    onClick={() => setFormData(prev => ({ ...prev, isPoornima: !prev.isPoornima }))}
+                    className={`relative shrink-0 h-7 w-14 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500/30 ${
+                      formData.isPoornima ? 'bg-orange-500' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-[3px] left-[3px] h-[22px] w-[22px] rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                        formData.isPoornima ? 'translate-x-[28px]' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+
+              {/* GST Field */}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-slate-700">GST Number (Optional)</label>
+                <div className="relative flex items-center">
+                  <FileText className="absolute left-4 text-slate-400 pointer-events-none" size={20} />
+                  <input 
+                    type="text" 
+                    name="gstNumber"
+                    value={formData.gstNumber}
+                    onChange={handleChange}
+                    className="w-full py-4 pl-12 pr-4 border-2 border-slate-200 rounded-xl bg-slate-50 text-slate-900 text-lg transition duration-200 focus:outline-none focus:border-orange-500 focus:bg-white uppercase placeholder-normal" 
+                    placeholder="e.g. 22AAAAA0000A1Z5" 
+                  />
+                </div>
               </div>
             </div>
           </div>

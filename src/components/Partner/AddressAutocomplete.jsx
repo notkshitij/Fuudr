@@ -141,7 +141,7 @@ const AddressAutocomplete = ({
   return (
     <div className="relative" ref={wrapperRef}>
       <div className="relative flex items-center">
-        <MapPin className="absolute left-4 text-slate-400 pointer-events-none" size={20} />
+        <MapPin className="absolute left-3 text-slate-400 pointer-events-none" size={17} />
         <input
           type="text"
           value={inputValue}
@@ -149,16 +149,16 @@ const AddressAutocomplete = ({
           onFocus={() => suggestions.length > 0 && setShowDropdown(true)}
           required={required}
           autoComplete="off"
-          className={`w-full py-3 pl-11 pr-10 border rounded-lg bg-slate-50 text-slate-900 transition duration-200 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 ${
+          className={`w-full py-2 sm:py-2.5 pl-9 pr-9 border rounded-lg bg-slate-50 text-slate-900 text-xs sm:text-sm transition duration-200 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500/10 ${
             isConfirmed ? 'border-green-300' : 'border-slate-200'
           }`}
           placeholder={placeholder}
         />
         {loading && (
-          <Loader2 className="absolute right-4 text-slate-400 animate-spin" size={18} />
+          <Loader2 className="absolute right-3 text-slate-400 animate-spin" size={16} />
         )}
         {!loading && isConfirmed && (
-          <span className="absolute right-4 text-green-500 text-xs font-semibold">✓</span>
+          <span className="absolute right-3 text-green-500 text-xs font-semibold">✓</span>
         )}
       </div>
 

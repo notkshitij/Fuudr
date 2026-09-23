@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Save, Building2, Clock, FileText, Image as ImageIcon, Upload, ShieldCheck, MapPin, Mail, Phone, User, CheckCircle2, CalendarDays, ChevronDown, UtensilsCrossed } from 'lucide-react';
+import { Save, Building2, Clock, FileText, Image as ImageIcon, Upload, ShieldCheck, MapPin, Mail, Phone, User, CheckCircle2, CalendarDays, ChevronDown, UtensilsCrossed, GraduationCap } from 'lucide-react';
 import { supabase } from '../../../supabaseClient';
 import { uploadToCloudinary } from '../../../utils/cloudinary';
 import AddressAutocomplete from '../../../components/Partner/AddressAutocomplete';
@@ -48,6 +48,7 @@ const Settings = ({ user }) => {
     total_reviews: 0,
     restaurant_type: '',
     provides_delivery: true,
+    is_poornima: false,
     opening_time: '',
     closing_time: '',
     operating_days: [],
@@ -74,6 +75,7 @@ const Settings = ({ user }) => {
         total_reviews: user.total_reviews || 0,
         restaurant_type: user.restaurant_type || '',
         provides_delivery: user.provides_delivery ?? true,
+        is_poornima: user.is_poornima ?? false,
         opening_time: user.opening_time || '',
         closing_time: user.closing_time || '',
         operating_days: user.operating_days || [],
@@ -365,6 +367,50 @@ const Settings = ({ user }) => {
                     )}
                   </div>
                 )}
+              </div>
+
+              {/* Poornima Campus Cafe Toggle */}
+              <div className="md:col-span-2">
+                <div className="p-5 bg-gradient-to-r from-orange-50/80 via-amber-50/40 to-orange-50/30 border border-orange-200/90 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all">
+                  <div className="flex items-start gap-3.5">
+                    <div className="w-11 h-11 rounded-xl bg-orange-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-orange-500/20 mt-0.5">
+                      <GraduationCap size={22} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-bold text-base text-slate-900">Inside Poornima Campus Cafe</h4>
+                        {formData.is_poornima ? (
+                          <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-orange-500 text-white shadow-sm shadow-orange-500/20">
+                            On-Campus
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-600">
+                            Off-Campus
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                        Is this cafe located inside the Poornima campus? Toggle this on to identify your outlet as an on-campus cafe for students and super admins.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={Boolean(formData.is_poornima)}
+                    onClick={() => setFormData(prev => ({ ...prev, is_poornima: !prev.is_poornima }))}
+                    className={`relative shrink-0 h-7 w-14 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 ${
+                      formData.is_poornima ? 'bg-orange-500' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-[3px] left-[3px] h-[22px] w-[22px] rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                        formData.is_poornima ? 'translate-x-[28px]' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
               </div>
             </div>
             </div>

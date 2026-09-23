@@ -12,7 +12,8 @@ import {
   Eye,
   EyeOff,
   AlertCircle,
-  X
+  X,
+  GraduationCap
 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import AuthLayout from '../../components/Partner/AuthLayout';
@@ -47,14 +48,15 @@ const SignUp = () => {
     totalReviews: 0,
     restaurantType: 'restaurant',
     providesDelivery: 'yes',
+    isPoornima: false,
     password: ''
   });
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
@@ -104,6 +106,21 @@ const SignUp = () => {
 
       if (partnerError || !partnerData) {
         throw partnerError || new Error('Failed to create partner profile.');
+      }
+
+      // Update is_poornima in partners table if checked or explicitly configured
+      if (formData.isPoornima) {
+        try {
+          await supabase
+            .from('partners')
+            .update({ is_poornima: true })
+            .eq('id', partnerData.id);
+          partnerData.is_poornima = true;
+        } catch (updateErr) {
+          console.warn("Could not set is_poornima during registration:", updateErr);
+        }
+      } else {
+        partnerData.is_poornima = false;
       }
 
       // Save user session in localStorage (matching existing structure)
@@ -220,20 +237,20 @@ const SignUp = () => {
         title="Partner With Us" 
         subtitle="Join Fuudr and grow your business today"
       >
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-2.5 sm:space-y-3">
 
         {/* Row 1: Restaurant & Owner Name */}
-        <div className="flex flex-col md:flex-row gap-5">
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
-            <label className="block text-sm font-medium mb-2 text-slate-900">Restaurant Name</label>
+            <label className="block text-xs font-semibold mb-1 text-slate-800">Restaurant Name</label>
             <div className="relative flex items-center">
-              <Store className="absolute left-4 text-slate-400 pointer-events-none" size={20} />
+              <Store className="absolute left-3 text-slate-400 pointer-events-none" size={17} />
               <input 
                 type="text" 
                 name="restaurantName"
                 value={formData.restaurantName}
                 onChange={handleChange}
-                className="w-full py-3 pl-11 pr-4 border border-slate-200 rounded-lg bg-slate-50 text-slate-900 transition duration-200 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10" 
+                className="w-full py-2 sm:py-2.5 pl-9 pr-3 border border-slate-200 rounded-lg bg-slate-50 text-slate-900 text-xs sm:text-sm transition duration-200 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500/10" 
                 placeholder="e.g. The Grand Kitchen" 
                 required
               />
@@ -241,15 +258,15 @@ const SignUp = () => {
           </div>
           
           <div className="flex-1">
-            <label className="block text-sm font-medium mb-2 text-slate-900">Owner / Manager Name</label>
+            <label className="block text-xs font-semibold mb-1 text-slate-800">Owner / Manager Name</label>
             <div className="relative flex items-center">
-              <User className="absolute left-4 text-slate-400 pointer-events-none" size={20} />
+              <User className="absolute left-3 text-slate-400 pointer-events-none" size={17} />
               <input 
                 type="text" 
                 name="ownerName"
                 value={formData.ownerName}
                 onChange={handleChange}
-                className="w-full py-3 pl-11 pr-4 border border-slate-200 rounded-lg bg-slate-50 text-slate-900 transition duration-200 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10" 
+                className="w-full py-2 sm:py-2.5 pl-9 pr-3 border border-slate-200 rounded-lg bg-slate-50 text-slate-900 text-xs sm:text-sm transition duration-200 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500/10" 
                 placeholder="Full Name" 
                 required
               />
@@ -257,18 +274,18 @@ const SignUp = () => {
           </div>
         </div>
 
-        {/* Row 2: Mobile & Verification */}
-        <div className="flex flex-col md:flex-row gap-5">
+        {/* Row 2: Mobile & Email */}
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
-            <label className="block text-sm font-medium mb-2 text-slate-900">Mobile Number</label>
+            <label className="block text-xs font-semibold mb-1 text-slate-800">Mobile Number</label>
             <div className="relative flex items-center">
-              <Phone className="absolute left-4 text-slate-400 pointer-events-none" size={20} />
+              <Phone className="absolute left-3 text-slate-400 pointer-events-none" size={17} />
               <input 
                 type="tel" 
                 name="mobileNumber"
                 value={formData.mobileNumber}
                 onChange={handleChange}
-                className="w-full py-3 pl-11 pr-4 border border-slate-200 rounded-lg bg-slate-50 text-slate-900 transition duration-200 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10" 
+                className="w-full py-2 sm:py-2.5 pl-9 pr-3 border border-slate-200 rounded-lg bg-slate-50 text-slate-900 text-xs sm:text-sm transition duration-200 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500/10" 
                 placeholder="+91 XXXXX XXXXX" 
                 required
               />
@@ -276,15 +293,15 @@ const SignUp = () => {
           </div>
           
           <div className="flex-1">
-            <label className="block text-sm font-medium mb-2 text-slate-900">Email Address</label>
+            <label className="block text-xs font-semibold mb-1 text-slate-800">Email Address</label>
             <div className="relative flex items-center">
-              <Mail className="absolute left-4 text-slate-400 pointer-events-none" size={20} />
+              <Mail className="absolute left-3 text-slate-400 pointer-events-none" size={17} />
               <input 
                 type="email" 
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full py-3 pl-11 pr-4 border border-slate-200 rounded-lg bg-slate-50 text-slate-900 transition duration-200 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10" 
+                className="w-full py-2 sm:py-2.5 pl-9 pr-3 border border-slate-200 rounded-lg bg-slate-50 text-slate-900 text-xs sm:text-sm transition duration-200 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500/10" 
                 placeholder="restaurant@example.com" 
                 required
               />
@@ -294,7 +311,7 @@ const SignUp = () => {
 
         {/* Address */}
         <div>
-          <label className="block text-sm font-medium mb-2 text-slate-900">Restaurant Address</label>
+          <label className="block text-xs font-semibold mb-1 text-slate-800">Restaurant Address</label>
           <AddressAutocomplete
             value={formData.address}
             onSelect={handleAddressSelect}
@@ -304,30 +321,30 @@ const SignUp = () => {
         </div>
 
         {/* Row 3: Type & Delivery */}
-        <div className="flex flex-col md:flex-row gap-5">
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
-            <label className="block text-sm font-medium mb-2 text-slate-900">Restaurant Type</label>
+            <label className="block text-xs font-semibold mb-1 text-slate-800">Restaurant Type</label>
             <div className="relative">
-              <UtensilsCrossed className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" size={20} />
+              <UtensilsCrossed className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10" size={17} />
               
               {/* Custom Dropdown Trigger */}
               <button 
                 type="button"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full flex items-center justify-between py-3 pl-11 pr-4 border border-slate-200 rounded-lg bg-slate-50 text-slate-900 transition duration-200 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 text-left"
+                className="w-full flex items-center justify-between py-2 sm:py-2.5 pl-9 pr-3 border border-slate-200 rounded-lg bg-slate-50 text-slate-900 text-xs sm:text-sm transition duration-200 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500/10 text-left"
               >
                 <span>{restaurantTypes.find(t => t.value === formData.restaurantType)?.label}</span>
-                <ChevronDown size={20} className={`text-slate-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown size={17} className={`text-slate-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {/* Custom Dropdown Menu */}
               <div 
-                className={`absolute left-0 right-0 top-full mt-2 bg-white border border-slate-100 shadow-xl rounded-lg overflow-hidden z-20 transition-all duration-300 origin-top ${isDropdownOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 pointer-events-none'}`}
+                className={`absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-100 shadow-xl rounded-lg overflow-hidden z-20 transition-all duration-300 origin-top ${isDropdownOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 pointer-events-none'}`}
               >
                 {restaurantTypes.map(type => (
                   <div 
                     key={type.value}
-                    className={`px-4 py-3 cursor-pointer hover:bg-orange-50 transition-colors ${formData.restaurantType === type.value ? 'bg-orange-50 text-orange-600 font-semibold' : 'text-slate-700'}`}
+                    className={`px-3.5 py-2.5 text-xs sm:text-sm cursor-pointer hover:bg-orange-50 transition-colors ${formData.restaurantType === type.value ? 'bg-orange-50 text-orange-600 font-semibold' : 'text-slate-700'}`}
                     onClick={() => {
                       setFormData(prev => ({ ...prev, restaurantType: type.value }));
                       setIsDropdownOpen(false);
@@ -341,8 +358,8 @@ const SignUp = () => {
           </div>
 
           <div className="flex-1">
-            <label className="block text-sm font-medium mb-2 text-slate-900">Provide Delivery?</label>
-            <div className="flex gap-4">
+            <label className="block text-xs font-semibold mb-1 text-slate-800">Provide Delivery?</label>
+            <div className="flex gap-2.5">
               <div className="flex-1 relative">
                 <input 
                   type="radio" 
@@ -353,7 +370,7 @@ const SignUp = () => {
                   onChange={handleChange}
                   className="peer absolute opacity-0"
                 />
-                <label htmlFor="delivery-yes" className="flex items-center justify-center py-3 px-4 border border-slate-200 rounded-lg bg-white text-slate-500 font-medium cursor-pointer transition-all peer-checked:border-orange-500 peer-checked:bg-orange-500/5 peer-checked:text-orange-500 peer-focus-visible:ring-4 peer-focus-visible:ring-orange-500/20">
+                <label htmlFor="delivery-yes" className="flex items-center justify-center py-2 sm:py-2.5 px-3 border border-slate-200 rounded-lg bg-white text-slate-500 text-xs sm:text-sm font-medium cursor-pointer transition-all peer-checked:border-orange-500 peer-checked:bg-orange-500/5 peer-checked:text-orange-500 peer-focus-visible:ring-2 peer-focus-visible:ring-orange-500/20">
                   Yes
                 </label>
               </div>
@@ -367,7 +384,7 @@ const SignUp = () => {
                   onChange={handleChange}
                   className="peer absolute opacity-0"
                 />
-                <label htmlFor="delivery-no" className="flex items-center justify-center py-3 px-4 border border-slate-200 rounded-lg bg-white text-slate-500 font-medium cursor-pointer transition-all peer-checked:border-orange-500 peer-checked:bg-orange-500/5 peer-checked:text-orange-500 peer-focus-visible:ring-4 peer-focus-visible:ring-orange-500/20">
+                <label htmlFor="delivery-no" className="flex items-center justify-center py-2 sm:py-2.5 px-3 border border-slate-200 rounded-lg bg-white text-slate-500 text-xs sm:text-sm font-medium cursor-pointer transition-all peer-checked:border-orange-500 peer-checked:bg-orange-500/5 peer-checked:text-orange-500 peer-focus-visible:ring-2 peer-focus-visible:ring-orange-500/20">
                   No
                 </label>
               </div>
@@ -375,26 +392,44 @@ const SignUp = () => {
           </div>
         </div>
 
+        {/* Inside Poornima Campus Checkbox */}
+        <label className={`flex items-center gap-2.5 p-2.5 rounded-lg border transition-colors cursor-pointer select-none ${
+          formData.isPoornima 
+            ? 'border-orange-400 bg-orange-50/50' 
+            : 'border-slate-200 bg-slate-50/60 hover:bg-slate-50'
+        }`}>
+          <input 
+            type="checkbox" 
+            name="isPoornima"
+            checked={formData.isPoornima}
+            onChange={handleChange}
+            className="h-4 w-4 rounded border-slate-300 text-orange-500 focus:ring-orange-500 cursor-pointer accent-orange-500 shrink-0"
+          />
+          <span className="text-xs font-medium text-slate-700">
+            Is this cafe located inside <strong className="font-semibold text-orange-600">Poornima campus</strong>?
+          </span>
+        </label>
+
         {/* Password */}
         <div>
-          <label className="block text-sm font-medium mb-2 text-slate-900">Create Password</label>
+          <label className="block text-xs font-semibold mb-1 text-slate-800">Create Password</label>
           <div className="relative flex items-center">
-            <Lock className="absolute left-4 text-slate-400 pointer-events-none" size={20} />
+            <Lock className="absolute left-3 text-slate-400 pointer-events-none" size={17} />
             <input 
               type={showPassword ? "text" : "password"}
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className="w-full py-3 pl-11 pr-12 border border-slate-200 rounded-lg bg-slate-50 text-slate-900 transition duration-200 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10" 
+              className="w-full py-2 sm:py-2.5 pl-9 pr-10 border border-slate-200 rounded-lg bg-slate-50 text-slate-900 text-xs sm:text-sm transition duration-200 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500/10" 
               placeholder="Create a strong password" 
               required
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 text-slate-400 hover:text-orange-500 transition-colors focus:outline-none"
+              className="absolute right-3 text-slate-400 hover:text-orange-500 transition-colors focus:outline-none"
             >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
             </button>
           </div>
         </div>
@@ -402,15 +437,15 @@ const SignUp = () => {
         <button 
           type="submit" 
           disabled={loading}
-          className="w-full inline-flex items-center justify-center gap-2 py-3 px-6 rounded-lg font-semibold text-white bg-orange-500 hover:bg-orange-600 active:translate-y-0 hover:-translate-y-px transition-all shadow-[0_4px_6px_-1px_rgba(249,115,22,0.2)] hover:shadow-[0_6px_8px_-1px_rgba(249,115,22,0.3)] mt-4 disabled:opacity-70 disabled:cursor-not-allowed"
+          className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-5 rounded-lg font-bold text-white bg-orange-500 hover:bg-orange-600 active:translate-y-0 hover:-translate-y-px transition-all shadow-[0_4px_6px_-1px_rgba(249,115,22,0.2)] hover:shadow-[0_6px_8px_-1px_rgba(249,115,22,0.3)] mt-1.5 text-xs sm:text-sm disabled:opacity-70 disabled:cursor-not-allowed"
         >
           {loading ? 'Registering...' : 'Register Restaurant'}
-          {!loading && <ArrowRight size={20} />}
+          {!loading && <ArrowRight size={17} />}
         </button>
 
-        <div className="mt-8 text-center text-sm text-slate-500">
+        <div className="mt-3 text-center text-xs text-slate-500">
           Already have an account?{' '}
-          <Link to="/partner" className="text-orange-500 font-medium hover:text-orange-600 transition-colors">Sign In here</Link>
+          <Link to="/partner" className="text-orange-500 font-semibold hover:text-orange-600 transition-colors">Sign In here</Link>
         </div>
       </form>
       </AuthLayout>

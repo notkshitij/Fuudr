@@ -108,22 +108,22 @@ const AuthLayout = ({ children, title, subtitle }) => {
         
         {/* Centered Area */}
         <div 
-          className="flex-1 flex justify-center items-center p-6 lg:p-10 xl:p-16 w-full min-h-max bg-[#FAFAFA]"
+          className="flex-1 flex justify-center items-center p-3 sm:p-5 lg:p-6 w-full min-h-max bg-[#FAFAFA]"
           style={{
             backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.05) 1.5px, transparent 1.5px)',
             backgroundSize: '28px 28px'
           }}
         >
           
-          {/* Card (No internal scrollbar) */}
-          <div className="w-full max-w-xl xl:max-w-2xl bg-white p-8 lg:p-12 xl:p-14 rounded-[2.5rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.05)] border border-slate-100/80 m-auto relative overflow-hidden group transition-all duration-300 hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08)]">
+          {/* Card */}
+          <div className="w-full max-w-xl xl:max-w-2xl bg-white p-5 sm:p-7 lg:p-8 rounded-[2rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.05)] border border-slate-100/80 m-auto relative overflow-hidden group transition-all duration-300 hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08)]">
             
             {/* Subtle top highlight */}
             <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-orange-400 via-orange-500 to-rose-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-            <div className="mb-10 text-center relative z-10">
-              <h2 className="text-3xl lg:text-4xl xl:text-5xl font-black mb-3 text-slate-900 tracking-tight">{title}</h2>
-              <p className="text-slate-500 font-medium text-lg xl:text-xl">{subtitle}</p>
+            <div className="mb-4 sm:mb-5 text-center relative z-10">
+              <h2 className="text-2xl sm:text-3xl lg:text-3xl font-black mb-1 text-slate-900 tracking-tight">{title}</h2>
+              <p className="text-slate-500 font-medium text-xs sm:text-sm">{subtitle}</p>
             </div>
             
             <div className="relative z-10">
