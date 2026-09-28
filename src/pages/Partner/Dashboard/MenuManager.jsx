@@ -11,6 +11,7 @@ import {
   Pencil, 
   ToggleLeft, 
   ToggleRight, 
+  EyeOff,
   Play, 
   Layers, 
   Check, 
@@ -166,12 +167,14 @@ const MenuManager = ({ user }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [stockFilter, setStockFilter] = useState('all'); // 'all' | 'in_stock' | 'out_of_stock'
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     price: '',
     category_name: '',
-    is_veg: true
+    is_veg: true,
+    is_in_stock: true
   });
   const [quantities, setQuantities] = useState([]);
   const [imageFile, setImageFile] = useState(null);
@@ -301,7 +304,7 @@ const MenuManager = ({ user }) => {
     setQuantities([]);
     setSelectedAddonIds([]);
     setAddonSearchTerm('');
-    setFormData({ name: '', description: '', price: '', category_name: categories[0]?.name || '', is_veg: true });
+    setFormData({ name: '', description: '', price: '', category_name: categories[0]?.name || '', is_veg: true, is_in_stock: true });
     setIsModalOpen(true);
   };
 
@@ -320,7 +323,8 @@ const MenuManager = ({ user }) => {
         description: item.description || '',
         price: item.price,
         category_name: item.category_name,
-        is_veg: item.is_veg
+        is_veg: item.is_veg,
+        is_in_stock: item.is_in_stock !== false
       });
       setQuantities(item.quantities || []);
 
@@ -360,7 +364,7 @@ const MenuManager = ({ user }) => {
     setQuantities([]);
     setSelectedAddonIds([]);
     setAddonSearchTerm('');
-    setFormData({ name: '', description: '', price: '', category_name: categories[0]?.name || '', is_veg: true });
+    setFormData({ name: '', description: '', price: '', category_name: categories[0]?.name || '', is_veg: true, is_in_stock: true });
   };
 
   const toggleAddonSelection = (addonId) => {
@@ -375,7 +379,35 @@ const MenuManager = ({ user }) => {
   const removeQuantityRow = (i) => setQuantities(prev => prev.filter((_, idx) => idx !== i));
   const updateQuantityRow = (i, field, value) => setQuantities(prev => prev.map((q, idx) => idx === i ? { ...q, [field]: value } : q));
 
-  // Toggle availability
+  // Toggle stock availability
+  const handleToggleStock = async (item) => {
+    const currentStock = item.is_in_stock !== false;
+    const newStock = !currentStock;
+
+    // Optimistic UI update
+    setMenuItems(prev => prev.map(m => m.id === item.id ? { ...m, is_in_stock: newStock } : m));
+
+    try {
+      const { error } = await supabase
+        .from('menu_items')
+        .update({ is_in_stock: newStock })
+        .eq('id', item.id);
+
+      if (error) {
+        if (error.code === 'PGRST204' || error.message?.includes('is_in_stock')) {
+          console.warn("Database column 'is_in_stock' missing in Supabase.");
+          setErrorMsg("Column 'is_in_stock' missing in database. Please run the migration SQL in Supabase SQL Editor: ALTER TABLE menu_items ADD COLUMN is_in_stock BOOLEAN DEFAULT TRUE;");
+        }
+        throw error;
+      }
+    } catch (err) {
+      console.error("Toggle stock error:", err);
+      // Revert optimistic update
+      setMenuItems(prev => prev.map(m => m.id === item.id ? { ...m, is_in_stock: currentStock } : m));
+    }
+  };
+
+  // Toggle availability (Feed Visibility)
   const handleToggleAvailability = async (item) => {
     try {
       const { error } = await supabase
@@ -438,21 +470,35 @@ const MenuManager = ({ user }) => {
 
       if (isAddMode) {
         // INSERT
-        const { data: menuItem, error: menuError } = await supabase
+        const insertPayload = {
+          partner_id: user.id,
+          category_id: categoryId,
+          category_name: formData.category_name,
+          name: formData.name,
+          description: formData.description,
+          price: parseFloat(formData.price),
+          is_veg: formData.is_veg,
+          is_in_stock: formData.is_in_stock !== false,
+          image_url: imageUrl,
+          quantities: quantities.filter(q => q.name.trim() && q.price !== '').map(q => ({ name: q.name.trim(), price: parseFloat(q.price) })),
+        };
+
+        let { data: menuItem, error: menuError } = await supabase
           .from('menu_items')
-          .insert([{
-            partner_id: user.id,
-            category_id: categoryId,
-            category_name: formData.category_name,
-            name: formData.name,
-            description: formData.description,
-            price: parseFloat(formData.price),
-            is_veg: formData.is_veg,
-            image_url: imageUrl,
-            quantities: quantities.filter(q => q.name.trim() && q.price !== '').map(q => ({ name: q.name.trim(), price: parseFloat(q.price) })),
-          }])
+          .insert([insertPayload])
           .select()
           .single();
+
+        // Fallback retry if column is_in_stock doesn't exist yet in Supabase schema
+        if (menuError && (menuError.code === 'PGRST204' || menuError.message?.includes('is_in_stock'))) {
+          console.warn("Retrying insert without is_in_stock until database migration is run");
+          const dataWithoutStock = { ...insertPayload };
+          delete dataWithoutStock.is_in_stock;
+          const retry = await supabase.from('menu_items').insert([dataWithoutStock]).select().single();
+          menuItem = retry.data;
+          menuError = retry.error;
+        }
+
         if (menuError) throw menuError;
 
         // Insert all reels — dish data lives on menu_items now,
@@ -479,19 +525,32 @@ const MenuManager = ({ user }) => {
 
       } else {
         // UPDATE menu item
-        const { error: updateError } = await supabase
+        const updatePayload = {
+          category_id: categoryId,
+          category_name: formData.category_name,
+          name: formData.name,
+          description: formData.description,
+          price: parseFloat(formData.price),
+          is_veg: formData.is_veg,
+          is_in_stock: formData.is_in_stock !== false,
+          image_url: imageUrl,
+          quantities: quantities.filter(q => q.name.trim() && q.price !== '').map(q => ({ name: q.name.trim(), price: parseFloat(q.price) })),
+        };
+
+        let { error: updateError } = await supabase
           .from('menu_items')
-          .update({
-            category_id: categoryId,
-            category_name: formData.category_name,
-            name: formData.name,
-            description: formData.description,
-            price: parseFloat(formData.price),
-            is_veg: formData.is_veg,
-            image_url: imageUrl,
-            quantities: quantities.filter(q => q.name.trim() && q.price !== '').map(q => ({ name: q.name.trim(), price: parseFloat(q.price) })),
-          })
+          .update(updatePayload)
           .eq('id', editItem.id);
+
+        // Fallback retry if column is_in_stock doesn't exist yet in Supabase schema
+        if (updateError && (updateError.code === 'PGRST204' || updateError.message?.includes('is_in_stock'))) {
+          console.warn("Retrying update without is_in_stock until database migration is run");
+          const updateWithoutStock = { ...updatePayload };
+          delete updateWithoutStock.is_in_stock;
+          const retry = await supabase.from('menu_items').update(updateWithoutStock).eq('id', editItem.id);
+          updateError = retry.error;
+        }
+
         if (updateError) throw updateError;
 
         // Delete removed reels
@@ -532,7 +591,7 @@ const MenuManager = ({ user }) => {
         // Keep modal open, clear name/desc/price/files, keep category & veg
         setFormData(prev => ({ ...prev, name: '', description: '', price: '' }));
         setImageFile(null);
-        setVideoFile(null);
+        setVideoFiles([]);
         setSuccessMsg(`Successfully added! You can add another dish in ${formData.category_name}.`);
         
         // Reset file inputs manually
@@ -552,12 +611,21 @@ const MenuManager = ({ user }) => {
     }
   };
 
+  const inStockCount = menuItems.filter(m => m.is_in_stock !== false).length;
+  const outOfStockCount = menuItems.filter(m => m.is_in_stock === false).length;
+
+  const filteredMenuItems = menuItems.filter(item => {
+    if (stockFilter === 'in_stock') return item.is_in_stock !== false;
+    if (stockFilter === 'out_of_stock') return item.is_in_stock === false;
+    return true;
+  });
+
   return (
     <div className="animate-fadeIn h-full overflow-y-auto overscroll-contain pb-12">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 mb-1">Menu Management</h1>
-          <p className="text-slate-500">Manage your restaurant's dishes and pricing.</p>
+          <p className="text-slate-500">Manage your restaurant's dishes, pricing, and live stock.</p>
         </div>
         <button
           onClick={openAddModal}
@@ -567,6 +635,44 @@ const MenuManager = ({ user }) => {
           Add New Dish
         </button>
       </div>
+
+      {/* Stock Filter Chips */}
+      {menuItems.length > 0 && (
+        <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
+          <button
+            onClick={() => setStockFilter('all')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              stockFilter === 'all'
+                ? 'bg-slate-900 text-white shadow-sm'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            All Dishes ({menuItems.length})
+          </button>
+          <button
+            onClick={() => setStockFilter('in_stock')}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              stockFilter === 'in_stock'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-emerald-50 hover:text-emerald-700'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            In Stock ({inStockCount})
+          </button>
+          <button
+            onClick={() => setStockFilter('out_of_stock')}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+              stockFilter === 'out_of_stock'
+                ? 'bg-rose-600 text-white shadow-sm'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-rose-50 hover:text-rose-700'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-rose-500" />
+            Out of Stock ({outOfStockCount})
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center items-center h-64">
@@ -587,123 +693,184 @@ const MenuManager = ({ user }) => {
             Add Your First Dish
           </button>
         </div>
+      ) : filteredMenuItems.length === 0 ? (
+        <div className="bg-white p-12 rounded-3xl shadow-sm border border-slate-100 flex flex-col items-center justify-center text-center">
+          <h3 className="text-xl font-bold text-slate-900 mb-2">No dishes match this stock filter</h3>
+          <p className="text-slate-500 text-sm mb-4">Currently no dishes are marked as {stockFilter === 'in_stock' ? 'in stock' : 'out of stock'}.</p>
+          <button
+            onClick={() => setStockFilter('all')}
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-colors"
+          >
+            View All Dishes
+          </button>
+        </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-          {menuItems.map(item => (
-            <div 
-              key={item.id} 
-              className={`relative group aspect-[9/16] bg-slate-900 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer ${!item.is_available ? 'opacity-60 grayscale-[50%]' : ''}`}
-              onClick={() => setActiveVideoItem(item)}
-            >
-              {/* Background Image or Video */}
-              {item.reels && item.reels.length > 0 && item.reels[0].video_url ? (
-                <video 
-                  src={item.reels[0].video_url} 
-                  poster={item.image_url || undefined}
-                  className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
-                  loop
-                  muted
-                  playsInline
-                  onMouseOver={e => {
-                    const playPromise = e.target.play();
-                    if (playPromise !== undefined) {
-                      playPromise.catch(error => console.log("Auto-play prevented", error));
-                    }
-                  }}
-                  onMouseOut={e => {
-                    e.target.pause();
-                    e.target.currentTime = 0;
-                  }}
-                />
-              ) : item.image_url ? (
-                <img src={item.image_url} alt={item.name} className="w-full h-full object-cover opacity-80 group-hover:scale-110 transition-transform duration-700" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-slate-800 text-slate-500">
-                  <ImageIcon size={48} />
-                </div>
-              )}
-              
-              {/* Overlay Gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none flex flex-col justify-end p-5">
-                
-                {/* Top Badges */}
-                <div className="absolute top-4 right-4 flex flex-col gap-2 pointer-events-none">
-                  <div className="bg-white/90 backdrop-blur-md p-2 rounded-full shadow-lg">
-                    <div className={`w-3 h-3 rounded-full ${item.is_veg ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                  </div>
-                  {!item.is_available && (
-                    <div className="bg-white/90 backdrop-blur-md p-1.5 rounded-full shadow-lg flex items-center justify-center">
-                       <ToggleLeft size={16} className="text-slate-500" />
-                    </div>
-                  )}
-                </div>
+          {filteredMenuItems.map(item => {
+            const isInStock = item.is_in_stock !== false;
+            const isAvailable = item.is_available;
 
-                {/* Details Overlay */}
-                <div className="pointer-events-auto">
-                  <div className="text-orange-400 font-black text-xs uppercase tracking-widest mb-1">{item.category_name}</div>
-                  <h3 className="text-white font-bold text-xl leading-tight mb-1 drop-shadow-md">{item.name}</h3>
-                  {item.description && <p className="text-white/70 text-xs leading-snug mb-2 line-clamp-2">{item.description}</p>}
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="bg-orange-500 text-white font-bold px-3 py-1 rounded-lg w-max text-sm shadow-lg shadow-orange-500/20">
-                      ₹{item.price}
+            return (
+              <div 
+                key={item.id} 
+                className={`relative group aspect-[9/16] bg-slate-900 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer ${!isAvailable ? 'opacity-60 grayscale-[50%]' : ''}`}
+                onClick={() => setActiveVideoItem(item)}
+              >
+                {/* Background Image or Video */}
+                {item.reels && item.reels.length > 0 && item.reels[0].video_url ? (
+                  <video 
+                    src={item.reels[0].video_url} 
+                    poster={item.image_url || undefined}
+                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
+                    loop
+                    muted
+                    playsInline
+                    onMouseOver={e => {
+                      const playPromise = e.target.play();
+                      if (playPromise !== undefined) {
+                        playPromise.catch(error => console.log("Auto-play prevented", error));
+                      }
+                    }}
+                    onMouseOut={e => {
+                      e.target.pause();
+                      e.target.currentTime = 0;
+                    }}
+                  />
+                ) : item.image_url ? (
+                  <img src={item.image_url} alt={item.name} className="w-full h-full object-cover opacity-80 group-hover:scale-110 transition-transform duration-700" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-slate-800 text-slate-500">
+                    <ImageIcon size={48} />
+                  </div>
+                )}
+                
+                {/* Top Badges Bar: Stock Quick-Toggle & Food Type / Status */}
+                <div className="absolute top-4 left-4 right-4 flex items-start justify-between gap-2 z-10 pointer-events-none">
+                  {/* Top Left: Interactive Stock Badge / Toggle Button */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleStock(item);
+                    }}
+                    className={`pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold shadow-lg backdrop-blur-md transition-all cursor-pointer border ${
+                      isInStock
+                        ? 'bg-emerald-500/90 hover:bg-emerald-600 text-white border-emerald-400/30'
+                        : 'bg-rose-600/95 hover:bg-rose-700 text-white border-rose-400/40 shadow-rose-900/40 ring-2 ring-rose-500/40'
+                    }`}
+                    title={isInStock ? "In Stock — Click to mark Out of Stock" : "Out of Stock — Click to mark In Stock"}
+                  >
+                    <span className={`w-2 h-2 rounded-full ${isInStock ? 'bg-white' : 'bg-rose-200 animate-pulse'}`} />
+                    <span>{isInStock ? 'In Stock' : 'Out of Stock'}</span>
+                  </button>
+
+                  {/* Top Right: Veg indicator & Feed Visibility badge */}
+                  <div className="flex flex-col gap-2 items-end">
+                    <div className="bg-white/90 backdrop-blur-md p-2 rounded-full shadow-lg">
+                      <div className={`w-3 h-3 rounded-full ${item.is_veg ? 'bg-green-500' : 'bg-red-500'}`}></div>
                     </div>
-                    {item.menu_item_addons && item.menu_item_addons.length > 0 && (
-                      <div className="inline-flex items-center gap-1 bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-lg text-xs font-bold text-orange-200 border border-white/10">
-                        <Layers size={12} />
-                        <span>{item.menu_item_addons.length} Add-on{item.menu_item_addons.length > 1 ? 's' : ''}</span>
+                    {!isAvailable && (
+                      <div 
+                        className="bg-white/90 backdrop-blur-md p-1.5 rounded-full shadow-lg flex items-center justify-center text-slate-500"
+                        title="Hidden from feed"
+                      >
+                        <EyeOff size={16} />
                       </div>
                     )}
                   </div>
+                </div>
 
-                  {/* Delete Confirmation Inline */}
-                  {deleteConfirmId === item.id ? (
-                    <div className="flex flex-col gap-2 mb-2 animate-fadeIn bg-black/60 p-3 rounded-xl backdrop-blur-md">
-                      <p className="text-white text-xs font-bold text-center">Delete dish?</p>
-                      <div className="flex gap-2">
-                        <button onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }} className="flex-1 py-1.5 bg-red-500 text-white text-xs font-bold rounded-lg hover:bg-red-600 transition-colors">
-                          Yes
+                {/* Overlay Gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none flex flex-col justify-end p-5">
+                  {/* Details Overlay */}
+                  <div className="pointer-events-auto">
+                    <div className="text-orange-400 font-black text-xs uppercase tracking-widest mb-1">{item.category_name}</div>
+                    <h3 className="text-white font-bold text-xl leading-tight mb-1 drop-shadow-md">{item.name}</h3>
+                    {item.description && <p className="text-white/70 text-xs leading-snug mb-2 line-clamp-2">{item.description}</p>}
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="bg-orange-500 text-white font-bold px-3 py-1 rounded-lg w-max text-sm shadow-lg shadow-orange-500/20">
+                        ₹{item.price}
+                      </div>
+                      {item.menu_item_addons && item.menu_item_addons.length > 0 && (
+                        <div className="inline-flex items-center gap-1 bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-lg text-xs font-bold text-orange-200 border border-white/10">
+                          <Layers size={12} />
+                          <span>{item.menu_item_addons.length} Add-on{item.menu_item_addons.length > 1 ? 's' : ''}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Delete Confirmation Inline */}
+                    {deleteConfirmId === item.id ? (
+                      <div className="flex flex-col gap-2 mb-2 animate-fadeIn bg-black/80 p-3 rounded-xl backdrop-blur-md border border-white/10">
+                        <p className="text-white text-xs font-bold text-center">Delete dish?</p>
+                        <div className="flex gap-2">
+                          <button onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }} className="flex-1 py-1.5 bg-red-500 text-white text-xs font-bold rounded-lg hover:bg-red-600 transition-colors">
+                            Yes
+                          </button>
+                          <button onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(null); }} className="flex-1 py-1.5 bg-white/20 text-white text-xs font-bold rounded-lg hover:bg-white/30 transition-colors">
+                            No
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Action buttons on hover */
+                      <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all translate-y-3 group-hover:translate-y-0 duration-300">
+                        {/* Edit Dish */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); openEditModal(item); }}
+                          disabled={loadingEditId === item.id}
+                          className="p-2 sm:p-2.5 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white transition-colors flex-1 flex flex-col items-center justify-center gap-0.5"
+                          title="Edit Dish"
+                        >
+                          {loadingEditId === item.id ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <Pencil size={16} />
+                          )}
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-slate-200">Edit</span>
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(null); }} className="flex-1 py-1.5 bg-white/20 text-white text-xs font-bold rounded-lg hover:bg-white/30 transition-colors">
-                          No
+
+                        {/* Stock Toggle Button */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleToggleStock(item); }}
+                          className={`p-2 sm:p-2.5 rounded-xl backdrop-blur-md text-white transition-colors flex-1 flex flex-col items-center justify-center gap-0.5 ${
+                            isInStock ? 'bg-emerald-600/85 hover:bg-emerald-600' : 'bg-rose-600/85 hover:bg-rose-600'
+                          }`}
+                          title={isInStock ? "Stock: In Stock (Click to mark Out of Stock)" : "Stock: Out of Stock (Click to mark In Stock)"}
+                        >
+                          {isInStock ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-white">Stock</span>
+                        </button>
+
+                        {/* Feed Visibility Toggle Button */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleToggleAvailability(item); }}
+                          className={`p-2 sm:p-2.5 rounded-xl backdrop-blur-md text-white transition-colors flex-1 flex flex-col items-center justify-center gap-0.5 ${
+                            isAvailable ? 'bg-blue-600/85 hover:bg-blue-600' : 'bg-slate-600/85 hover:bg-slate-600'
+                          }`}
+                          title={isAvailable ? "Feed: Visible (Click to hide from feed)" : "Feed: Hidden (Click to show in feed)"}
+                        >
+                          {isAvailable ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-white">Feed</span>
+                        </button>
+
+                        {/* Delete Dish */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(item.id); }}
+                          className="p-2 sm:p-2.5 rounded-xl bg-red-500/80 hover:bg-red-500 backdrop-blur-md text-white transition-colors flex-1 flex flex-col items-center justify-center gap-0.5"
+                          title="Delete Dish"
+                        >
+                          <Trash2 size={16} />
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-slate-200">Delete</span>
                         </button>
                       </div>
-                    </div>
-                  ) : (
-                    /* Action buttons on hover */
-                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0 duration-300">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); openEditModal(item); }}
-                        disabled={loadingEditId === item.id}
-                        className="p-2.5 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white transition-colors flex-1 flex justify-center items-center"
-                        title="Edit Dish"
-                      >
-                        {loadingEditId === item.id ? (
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <Pencil size={18} />
-                        )}
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleToggleAvailability(item); }}
-                        className={`p-2.5 rounded-xl backdrop-blur-md text-white transition-colors flex-1 flex justify-center ${item.is_available ? 'bg-green-500/80 hover:bg-green-500' : 'bg-slate-500/80 hover:bg-slate-500'}`}
-                        title={item.is_available ? "Mark Unavailable" : "Mark Available"}
-                      >
-                        {item.is_available ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(item.id); }}
-                        className="p-2.5 rounded-xl bg-red-500/80 hover:bg-red-500 backdrop-blur-md text-white transition-colors flex-1 flex justify-center"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
+
               </div>
-
-
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -805,6 +972,39 @@ const MenuManager = ({ user }) => {
                       <div className="w-3 h-3 rounded-full bg-red-500"></div>
                     </label>
                   </div>
+                </div>
+
+                {/* Stock Availability */}
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                  <div>
+                    <span className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                      Stock Availability
+                    </span>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      When off, dish still shows in video reels but shows Out of Stock at checkout.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, is_in_stock: !prev.is_in_stock }))}
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border font-bold text-xs transition-all shadow-sm shrink-0 ml-4 ${
+                      formData.is_in_stock
+                        ? 'bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100'
+                        : 'bg-rose-50 border-rose-300 text-rose-700 hover:bg-rose-100'
+                    }`}
+                  >
+                    {formData.is_in_stock ? (
+                      <>
+                        <ToggleRight size={20} className="text-emerald-600" />
+                        <span>In Stock</span>
+                      </>
+                    ) : (
+                      <>
+                        <ToggleLeft size={20} className="text-rose-600" />
+                        <span>Out of Stock</span>
+                      </>
+                    )}
+                  </button>
                 </div>
 
                 {/* Quantities / Varieties */}
