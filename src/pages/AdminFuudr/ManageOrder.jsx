@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import { ArrowLeft, MapPin, CreditCard, Clock, Package, Flame, Bike, CheckCircle, ChevronRight, IndianRupee, UtensilsCrossed, Printer, Navigation, Phone, GraduationCap } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Clock, Package, Flame, Bike, CheckCircle, ChevronRight, IndianRupee, UtensilsCrossed, Printer, Navigation, Phone, GraduationCap, Trash2, X, Loader2 } from 'lucide-react';
 
 const STEPS = [
   { key: 'placed',     label: 'Placed',     icon: Package, desc: 'Order placed' },
@@ -72,6 +72,34 @@ export default function ManageOrder() {
   const [partnerMobileInput, setPartnerMobileInput] = useState('');
   const [editingPartnerMobile, setEditingPartnerMobile] = useState(false);
   const [savingPartnerMobile, setSavingPartnerMobile] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+
+  const handleDeleteOrder = async () => {
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', id)
+        .select();
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        throw new Error("Delete blocked by Supabase RLS policy! 0 rows were deleted. Please run the SQL command in your Supabase SQL Editor to allow DELETE operations.");
+      }
+
+      navigate('/adminfuudr/orders');
+    } catch (err) {
+      console.error('Failed to delete order:', err);
+      setDeleteError(err.message || 'Failed to delete order. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => { fetchOrderDetails(); }, [id]);
 
@@ -375,12 +403,23 @@ export default function ManageOrder() {
             <span className="text-slate-700 font-bold">#{displayId}</span>
           </div>
         </div>
-        <button
-          onClick={handlePrint}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl font-semibold text-sm hover:bg-slate-50 transition-all"
-        >
-          <Printer size={15} /> Print Receipt
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handlePrint}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl font-semibold text-sm hover:bg-slate-50 transition-all shadow-sm"
+          >
+            <Printer size={15} /> Print Receipt
+          </button>
+          <button
+            onClick={() => {
+              setDeleteError(null);
+              setShowDeleteModal(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-rose-50 border border-rose-200 text-rose-600 rounded-xl font-semibold text-sm hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+          >
+            <Trash2 size={15} /> Delete Order
+          </button>
+        </div>
       </div>
 
       {/* ── Order Title + Quick Status ── */}
@@ -786,6 +825,79 @@ export default function ManageOrder() {
             <div className="p-4 bg-slate-900 border-t border-slate-800 text-center flex justify-between items-center px-6">
               <p className="text-xs font-bold text-slate-400">Reel {activeVideoIndex + 1} of {activeVideoList.length}</p>
               <p className="text-sm font-bold text-orange-500 uppercase tracking-widest text-[10px]">Fuudr food reel</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Confirmation Modal ── */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 relative shadow-2xl border border-slate-100 animate-scaleUp">
+            <button
+              onClick={() => {
+                if (!isDeleting) {
+                  setShowDeleteModal(false);
+                  setDeleteError(null);
+                }
+              }}
+              disabled={isDeleting}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-100 p-1.5 rounded-full transition-colors disabled:opacity-50"
+            >
+              <X size={14} />
+            </button>
+
+            <div className="w-11 h-11 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center mb-3.5">
+              <Trash2 size={22} />
+            </div>
+
+            <h3 className="text-base font-bold text-slate-900 mb-1.5">
+              Delete Order #{displayId}?
+            </h3>
+
+            <p className="text-slate-500 text-xs mb-4 leading-relaxed">
+              Are you sure you want to permanently delete this order for{' '}
+              <strong className="text-slate-700">{order.delivery_name || 'Customer'}</strong>
+              {order.restaurant_name ? ` from ${order.restaurant_name}` : ''}? This action cannot be undone.
+            </p>
+
+            {deleteError && (
+              <div className="p-3 mb-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
+                {deleteError}
+              </div>
+            )}
+
+            <div className="flex gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteError(null);
+                }}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 px-3 rounded-xl font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors text-xs disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDeleteOrder}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 px-3 rounded-xl font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors text-xs flex items-center justify-center gap-1.5 disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={14} />
+                    <span>Delete</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

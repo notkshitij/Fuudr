@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import { Eye, Search, Filter, Package, Clock, Bike, CheckCircle, RefreshCw, GraduationCap } from 'lucide-react';
+import { Eye, Search, Filter, Package, Clock, Bike, CheckCircle, RefreshCw, GraduationCap, Trash2, X, Loader2 } from 'lucide-react';
 
 const STATUS_CONFIG = {
   all:        { label: 'All Orders',  color: 'text-slate-700',   bg: 'bg-slate-100',  dot: 'bg-slate-400' },
@@ -19,7 +19,59 @@ export default function OrdersList() {
   const [dateFilter, setDateFilter] = useState('');
   const [campusFilter, setCampusFilter] = useState('all'); // 'all', 'poornima_only'
   const [activeTab, setActiveTab] = useState('all');
+  const [orderToDelete, setOrderToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
   const navigate = useNavigate();
+
+  const handleDeleteOrder = async () => {
+    if (!orderToDelete) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .delete()
+        .eq('id', orderToDelete.id)
+        .select();
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        throw new Error("Delete blocked by Supabase RLS policy! 0 rows were deleted. Please run the SQL snippet shown below in your Supabase SQL Editor to allow DELETE operations.");
+      }
+
+      setOrders(prev => prev.filter(o => o.id !== orderToDelete.id));
+      setOrderToDelete(null);
+    } catch (err) {
+      console.error('Failed to delete order:', err);
+      setDeleteError(err.message || 'Failed to delete order. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelOrderFallback = async () => {
+    if (!orderToDelete) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: 'cancelled' })
+        .eq('id', orderToDelete.id);
+
+      if (error) throw error;
+
+      setOrders(prev => prev.map(o => o.id === orderToDelete.id ? { ...o, status: 'cancelled' } : o));
+      setOrderToDelete(null);
+    } catch (err) {
+      console.error('Failed to cancel order:', err);
+      setDeleteError(err.message || 'Failed to cancel order.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const fetchOrders = async () => {
     const { data, error } = await supabase
@@ -280,12 +332,24 @@ export default function OrdersList() {
                         </span>
                       </td>
                       <td className="px-5 py-4 whitespace-nowrap text-right">
-                        <button
-                          onClick={() => navigate(`/adminfuudr/orders/${order.id}`)}
-                          className="inline-flex items-center gap-1.5 bg-slate-900 text-white px-3.5 py-2 rounded-xl font-bold text-xs hover:bg-orange-500 transition-all"
-                        >
-                          <Eye size={13} /> Manage
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => navigate(`/adminfuudr/orders/${order.id}`)}
+                            className="inline-flex items-center gap-1.5 bg-slate-900 text-white px-3.5 py-2 rounded-xl font-bold text-xs hover:bg-orange-500 transition-all shadow-sm"
+                          >
+                            <Eye size={13} /> Manage
+                          </button>
+                          <button
+                            onClick={() => {
+                              setDeleteError(null);
+                              setOrderToDelete(order);
+                            }}
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-xl text-rose-500 hover:text-white bg-rose-50 hover:bg-rose-600 border border-rose-100 hover:border-rose-600 transition-all shadow-sm group"
+                            title="Delete Order"
+                          >
+                            <Trash2 size={14} className="group-hover:scale-110 transition-transform" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -295,6 +359,87 @@ export default function OrdersList() {
           </div>
           <div className="px-5 py-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-400">Showing {filtered.length} of {orders.length} orders</span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Confirmation Modal ── */}
+      {orderToDelete && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 relative shadow-2xl border border-slate-100 animate-scaleUp">
+            <button
+              onClick={() => {
+                if (!isDeleting) {
+                  setOrderToDelete(null);
+                  setDeleteError(null);
+                }
+              }}
+              disabled={isDeleting}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-100 p-1.5 rounded-full transition-colors disabled:opacity-50"
+            >
+              <X size={14} />
+            </button>
+
+            <div className="w-11 h-11 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center mb-3.5">
+              <Trash2 size={22} />
+            </div>
+
+            <h3 className="text-base font-bold text-slate-900 mb-1.5">
+              Delete Order #{orderToDelete.id.split('-').pop().toUpperCase()}?
+            </h3>
+
+            <p className="text-slate-500 text-xs mb-4 leading-relaxed">
+              Are you sure you want to permanently delete this order for{' '}
+              <strong className="text-slate-700">{orderToDelete.delivery_name || 'Customer'}</strong>
+              {orderToDelete.restaurant_name ? ` from ${orderToDelete.restaurant_name}` : ''}? This action cannot be undone.
+            </p>
+
+            {deleteError && (
+              <div className="p-3 mb-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium space-y-2">
+                <p>{deleteError}</p>
+                <button
+                  type="button"
+                  onClick={handleCancelOrderFallback}
+                  disabled={isDeleting}
+                  className="w-full py-1.5 px-2 bg-rose-600 text-white rounded-lg font-bold text-xs hover:bg-rose-700 transition-colors"
+                >
+                  {isDeleting ? 'Updating...' : 'Mark as Cancelled Instead'}
+                </button>
+              </div>
+            )}
+
+            <div className="flex gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setOrderToDelete(null);
+                  setDeleteError(null);
+                }}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 px-3 rounded-xl font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors text-xs disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDeleteOrder}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 px-3 rounded-xl font-bold text-white bg-rose-600 hover:bg-rose-700 transition-colors text-xs flex items-center justify-center gap-1.5 disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={14} />
+                    <span>Delete</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
