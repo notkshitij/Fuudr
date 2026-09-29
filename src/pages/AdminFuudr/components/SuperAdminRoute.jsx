@@ -1,8 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Eye, EyeOff, Lock, Mail, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { supabase } from '../../../supabaseClient';
 
-const SESSION_KEY = 'fuudr_super_admin_auth';
+const ATTEMPTS_KEY   = 'fuudr_sa_attempts';
+const LOCKOUT_KEY    = 'fuudr_sa_lockout_until';
+const MAX_ATTEMPTS   = 5;
+const LOCKOUT_MS     = 15 * 60 * 1000; // 15 minutes
+
+// Whitelisted Super Admin emails (always permitted)
+const KNOWN_ADMIN_EMAILS = [
+  'solvers.real@gmail.com',
+];
 
 const FOOD_IMAGES = [
   'https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg?auto=compress&cs=tinysrgb&w=1200',
@@ -11,40 +19,237 @@ const FOOD_IMAGES = [
   'https://images.pexels.com/photos/70497/pexels-photo-70497.jpeg?auto=compress&cs=tinysrgb&w=1200',
 ];
 
+function getRemainingLockout() {
+  const until = parseInt(sessionStorage.getItem(LOCKOUT_KEY) || '0', 10);
+  return Math.max(0, until - Date.now());
+}
+
+function formatCountdown(ms) {
+  const totalSec = Math.ceil(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
 export function SuperAdminRoute({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [checkingAuth, setCheckingAuth]       = useState(true);
+  const [email, setEmail]                     = useState('');
   const [password, setPassword]               = useState('');
   const [show, setShow]                       = useState(false);
-  const [error, setError]                     = useState(false);
+  const [errorMsg, setErrorMsg]               = useState('');
   const [loading, setLoading]                 = useState(false);
+  const [googleLoading, setGoogleLoading]     = useState(false);
   const [shake, setShake]                     = useState(false);
   const [mounted, setMounted]                 = useState(false);
   const [imgIndex]                            = useState(() => Math.floor(Math.random() * FOOD_IMAGES.length));
+  const [lockedOut, setLockedOut]             = useState(() => getRemainingLockout() > 0);
+  const [countdown, setCountdown]             = useState(() => getRemainingLockout());
+  const [attempts, setAttempts]               = useState(() => parseInt(sessionStorage.getItem(ATTEMPTS_KEY) || '0', 10));
+  const timerRef                              = useRef(null);
 
+  // Verify if an authenticated user is an authorized Super Admin
+  const verifyAdminStatus = async (user) => {
+    if (!user || !user.email) return false;
+    const userEmail = user.email.trim().toLowerCase();
+
+    // 1. Check hardcoded primary admin list
+    if (KNOWN_ADMIN_EMAILS.includes(userEmail)) {
+      return true;
+    }
+
+    // 2. Check user app_metadata / user_metadata role
+    if (user.app_metadata?.role === 'super_admin' || user.user_metadata?.role === 'super_admin') {
+      return true;
+    }
+
+    // 3. Check admin_users table in Supabase
+    try {
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('id, email, is_active')
+        .eq('email', userEmail)
+        .single();
+      
+      if (!error && data && data.is_active !== false) {
+        return true;
+      }
+    } catch {
+      // Table check fallback
+    }
+
+    // 4. Check if email matches super_admin_email in admin_config
+    try {
+      const { data, error } = await supabase
+        .from('admin_config')
+        .select('value')
+        .eq('key', 'super_admin_email')
+        .single();
+
+      if (!error && data?.value && data.value.toLowerCase() === userEmail) {
+        return true;
+      }
+    } catch {
+      // Ignore
+    }
+
+    return false;
+  };
+
+  // Check initial session
   useEffect(() => {
-    if (sessionStorage.getItem(SESSION_KEY) === 'true') setIsAuthenticated(true);
+    let isSubscribed = true;
+
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user && isSubscribed) {
+          const isAuthorized = await verifyAdminStatus(session.user);
+          if (isAuthorized) {
+            setIsAuthenticated(true);
+          } else {
+            const unauthorizedEmail = session.user.email || 'this account';
+            await supabase.auth.signOut();
+            setIsAuthenticated(false);
+            setErrorMsg(`Access Denied: ${unauthorizedEmail} is not authorized for Super Admin access.`);
+          }
+        }
+      } catch {
+        // Session fetch error
+      } finally {
+        if (isSubscribed) setCheckingAuth(false);
+      }
+    };
+
+    checkSession();
     setTimeout(() => setMounted(true), 60);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        const isAuthorized = await verifyAdminStatus(session.user);
+        if (isAuthorized) {
+          setIsAuthenticated(true);
+          setErrorMsg('');
+        } else {
+          const unauthorizedEmail = session.user.email || 'this account';
+          await supabase.auth.signOut();
+          setIsAuthenticated(false);
+          setErrorMsg(`Access Denied: ${unauthorizedEmail} is not authorized for Super Admin access.`);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setIsAuthenticated(false);
+      }
+    });
+
+    return () => {
+      isSubscribed = false;
+      subscription?.unsubscribe();
+    };
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!password) return;
-    setLoading(true);
-    const { data, error: dbError } = await supabase
-      .from('admin_config')
-      .select('value')
-      .eq('key', 'super_admin_password')
-      .single();
-    setLoading(false);
-    if (!dbError && data?.value && password === data.value) {
-      sessionStorage.setItem(SESSION_KEY, 'true');
-      setIsAuthenticated(true);
-    } else {
-      setError(true);
-      setShake(true);
-      setTimeout(() => setShake(false), 600);
+  // Tick countdown every second while locked out
+  useEffect(() => {
+    if (lockedOut) {
+      timerRef.current = setInterval(() => {
+        const remaining = getRemainingLockout();
+        setCountdown(remaining);
+        if (remaining <= 0) {
+          clearInterval(timerRef.current);
+          sessionStorage.removeItem(LOCKOUT_KEY);
+          sessionStorage.removeItem(ATTEMPTS_KEY);
+          setAttempts(0);
+          setLockedOut(false);
+        }
+      }, 500);
+    }
+    return () => clearInterval(timerRef.current);
+  }, [lockedOut]);
+
+  // Handle Google OAuth Sign-in
+  const handleGoogleSignIn = async () => {
+    if (lockedOut) return;
+    setGoogleLoading(true);
+    setErrorMsg('');
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/adminfuudr`,
+        }
+      });
+
+      if (error) {
+        setErrorMsg(error.message);
+        setGoogleLoading(false);
+      }
+    } catch (err) {
+      setErrorMsg('Failed to initiate Google sign-in. Please try again.');
+      setGoogleLoading(false);
     }
   };
+
+  // Handle Email + Password Sign-in
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!email || !password || lockedOut) return;
+    setLoading(true);
+    setErrorMsg('');
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    const { data, error: authError } = await supabase.auth.signInWithPassword({
+      email: cleanEmail,
+      password: password,
+    });
+
+    if (authError || !data?.user) {
+      setLoading(false);
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+      sessionStorage.setItem(ATTEMPTS_KEY, String(newAttempts));
+      
+      if (newAttempts >= MAX_ATTEMPTS) {
+        const until = Date.now() + LOCKOUT_MS;
+        sessionStorage.setItem(LOCKOUT_KEY, String(until));
+        setCountdown(LOCKOUT_MS);
+        setLockedOut(true);
+        setPassword('');
+        setErrorMsg(`Too many failed attempts. Locked out for ${formatCountdown(LOCKOUT_MS)}.`);
+      } else {
+        setErrorMsg(authError?.message || 'Invalid email or password.');
+      }
+      setShake(true);
+      setTimeout(() => setShake(false), 600);
+      return;
+    }
+
+    const isAuthorized = await verifyAdminStatus(data.user);
+    setLoading(false);
+
+    if (!isAuthorized) {
+      await supabase.auth.signOut();
+      setErrorMsg(`Access Denied: ${cleanEmail} is not authorized for Super Admin access.`);
+      setShake(true);
+      setTimeout(() => setShake(false), 600);
+      return;
+    }
+
+    sessionStorage.removeItem(ATTEMPTS_KEY);
+    sessionStorage.removeItem(LOCKOUT_KEY);
+    setIsAuthenticated(true);
+  };
+
+  if (checkingAuth) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#080809] text-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 rounded-full border-4 border-white/10 border-t-orange-500 animate-spin" />
+          <span className="text-sm font-semibold tracking-wider uppercase text-slate-400">Verifying Admin Credentials...</span>
+        </div>
+      </div>
+    );
+  }
 
   if (isAuthenticated) return children;
 
@@ -178,7 +383,7 @@ export function SuperAdminRoute({ children }) {
         }
 
         .sa-form-wrap {
-          width: 100%; max-width: 340px;
+          width: 100%; max-width: 360px;
           position: relative; z-index: 1;
           opacity: 0; transform: translateY(18px);
           transition: opacity 0.5s cubic-bezier(0.16,1,0.3,1),
@@ -190,27 +395,73 @@ export function SuperAdminRoute({ children }) {
         .sa-eyebrow {
           font-size: 10px; font-weight: 700;
           letter-spacing: 1.8px; text-transform: uppercase;
-          color: #f97316; margin-bottom: 10px;
+          color: #f97316; margin-bottom: 8px;
+          display: flex; align-items: center; gap: 6px;
         }
         .sa-title {
           font-size: 26px; font-weight: 800;
           color: #fff; letter-spacing: -0.6px; margin-bottom: 6px;
         }
         .sa-subtitle {
-          font-size: 13px; color: rgba(255,255,255,0.3);
-          font-weight: 400; margin-bottom: 32px; line-height: 1.6;
+          font-size: 13px; color: rgba(255,255,255,0.35);
+          font-weight: 400; margin-bottom: 24px; line-height: 1.5;
         }
-        .sa-divider {
+
+        .sa-google-btn {
+          width: 100%;
+          padding: 13px 16px;
+          background: #ffffff;
+          border: 1px solid rgba(255,255,255,0.2);
+          border-radius: 12px;
+          color: #111827;
+          font-size: 14px;
+          font-weight: 600;
+          font-family: 'Inter', sans-serif;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          transition: all 0.2s ease;
+          box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+          margin-bottom: 20px;
+        }
+        .sa-google-btn:hover:not(:disabled) {
+          background: #f3f4f6;
+          transform: translateY(-1px);
+          box-shadow: 0 6px 20px rgba(255,255,255,0.1);
+        }
+        .sa-google-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .sa-or-divider {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 20px;
+        }
+        .sa-or-line {
+          flex: 1;
           height: 1px;
-          background: rgba(255,255,255,0.06);
-          margin-bottom: 28px;
+          background: rgba(255,255,255,0.08);
         }
+        .sa-or-text {
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          color: rgba(255,255,255,0.25);
+        }
+
         .sa-field-label {
           font-size: 11px; font-weight: 600;
           letter-spacing: 0.9px; text-transform: uppercase;
-          color: rgba(255,255,255,0.28); margin-bottom: 8px;
+          color: rgba(255,255,255,0.4); margin-bottom: 8px;
+          display: block;
         }
-        .sa-input-wrap { position: relative; margin-bottom: 10px; }
+        .sa-input-wrap { position: relative; margin-bottom: 16px; }
         .sa-input {
           width: 100%;
           padding: 13px 46px 13px 16px;
@@ -225,29 +476,34 @@ export function SuperAdminRoute({ children }) {
           transition: border-color 0.18s, background 0.18s;
           -webkit-appearance: none;
         }
-        .sa-input::placeholder { color: rgba(255,255,255,0.16); }
+        .sa-input::placeholder { color: rgba(255,255,255,0.2); }
         .sa-input:focus {
-          border-color: rgba(249,115,22,0.4);
+          border-color: rgba(249,115,22,0.5);
           background: rgba(255,255,255,0.06);
         }
         .sa-input.err {
-          border-color: rgba(239,68,68,0.4);
-          background: rgba(239,68,68,0.04);
+          border-color: rgba(239,68,68,0.5);
+          background: rgba(239,68,68,0.05);
         }
         .sa-toggle {
           position: absolute; right: 13px; top: 50%;
           transform: translateY(-50%);
           background: none; border: none; cursor: pointer;
-          color: rgba(255,255,255,0.2); padding: 4px;
+          color: rgba(255,255,255,0.3); padding: 4px;
           display: flex; align-items: center;
           transition: color 0.15s;
           font-family: inherit;
         }
-        .sa-toggle:hover { color: rgba(255,255,255,0.5); }
+        .sa-toggle:hover { color: rgba(255,255,255,0.7); }
         .sa-error {
-          display: flex; align-items: center; gap: 6px;
+          display: flex; align-items: flex-start; gap: 8px;
           font-size: 12px; font-weight: 500;
-          color: #f87171; margin-bottom: 14px;
+          color: #f87171; margin-bottom: 16px;
+          background: rgba(239,68,68,0.1);
+          border: 1px solid rgba(239,68,68,0.2);
+          padding: 10px 12px;
+          border-radius: 10px;
+          line-height: 1.4;
         }
         .sa-btn {
           width: 100%; padding: 13px;
@@ -260,7 +516,7 @@ export function SuperAdminRoute({ children }) {
           transition: background 0.18s, transform 0.15s, box-shadow 0.18s;
           display: flex; align-items: center; justify-content: center; gap: 8px;
           box-shadow: 0 4px 18px rgba(249,115,22,0.28);
-          margin-top: 6px;
+          margin-top: 8px;
         }
         .sa-btn:hover:not(:disabled) {
           background: #ea6d10;
@@ -268,14 +524,14 @@ export function SuperAdminRoute({ children }) {
           box-shadow: 0 8px 26px rgba(249,115,22,0.36);
         }
         .sa-btn:active:not(:disabled) { transform: translateY(0); }
-        .sa-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .sa-btn:disabled { opacity: 0.45; cursor: not-allowed; }
         .sa-footer {
           display: flex; align-items: center; gap: 10px;
           margin-top: 28px;
         }
         .sa-footer-line { flex: 1; height: 1px; background: rgba(255,255,255,0.05); }
         .sa-footer-text {
-          font-size: 11px; color: rgba(255,255,255,0.13);
+          font-size: 11px; color: rgba(255,255,255,0.18);
           font-weight: 500; white-space: nowrap;
         }
 
@@ -305,7 +561,6 @@ export function SuperAdminRoute({ children }) {
           <div className="sa-left-gradient" />
 
           <div className="sa-left-content">
-            {/* Brand — real favicon */}
             <div className="sa-left-brand">
               <div className="sa-left-logo">
                 <img src="/favicon.png" alt="Fuudr" />
@@ -313,17 +568,16 @@ export function SuperAdminRoute({ children }) {
               <span className="sa-left-brand-name">Fuudr</span>
             </div>
 
-            {/* Bottom */}
             <div>
               <div className="sa-left-tag">
                 <span className="sa-live-dot" />
-                Live Orders
+                Live Command Center
               </div>
               <h2 className="sa-left-heading">
-                Every order,<br />tracked in <span>real‑time</span>
+                Protected <span>Super Admin</span> Portal
               </h2>
               <p className="sa-left-sub">
-                Full visibility into orders, deliveries, and restaurant operations — from one dashboard.
+                Secured administrative access for operations, orders, dispatching, and partner management.
               </p>
             </div>
           </div>
@@ -333,39 +587,118 @@ export function SuperAdminRoute({ children }) {
         <div className="sa-right">
           <div className={`sa-form-wrap${mounted ? ' mounted' : ''}${shake ? ' shake' : ''}`}>
 
-            <p className="sa-eyebrow">Super Admin Portal</p>
-            <h1 className="sa-title">Welcome back</h1>
-            <p className="sa-subtitle">Sign in to manage Fuudr's orders and deliveries.</p>
+            <p className="sa-eyebrow">
+              <ShieldCheck size={14} />
+              Fuudr Admin Security
+            </p>
+            <h1 className="sa-title">Admin Sign In</h1>
+            <p className="sa-subtitle">Sign in with your authorized Google Admin account.</p>
 
-            <div className="sa-divider" />
+            {/* ── Google OAuth Button ── */}
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={lockedOut || googleLoading}
+              className="sa-google-btn"
+            >
+              {googleLoading ? (
+                <>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    style={{ animation: 'spin 0.75s linear infinite' }}>
+                    <circle cx="12" cy="12" r="9" stroke="rgba(0,0,0,0.2)" strokeWidth="2.5"/>
+                    <path d="M12 3a9 9 0 0 1 9 9" stroke="#111" strokeWidth="2.5" strokeLinecap="round"/>
+                  </svg>
+                  Redirecting to Google...
+                </>
+              ) : (
+                <>
+                  <svg width="18" height="18" viewBox="0 0 24 24">
+                    <path
+                      fill="#4285F4"
+                      d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.35 24 12 24z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.04 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+                    />
+                    <path
+                      fill="#EA4335"
+                      d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.35 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                    />
+                  </svg>
+                  Continue with Google
+                </>
+              )}
+            </button>
+
+            <div className="sa-or-divider">
+              <div className="sa-or-line" />
+              <span className="sa-or-text">or email</span>
+              <div className="sa-or-line" />
+            </div>
 
             <form onSubmit={handleSubmit}>
-              <p className="sa-field-label">Password</p>
+              <label className="sa-field-label">Admin Email</label>
               <div className="sa-input-wrap">
                 <input
-                  className={`sa-input${error ? ' err' : ''}`}
+                  className={`sa-input${errorMsg && !lockedOut ? ' err' : ''}`}
+                  type="email"
+                  value={email}
+                  onChange={e => { setEmail(e.target.value); setErrorMsg(''); }}
+                  placeholder="admin@fuudr.com"
+                  disabled={lockedOut || loading}
+                />
+              </div>
+
+              <label className="sa-field-label">Password</label>
+              <div className="sa-input-wrap">
+                <input
+                  className={`sa-input${errorMsg ? ' err' : ''}`}
                   type={show ? 'text' : 'password'}
                   value={password}
-                  onChange={e => { setPassword(e.target.value); setError(false); }}
-                  placeholder="Enter your password"
-                  autoFocus
+                  onChange={e => { setPassword(e.target.value); setErrorMsg(''); }}
+                  placeholder={lockedOut ? 'Access locked' : '••••••••••••'}
+                  disabled={lockedOut || loading}
                 />
-                <button type="button" className="sa-toggle" onClick={() => setShow(s => !s)} tabIndex={-1}>
+                <button 
+                  type="button" 
+                  className="sa-toggle" 
+                  onClick={() => setShow(s => !s)} 
+                  tabIndex={-1} 
+                  disabled={lockedOut || loading}
+                >
                   {show ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
 
-              {error && (
-                <p className="sa-error">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="12" r="10" stroke="#f87171" strokeWidth="2"/>
-                    <path d="M12 8v5M12 16h.01" stroke="#f87171" strokeWidth="2.2" strokeLinecap="round"/>
-                  </svg>
-                  Incorrect password. Please try again.
-                </p>
+              {lockedOut && (
+                <div className="sa-error">
+                  <Lock size={15} className="flex-shrink-0 mt-0.5" />
+                  <span>
+                    Too many failed attempts. Try again in <strong>{formatCountdown(countdown)}</strong>
+                  </span>
+                </div>
               )}
 
-              <button type="submit" className="sa-btn" disabled={loading || !password}>
+              {errorMsg && !lockedOut && (
+                <div className="sa-error">
+                  <AlertTriangle size={15} className="flex-shrink-0 mt-0.5" />
+                  <span>
+                    {errorMsg}
+                    {MAX_ATTEMPTS - attempts > 0 && attempts > 0 && (
+                      <span className="block opacity-75 mt-0.5">
+                        {MAX_ATTEMPTS - attempts} attempt{MAX_ATTEMPTS - attempts !== 1 ? 's' : ''} remaining.
+                      </span>
+                    )}
+                  </span>
+                </div>
+              )}
+
+              <button type="submit" className="sa-btn" disabled={loading || !email || !password || lockedOut}>
                 {loading ? (
                   <>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
@@ -373,11 +706,13 @@ export function SuperAdminRoute({ children }) {
                       <circle cx="12" cy="12" r="9" stroke="rgba(255,255,255,0.25)" strokeWidth="2.5"/>
                       <path d="M12 3a9 9 0 0 1 9 9" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/>
                     </svg>
-                    Verifying...
+                    Authenticating...
                   </>
+                ) : lockedOut ? (
+                  <>Locked — {formatCountdown(countdown)}</>
                 ) : (
                   <>
-                    Sign In
+                    Sign In with Password
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                       <path d="M5 12h14M13 6l6 6-6 6" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
@@ -388,7 +723,7 @@ export function SuperAdminRoute({ children }) {
 
             <div className="sa-footer">
               <div className="sa-footer-line" />
-              <span className="sa-footer-text">© 2025 Fuudr · fuudr.com</span>
+              <span className="sa-footer-text">© 2025 Fuudr Inc. · Internal Only</span>
               <div className="sa-footer-line" />
             </div>
 

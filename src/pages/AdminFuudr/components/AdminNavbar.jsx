@@ -28,10 +28,14 @@ export function AdminNavbar() {
     return () => supabase.removeChannel(sub);
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // Ignore
+    }
     sessionStorage.removeItem(SESSION_KEY);
     navigate('/adminfuudr');
-    window.location.reload(); // force re-render to show login screen
   };
 
   const isActive = (path) => {

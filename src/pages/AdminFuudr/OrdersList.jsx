@@ -74,6 +74,7 @@ export default function OrdersList() {
   };
 
   const fetchOrders = async () => {
+    let ordersData = null;
     const { data, error } = await supabase
       .from('orders')
       .select(`
@@ -84,13 +85,29 @@ export default function OrdersList() {
         )
       `)
       .order('created_at', { ascending: false });
+
     if (!error && data) {
-      const normalized = data.map(o => ({
+      ordersData = data.map(o => ({
         ...o,
         restaurant_name: o.partners?.restaurant_name ?? o.restaurant_name,
         is_poornima: o.partners?.is_poornima ?? o.is_poornima ?? false
       }));
-      setOrders(normalized);
+    } else if (error) {
+      console.warn('Orders joined query failed in OrdersList:', error.message, 'Trying plain select...');
+      const plain = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (!plain.error && plain.data) {
+        ordersData = plain.data;
+      } else if (plain.error) {
+        console.error('Plain orders query failed:', plain.error.message);
+      }
+    }
+
+    if (ordersData) {
+      setOrders(ordersData);
     }
     setLoading(false);
   };

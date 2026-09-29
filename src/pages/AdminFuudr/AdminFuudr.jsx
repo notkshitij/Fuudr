@@ -41,14 +41,31 @@ export default function AdminFuudr() {
           .select('id, is_poornima')
       ]);
 
+      let ordersData = ordersRes.data;
+      if (ordersRes.error) {
+        console.warn('Orders joined query failed:', ordersRes.error.message, 'Trying plain select...');
+        const plainOrders = await supabase
+          .from('orders')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (plainOrders.error) {
+          console.error('Plain orders query also failed:', plainOrders.error.message);
+        } else {
+          ordersData = plainOrders.data;
+        }
+      }
+
       if (partnersRes.data) {
         const totalP = partnersRes.data.length;
         const poornimaP = partnersRes.data.filter(p => p.is_poornima).length;
         setPartnerStats({ total: totalP, poornima: poornimaP });
+      } else if (partnersRes.error) {
+        console.error('Partners query failed:', partnersRes.error.message);
       }
 
-      if (ordersRes.data) {
-        const data = ordersRes.data;
+      if (ordersData) {
+        const data = ordersData;
         const s = { total: data.length, placed: 0, preparing: 0, on_the_way: 0, delivered: 0, cancelled: 0, revenue: 0 };
         data.forEach(o => {
           if (s[o.status] !== undefined) s[o.status]++;

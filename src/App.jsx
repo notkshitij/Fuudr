@@ -62,9 +62,9 @@ export default function App() {
           </Route>
 
           <Route path="/fuudr-backstage" element={
-            <ProtectedRoute>
+            <SuperAdminRoute>
               <AdminPortal />
-            </ProtectedRoute>
+            </SuperAdminRoute>
           } />
 
           {/* Partner Portal Routes */}
