@@ -105,7 +105,7 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
           </div>
           <div>
             <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Orders & Sales Analytics</h2>
-            <p className="text-xs text-slate-500 font-medium">Daily transaction volume and revenue trends</p>
+            <p className="text-xs text-slate-500 font-medium">Daily transaction volume and sales trends</p>
           </div>
         </div>
 
@@ -131,7 +131,7 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Revenue (₹)
+              Total Sales (₹)
             </button>
           </div>
 

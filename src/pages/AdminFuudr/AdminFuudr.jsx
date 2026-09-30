@@ -107,7 +107,7 @@ export default function AdminFuudr() {
     { label: 'Total Orders',   value: stats.total,          icon: ShoppingBag,  accent: 'orange' },
     { label: 'Active Now',     value: activeCount,          icon: Zap,          accent: 'blue',   pulse: activeCount > 0 },
     { label: 'Delivered',      value: stats.delivered,      icon: CheckCircle,  accent: 'emerald' },
-    { label: 'Total Revenue',  value: `₹${stats.revenue.toLocaleString('en-IN')}`, icon: TrendingUp, accent: 'violet' },
+    { label: 'Total Sales',    value: `₹${stats.revenue.toLocaleString('en-IN')}`, icon: TrendingUp, accent: 'violet' },
   ];
 
   const accentMap = {
