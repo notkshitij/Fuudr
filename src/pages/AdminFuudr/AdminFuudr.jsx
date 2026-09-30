@@ -154,17 +154,20 @@ export default function AdminFuudr() {
       <PlatformStatusToggle />
 
       {/* ── Stat Cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {statCards.map(({ label, value, icon: Icon, accent, pulse }) => {
           const a = accentMap[accent];
           return (
-            <div key={label} className={`bg-white rounded-2xl border ${a.card} p-5 flex flex-col gap-4`}>
+            <div
+              key={label}
+              className={`bg-white rounded-2xl border ${a.card} p-4 sm:p-5 flex flex-col justify-between min-h-[110px] sm:min-h-[130px] shadow-sm hover:shadow-md transition-all`}
+            >
               <div className="flex items-center justify-between">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${a.icon}`}>
-                  <Icon size={20} />
+                <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center ${a.icon}`}>
+                  <Icon size={18} className="sm:w-5 sm:h-5" />
                 </div>
                 {pulse && (
-                  <span className="flex items-center gap-1.5 text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
                     <span className="relative flex h-1.5 w-1.5">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500"></span>
@@ -173,9 +176,13 @@ export default function AdminFuudr() {
                   </span>
                 )}
               </div>
-              <div>
-                <p className={`text-2xl font-black ${a.val}`}>{loading ? '—' : value}</p>
-                <p className="text-xs font-semibold text-slate-500 mt-0.5">{label}</p>
+              <div className="mt-2 sm:mt-3">
+                <p className={`text-xl sm:text-2xl font-black tracking-tight leading-none ${a.val}`}>
+                  {loading ? '—' : value}
+                </p>
+                <p className="text-xs font-semibold text-slate-500 mt-1.5 leading-tight">
+                  {label}
+                </p>
               </div>
             </div>
           );
