@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, ShoppingBag, CheckCircle, Clock, Bike, Package, TrendingUp, Zap, Store, GraduationCap } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 import { PlatformStatusToggle } from './components/PlatformStatusToggle';
+import { OrdersAnalyticsChart } from './components/OrdersAnalyticsChart';
 
 const STATUS_CONFIG = {
   placed:     { label: 'Placed',      color: 'text-slate-700',   bg: 'bg-slate-100',   dot: 'bg-slate-500',   icon: Package },
@@ -16,6 +17,7 @@ export default function AdminFuudr() {
   const navigate = useNavigate();
   const [stats, setStats] = useState({ total: 0, placed: 0, preparing: 0, on_the_way: 0, delivered: 0, cancelled: 0, revenue: 0 });
   const [partnerStats, setPartnerStats] = useState({ total: 0, poornima: 0 });
+  const [allOrders, setAllOrders] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -66,6 +68,7 @@ export default function AdminFuudr() {
 
       if (ordersData) {
         const data = ordersData;
+        setAllOrders(data);
         const s = { total: data.length, placed: 0, preparing: 0, on_the_way: 0, delivered: 0, cancelled: 0, revenue: 0 };
         data.forEach(o => {
           if (s[o.status] !== undefined) s[o.status]++;
@@ -188,6 +191,9 @@ export default function AdminFuudr() {
           );
         })}
       </div>
+
+      {/* ── Orders & Sales Analytics Graph ── */}
+      <OrdersAnalyticsChart orders={allOrders} loading={loading} />
 
       {/* ── Status Breakdown + Recent Orders ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
