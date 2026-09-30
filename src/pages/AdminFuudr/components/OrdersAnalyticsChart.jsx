@@ -26,16 +26,16 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
       dayMap[key] = { key, label, date: d, count: 0, revenue: 0 };
     }
 
-    // Populate with real orders
+    // Populate with real orders (excluding cancelled orders)
     orders.forEach(order => {
       if (!order.created_at) return;
+      if (order.status === 'cancelled') return; // Exclude cancelled orders
+
       const orderKey = new Date(order.created_at).toISOString().split('T')[0];
       if (dayMap[orderKey]) {
         dayMap[orderKey].count += 1;
-        if (order.status !== 'cancelled') {
-          const rev = Number(order.bill?.total ?? order.total_price ?? 0);
-          dayMap[orderKey].revenue += isNaN(rev) ? 0 : rev;
-        }
+        const rev = Number(order.bill?.total ?? order.total_price ?? 0);
+        dayMap[orderKey].revenue += isNaN(rev) ? 0 : rev;
       }
     });
 
@@ -151,34 +151,6 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
               </button>
             ))}
           </div>
-        </div>
-      </div>
-
-      {/* Mini Stat Summary Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 my-4">
-        <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Period Total</span>
-          <span className="text-lg font-black text-slate-900 mt-0.5 block">
-            {metric === 'orders' ? `${totals.totalOrders} Orders` : `₹${totals.totalRevenue.toLocaleString()}`}
-          </span>
-        </div>
-        <div className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Daily Average</span>
-          <span className="text-lg font-black text-slate-900 mt-0.5 block">
-            {metric === 'orders' 
-              ? `${totals.avgOrders} / day` 
-              : `₹${Math.round(totals.totalRevenue / chartData.length).toLocaleString()} / day`
-            }
-          </span>
-        </div>
-        <div className="col-span-2 sm:col-span-1 bg-slate-50 rounded-xl p-3 border border-slate-100">
-          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Peak Day</span>
-          <span className="text-lg font-black text-slate-900 mt-0.5 block truncate">
-            {totals.peakDay.val > 0 
-              ? `${totals.peakDay.label} (${metric === 'orders' ? `${totals.peakDay.val} orders` : `₹${totals.peakDay.val}`})` 
-              : 'None'
-            }
-          </span>
         </div>
       </div>
 
