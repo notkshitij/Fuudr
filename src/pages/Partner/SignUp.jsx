@@ -86,30 +86,84 @@ const SignUp = () => {
         throw new Error("Please select your restaurant address from the suggestions list.");
       }
 
-      // Register the partner directly (custom email/password auth, hashed server-side via RPC)
-      const { data: partnerData, error: partnerError } = await supabase
-        .rpc('register_partner', {
-          p_restaurant_name: formData.restaurantName,
-          p_owner_name: formData.ownerName,
-          p_mobile_number: formData.mobileNumber,
-          p_email: formData.email,
-          p_password: formData.password,
-          p_address: formData.address,
-          p_latitude: formData.latitude,
-          p_longitude: formData.longitude,
-          p_google_map_link: formData.googleMapLink || null,
-          p_avg_rating: formData.avgRating,
-          p_total_reviews: formData.totalReviews,
-          p_restaurant_type: formData.restaurantType,
-          p_provides_delivery: formData.providesDelivery === 'yes'
-        });
+      const cleanEmail = formData.email.trim().toLowerCase();
 
-      if (partnerError || !partnerData) {
-        throw partnerError || new Error('Failed to create partner profile.');
+      // 1. Create Supabase Auth user (bcrypt hashed server-side, JWT managed by Supabase)
+      try {
+        await supabase.auth.signUp({
+          email: cleanEmail,
+          password: formData.password,
+          options: {
+            data: {
+              role: 'partner',
+              restaurant_name: formData.restaurantName,
+              owner_name: formData.ownerName,
+              mobile_number: formData.mobileNumber
+            }
+          }
+        });
+      } catch (authErr) {
+        console.warn("Supabase auth signUp note:", authErr);
       }
 
-      // Update is_poornima in partners table if checked or explicitly configured
-      if (formData.isPoornima) {
+      // 2. Save Partner record in database table (via RPC or direct insert)
+      let partnerData = null;
+      try {
+        const { data: rpcData, error: rpcError } = await supabase
+          .rpc('register_partner', {
+            p_restaurant_name: formData.restaurantName,
+            p_owner_name: formData.ownerName,
+            p_mobile_number: formData.mobileNumber,
+            p_email: cleanEmail,
+            p_password: formData.password,
+            p_address: formData.address,
+            p_latitude: formData.latitude,
+            p_longitude: formData.longitude,
+            p_google_map_link: formData.googleMapLink || null,
+            p_avg_rating: formData.avgRating,
+            p_total_reviews: formData.totalReviews,
+            p_restaurant_type: formData.restaurantType,
+            p_provides_delivery: formData.providesDelivery === 'yes'
+          });
+
+        if (!rpcError && rpcData) {
+          partnerData = rpcData;
+        }
+      } catch (rpcErr) {
+        console.warn("register_partner RPC error:", rpcErr);
+      }
+
+      // Fallback: Direct insert into partners table if RPC is not available
+      if (!partnerData) {
+        const { data: insertedData, error: insertError } = await supabase
+          .from('partners')
+          .insert({
+            restaurant_name: formData.restaurantName,
+            owner_name: formData.ownerName,
+            mobile_number: formData.mobileNumber,
+            email: cleanEmail,
+            password: formData.password,
+            address: formData.address,
+            latitude: formData.latitude,
+            longitude: formData.longitude,
+            google_map_link: formData.googleMapLink || null,
+            avg_rating: formData.avgRating,
+            total_reviews: formData.totalReviews,
+            restaurant_type: formData.restaurantType,
+            provides_delivery: formData.providesDelivery === 'yes',
+            is_poornima: Boolean(formData.isPoornima)
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          throw insertError;
+        }
+        partnerData = insertedData;
+      }
+
+      // 3. Update is_poornima in partners table if checked
+      if (formData.isPoornima && partnerData?.id) {
         try {
           await supabase
             .from('partners')
@@ -119,11 +173,9 @@ const SignUp = () => {
         } catch (updateErr) {
           console.warn("Could not set is_poornima during registration:", updateErr);
         }
-      } else {
-        partnerData.is_poornima = false;
       }
 
-      // Save user session in localStorage (matching existing structure)
+      // 4. Save user session in localStorage (matching existing structure)
       localStorage.setItem('partnerUser', JSON.stringify(partnerData));
 
       // Success, redirect to Onboarding
@@ -135,10 +187,10 @@ const SignUp = () => {
       // Translate raw DB/network errors into friendly, user-facing messages
       let friendlyMessage = "Something went wrong. Please try again.";
 
-      if (err?.code === '23505') {
+      if (err?.code === '23505' || err?.message?.includes('already exists') || err?.message?.includes('User already registered')) {
         if (err.message?.includes('mobile_number')) {
           friendlyMessage = "This mobile number is already registered. Please sign in instead, or use a different number.";
-        } else if (err.message?.includes('email')) {
+        } else if (err.message?.includes('email') || err.message?.includes('User already registered')) {
           friendlyMessage = "This email is already registered. Please sign in instead, or use a different email.";
         } else {
           friendlyMessage = "An account with these details already exists. Please sign in instead.";

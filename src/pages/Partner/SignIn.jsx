@@ -1,166 +1,28 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
-import { Mail, Lock, ArrowRight } from 'lucide-react';
-import AuthLayout from '../../components/Partner/AuthLayout';
-import { supabase } from '../../supabaseClient';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { PartnerAuthForm } from './components/PartnerRoute';
 
 const SignIn = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-  
-  // Hardcoded default values for easy testing
-  const [credentials, setCredentials] = useState({
-    identifier: '',
-    password: ''
-  });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setCredentials(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setErrorMsg('');
-
+  useEffect(() => {
     try {
-      // Log in directly against the partners table (custom email/password auth via RPC)
-      const { data: partnerData, error: partnerError } = await supabase
-        .rpc('login_partner', {
-          p_email: credentials.identifier,
-          p_password: credentials.password,
-        });
-
-      if (partnerError || !partnerData) {
-        throw new Error('Invalid email or password.');
+      const stored = localStorage.getItem('partnerUser');
+      if (stored) {
+        const user = JSON.parse(stored);
+        if (!user.opening_time) {
+          navigate('/partner/setup-profile', { replace: true });
+        } else {
+          navigate('/partner/dashboard', { replace: true });
+        }
       }
-
-      // Save user session in localStorage (matching existing structure)
-      localStorage.setItem('partnerUser', JSON.stringify(partnerData));
-      
-      // Check if profile setup is incomplete (e.g., missing opening_time)
-      if (!partnerData.opening_time) {
-        navigate('/partner/setup-profile');
-      } else {
-        navigate('/partner/dashboard');
-      }
-      
-    } catch (err) {
-      console.error('Sign In Error:', err);
-      setErrorMsg(err.message || 'Login failed. Please check your credentials.');
-    } finally {
-      setLoading(false);
+    } catch {
+      // Ignore
     }
-  };
+  }, [navigate]);
 
-  return (
-    <>
-      <Helmet>
-        <title>Restaurant Partner Sign In | Fuudr Program</title>
-        <meta name="description" content="Join the Fuudr Partner Program. Reach more customers through video reels and get orders instantly. Log in to your restaurant dashboard." />
-        <link rel="canonical" href="https://fuudr.com/partner" />
-        
-        {/* Open Graph / Facebook */}
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://fuudr.com/partner" />
-        <meta property="og:title" content="Restaurant Partner Sign In | Fuudr Program" />
-        <meta property="og:description" content="Log in to your Fuudr partner dashboard. Reach more customers through video reels and get orders instantly." />
-        <meta property="og:image" content="https://fuudr.com/banner.png" />
-        
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:url" content="https://fuudr.com/partner" />
-        <meta name="twitter:title" content="Restaurant Partner Sign In | Fuudr Program" />
-        <meta name="twitter:description" content="Log in to your Fuudr partner dashboard. Reach more customers through video reels and get orders instantly." />
-        <meta name="twitter:image" content="https://fuudr.com/banner.png" />
-        <meta name="twitter:site" content="@tryfuudr" />
-
-        {/* JSON-LD Schemas */}
-        <script type="application/ld+json">{`
-          {
-            "@context": "https://schema.org",
-            "@type": "BreadcrumbList",
-            "itemListElement": [{
-              "@type": "ListItem",
-              "position": 1,
-              "name": "Home",
-              "item": "https://fuudr.com/"
-            },{
-              "@type": "ListItem",
-              "position": 2,
-              "name": "Partner Portal",
-              "item": "https://fuudr.com/partner"
-            }]
-          }
-        `}</script>
-      </Helmet>
-      <AuthLayout 
-        title="Welcome Back" 
-        subtitle="Sign in to your partner dashboard to manage your business"
-      >
-        <form onSubmit={handleSubmit} className="space-y-6">
-        
-        {errorMsg && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm font-medium border border-red-200">
-            {errorMsg}
-          </div>
-        )}
-
-        <div className="space-y-1.5">
-          <label className="block text-sm font-semibold text-slate-700 ml-1">Email Address</label>
-          <div className="relative flex items-center group">
-            <Mail className="absolute left-4 text-slate-400 group-focus-within:text-orange-500 transition-colors duration-300 pointer-events-none" size={20} />
-            <input 
-              type="email" 
-              name="identifier"
-              value={credentials.identifier}
-              onChange={handleChange}
-              className="w-full py-3.5 pl-12 pr-4 border border-slate-200/80 rounded-xl bg-slate-50/50 text-slate-900 transition duration-300 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 hover:bg-slate-50" 
-              placeholder="Enter your email address" 
-              required
-            />
-          </div>
-        </div>
-
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between ml-1">
-            <label className="block text-sm font-semibold text-slate-700">Password</label>
-            <Link to="/partner/forgot-password" className="text-sm font-semibold text-orange-500 hover:text-orange-600 transition-colors">Forgot password?</Link>
-          </div>
-          <div className="relative flex items-center group">
-            <Lock className="absolute left-4 text-slate-400 group-focus-within:text-orange-500 transition-colors duration-300 pointer-events-none" size={20} />
-            <input 
-              type="password" 
-              name="password"
-              value={credentials.password}
-              onChange={handleChange}
-              className="w-full py-3.5 pl-12 pr-4 border border-slate-200/80 rounded-xl bg-slate-50/50 text-slate-900 transition duration-300 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-500/10 hover:bg-slate-50" 
-              placeholder="Enter your password" 
-              required
-            />
-          </div>
-        </div>
-
-        <button 
-          type="submit" 
-          disabled={loading}
-          className="w-full inline-flex items-center justify-center gap-2 py-4 px-6 rounded-xl font-bold text-white bg-orange-500 hover:bg-orange-600 active:scale-[0.98] transition-all duration-300 shadow-lg shadow-orange-500/25 mt-8 disabled:opacity-70 disabled:cursor-not-allowed group"
-        >
-          {loading ? 'Signing In...' : 'Sign In'}
-          {!loading && <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />}
-        </button>
-
-        <div className="mt-8 text-center text-sm text-slate-500">
-          Don't have a partner account?{' '}
-          <Link to="/partner/signup" className="text-orange-500 font-medium hover:text-orange-600 transition-colors">Register now</Link>
-        </div>
-      </form>
-      </AuthLayout>
-    </>
-  );
+  return <PartnerAuthForm />;
 };
 
 export default SignIn;
+

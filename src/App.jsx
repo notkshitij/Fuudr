@@ -6,6 +6,8 @@ import { SuperAdminRoute } from './pages/AdminFuudr/components/SuperAdminRoute';
 import ScrollToTop from './components/ScrollToTop';
 import './App.css';
 
+import { PartnerRoute } from './pages/Partner/components/PartnerRoute';
+
 // Synchronous imports to allow proper static HTML pre-rendering
 import { AdminPortal } from './pages/AdminPortal/AdminPortal';
 import SignIn from './pages/Partner/SignIn';
@@ -70,8 +72,16 @@ export default function App() {
           {/* Partner Portal Routes */}
           <Route path="/partner" element={<SignIn />} />
           <Route path="/partner/signup" element={<SignUp />} />
-          <Route path="/partner/setup-profile" element={<ProfileSetup />} />
-          <Route path="/partner/dashboard/*" element={<DashboardLayout />} />
+          <Route path="/partner/setup-profile" element={
+            <PartnerRoute>
+              <ProfileSetup />
+            </PartnerRoute>
+          } />
+          <Route path="/partner/dashboard/*" element={
+            <PartnerRoute>
+              <DashboardLayout />
+            </PartnerRoute>
+          } />
 
           {/* 404 Catch-All */}
           <Route path="*" element={<NotFound />} />
