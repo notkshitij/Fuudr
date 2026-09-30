@@ -83,18 +83,8 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
 
     if (pts.length === 0) return { pathD: '', areaD: '', points: [], maxY: niceMax };
 
-    // Generate smooth bezier curve path
-    let pD = `M ${pts[0].x} ${pts[0].y}`;
-    for (let i = 0; i < pts.length - 1; i++) {
-      const p0 = pts[i];
-      const p1 = pts[i + 1];
-      const cp1x = p0.x + (p1.x - p0.x) / 2;
-      const cp1y = p0.y;
-      const cp2x = p0.x + (p1.x - p0.x) / 2;
-      const cp2y = p1.y;
-      pD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
-    }
-
+    // Generate straight line path connecting each data point
+    const pD = pts.map((pt, i) => `${i === 0 ? 'M' : 'L'} ${pt.x} ${pt.y}`).join(' ');
     const aD = `${pD} L ${pts[pts.length - 1].x} ${height - paddingY} L ${pts[0].x} ${height - paddingY} Z`;
 
     return { pathD: pD, areaD: aD, points: pts, maxY: niceMax };
