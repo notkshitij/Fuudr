@@ -109,39 +109,41 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
           </div>
         </div>
 
-        {/* Controls: Metric Toggle + Time Range */}
-        <div className="flex items-center gap-2 flex-wrap" onClick={e => e.stopPropagation()}>
+        {/* Controls: Metric Toggle + Time Range (Always 1 clean line) */}
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-nowrap overflow-x-auto" onClick={e => e.stopPropagation()}>
           {/* Metric Toggle */}
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl">
+          <div className="flex items-center bg-slate-100 p-0.5 sm:p-1 rounded-xl flex-shrink-0">
             <button
               onClick={() => { setMetric('orders'); setHoveredPoint(null); }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap ${
                 metric === 'orders'
                   ? 'bg-white text-orange-600 shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Orders Count
+              <span className="sm:hidden">Orders</span>
+              <span className="hidden sm:inline">Orders Count</span>
             </button>
             <button
               onClick={() => { setMetric('revenue'); setHoveredPoint(null); }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap ${
                 metric === 'revenue'
                   ? 'bg-white text-purple-600 shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Total Sales (₹)
+              <span className="sm:hidden">Sales (₹)</span>
+              <span className="hidden sm:inline">Total Sales (₹)</span>
             </button>
           </div>
 
           {/* Time Range Toggle */}
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl">
+          <div className="flex items-center bg-slate-100 p-0.5 sm:p-1 rounded-xl flex-shrink-0">
             {['7d', '14d', '30d'].map((r) => (
               <button
                 key={r}
                 onClick={() => { setTimeRange(r); setHoveredPoint(null); }}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all uppercase ${
+                className={`px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all uppercase whitespace-nowrap ${
                   timeRange === r
                     ? 'bg-white text-slate-900 shadow-sm'
                     : 'text-slate-500 hover:text-slate-900'
