@@ -123,29 +123,29 @@ export default function AdminFuudr() {
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Super Admin Dashboard</h1>
           <p className="text-slate-500 mt-1 font-medium">Real-time overview of all Fuudr orders, partner outlets & deliveries.</p>
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <button
             onClick={() => navigate('/adminfuudr/restaurants')}
-            className="flex items-center gap-2 px-5 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold shadow-sm hover:bg-slate-50 hover:-translate-y-0.5 transition-all"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-5 sm:py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-bold shadow-sm hover:bg-slate-50 hover:-translate-y-0.5 active:translate-y-0 transition-all whitespace-nowrap"
           >
-            <Store size={18} className="text-orange-500" />
+            <Store size={16} className="text-orange-500 sm:w-[18px] sm:h-[18px]" />
             <span>Restaurants</span>
             {partnerStats.total > 0 && (
-              <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-extrabold">
+              <span className="text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-extrabold">
                 {partnerStats.total}
               </span>
             )}
           </button>
           <button
             onClick={() => navigate('/adminfuudr/orders')}
-            className="group flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-xl font-bold shadow-md shadow-orange-500/25 hover:bg-orange-600 hover:-translate-y-0.5 transition-all"
+            className="group flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-5 sm:py-2.5 bg-orange-500 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-orange-500/25 hover:bg-orange-600 hover:-translate-y-0.5 active:translate-y-0 transition-all whitespace-nowrap"
           >
-            <span className="relative flex h-2 w-2">
+            <span className="relative flex h-2 w-2 flex-shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
             </span>
-            View Live Orders
-            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+            <span className="hidden xs:inline sm:inline">View </span>Live Orders
+            <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform flex-shrink-0 sm:w-[17px] sm:h-[17px]" />
           </button>
         </div>
       </div>
