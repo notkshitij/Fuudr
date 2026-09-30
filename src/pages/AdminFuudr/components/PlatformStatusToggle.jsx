@@ -155,30 +155,30 @@ export function PlatformStatusToggle() {
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden transition-all">
       
-      {/* Compact Master Toggle Bar */}
-      <div className={`p-4 sm:p-5 transition-colors duration-300 ${
+      {/* Compact Master Toggle Bar (Single row on all screens) */}
+      <div className={`p-2.5 sm:p-3 transition-colors duration-300 ${
         isOnline 
           ? 'bg-emerald-50/40 border-b border-emerald-100/60' 
           : 'bg-rose-50/60 border-b border-rose-100'
       }`}>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-2.5 sm:gap-3">
           
           {/* Status Header */}
-          <div className="flex items-center gap-3.5">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs transition-colors duration-300 ${
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+            <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 shadow-xs transition-colors duration-300 ${
               isOnline 
                 ? 'bg-emerald-500 text-white' 
                 : 'bg-rose-500 text-white animate-pulse'
             }`}>
-              <Power size={20} className={isOnline ? '' : 'rotate-180'} />
+              <Power size={14} className={`sm:w-4 sm:h-4 ${isOnline ? '' : 'rotate-180'}`} />
             </div>
 
-            <div>
-              <div className="flex items-center gap-2 mb-0.5">
-                <h3 className="text-base font-bold text-slate-900 tracking-tight">
-                  {isOnline ? 'Fuudr is Live' : 'Fuudr is Offline / Paused'}
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h3 className="text-xs sm:text-[13px] font-bold text-slate-900 tracking-tight leading-tight">
+                  {isOnline ? 'Fuudr is Live' : 'Fuudr Offline'}
                 </h3>
-                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black ${
+                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black leading-none ${
                   isOnline 
                     ? 'bg-emerald-100 text-emerald-800' 
                     : 'bg-rose-100 text-rose-800'
@@ -187,30 +187,30 @@ export function PlatformStatusToggle() {
                   {isOnline ? 'ONLINE' : 'OFFLINE'}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 font-medium">
+              <p className="text-[10px] sm:text-[11px] text-slate-500 font-medium truncate mt-0.5">
                 {isOnline 
                   ? 'Accepting customer orders across all restaurants.' 
-                  : 'Customer ordering is disabled. Offline message is shown in app.'}
+                  : 'Customer ordering disabled.'}
               </p>
             </div>
           </div>
 
           {/* Compact Switch Button */}
-          <div className="flex items-center gap-3 self-end sm:self-center shrink-0">
+          <div className="flex items-center shrink-0">
             <button
               type="button"
               onClick={handleToggleClick}
               disabled={loading || isSaving}
-              className={`relative w-20 h-10 rounded-full p-1 transition-all duration-300 focus:outline-none cursor-pointer select-none ${
+              className={`relative w-12 h-6 sm:w-14 sm:h-7 rounded-full p-0.5 transition-all duration-300 focus:outline-none cursor-pointer select-none ${
                 isOnline 
                   ? 'bg-emerald-500 hover:bg-emerald-600' 
                   : 'bg-rose-500 hover:bg-rose-600'
               }`}
               title={isOnline ? "Turn Fuudr OFF" : "Turn Fuudr ON"}
             >
-              <div className={`w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center transform transition-transform duration-300 font-black text-[10px] ${
+              <div className={`w-5 h-5 sm:w-6 sm:h-6 bg-white rounded-full shadow-sm flex items-center justify-center transform transition-transform duration-300 font-black text-[8px] sm:text-[9px] ${
                 isOnline 
-                  ? 'translate-x-10 text-emerald-600' 
+                  ? 'translate-x-6 sm:translate-x-7 text-emerald-600' 
                   : 'translate-x-0 text-rose-600'
               }`}>
                 {isOnline ? 'ON' : 'OFF'}
