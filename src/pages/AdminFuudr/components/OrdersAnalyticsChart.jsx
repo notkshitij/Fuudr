@@ -64,9 +64,9 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
   // Chart dimensions & SVG path calculations
   const { pathD, areaD, points, maxY } = useMemo(() => {
     const width = 800;
-    const height = 230;
+    const height = 250;
     const paddingX = 45;
-    const paddingY = 40;
+    const paddingY = 45;
 
     const values = chartData.map(d => metric === 'orders' ? d.count : d.revenue);
     const maxVal = Math.max(...values, metric === 'orders' ? 5 : 100);
@@ -103,7 +103,10 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
   const activeColor = metric === 'orders' ? '#f97316' : '#8b5cf6'; // Orange for orders, Purple for revenue
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-sm overflow-visible">
+    <div 
+      className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-sm overflow-visible"
+      onClick={() => setHoveredPoint(null)}
+    >
       {/* Header with Title, Filter & Metrics */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
         <div className="flex items-center gap-3">
@@ -117,11 +120,11 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
         </div>
 
         {/* Controls: Metric Toggle + Time Range */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap" onClick={e => e.stopPropagation()}>
           {/* Metric Toggle */}
           <div className="flex items-center bg-slate-100 p-1 rounded-xl">
             <button
-              onClick={() => setMetric('orders')}
+              onClick={() => { setMetric('orders'); setHoveredPoint(null); }}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 metric === 'orders'
                   ? 'bg-white text-orange-600 shadow-sm'
@@ -131,7 +134,7 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
               Orders Count
             </button>
             <button
-              onClick={() => setMetric('revenue')}
+              onClick={() => { setMetric('revenue'); setHoveredPoint(null); }}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                 metric === 'revenue'
                   ? 'bg-white text-purple-600 shadow-sm'
@@ -147,7 +150,7 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
             {['7d', '14d', '30d'].map((r) => (
               <button
                 key={r}
-                onClick={() => setTimeRange(r)}
+                onClick={() => { setTimeRange(r); setHoveredPoint(null); }}
                 className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all uppercase ${
                   timeRange === r
                     ? 'bg-white text-slate-900 shadow-sm'
@@ -192,8 +195,9 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
       {/* SVG Interactive Graph */}
       <div className="relative w-full pt-4 pb-2 overflow-visible">
         <svg
-          viewBox="0 0 800 230"
-          className="w-full h-48 sm:h-64 overflow-visible select-none"
+          viewBox="0 0 800 250"
+          className="w-full h-52 sm:h-64 overflow-visible select-none"
+          onClick={() => setHoveredPoint(null)}
         >
           <defs>
             <linearGradient id="orderAreaGradient" x1="0" y1="0" x2="0" y2="1">
@@ -207,7 +211,7 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
 
           {/* Background horizontal grid lines */}
           {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-            const y = 35 + ratio * 150;
+            const y = 35 + ratio * 160;
             const valLabel = Math.round(maxY * (1 - ratio));
             return (
               <g key={ratio}>
@@ -224,7 +228,7 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
                   x="28"
                   y={y + 4}
                   textAnchor="end"
-                  className="text-[10px] fill-slate-300 font-semibold"
+                  className="text-xs fill-slate-400 font-bold"
                 >
                   {metric === 'revenue' ? `₹${valLabel}` : valLabel}
                 </text>
@@ -237,7 +241,7 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
             <path
               d={areaD}
               fill="url(#orderAreaGradient)"
-              className="transition-all duration-500 ease-out"
+              className="transition-all duration-500 ease-out pointer-events-none"
             />
           )}
 
@@ -247,11 +251,11 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
               d={pathD}
               fill="none"
               stroke={activeColor}
-              strokeWidth="3"
+              strokeWidth="3.5"
               strokeLinecap="round"
               strokeLinejoin="round"
               filter="url(#glow)"
-              className="transition-all duration-500 ease-out"
+              className="transition-all duration-500 ease-out pointer-events-none"
             />
           )}
 
@@ -259,12 +263,19 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
           {points.map((pt, i) => {
             const isHovered = hoveredPoint?.raw?.key === pt.raw.key;
             return (
-              <g key={pt.raw.key} className="cursor-pointer" onClick={() => setHoveredPoint(isHovered ? null : pt)}>
+              <g 
+                key={pt.raw.key} 
+                className="cursor-pointer" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setHoveredPoint(isHovered ? null : pt);
+                }}
+              >
                 {/* Invisible large hit area for easy tapping & clicking */}
                 <circle
                   cx={pt.x}
                   cy={pt.y}
-                  r="20"
+                  r="22"
                   fill="transparent"
                   onMouseEnter={() => setHoveredPoint(pt)}
                 />
@@ -273,7 +284,7 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
                   <circle
                     cx={pt.x}
                     cy={pt.y}
-                    r="8"
+                    r="9"
                     fill={activeColor}
                     fillOpacity="0.25"
                     className="animate-ping"
@@ -283,21 +294,21 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
                 <circle
                   cx={pt.x}
                   cy={pt.y}
-                  r={isHovered ? 6 : pt.val > 0 ? 4 : 2.5}
+                  r={isHovered ? 6.5 : pt.val > 0 ? 4.5 : 3}
                   fill="#ffffff"
                   stroke={activeColor}
-                  strokeWidth={isHovered ? 3.5 : 2}
+                  strokeWidth={isHovered ? 3.5 : 2.5}
                   className="transition-all duration-150"
                   onMouseEnter={() => setHoveredPoint(pt)}
                 />
-                {/* X Axis Labels */}
+                {/* X Axis Labels - Bold, Clear & Legible */}
                 {(chartData.length <= 14 || i % 2 === 0 || i === chartData.length - 1) && (
                   <text
                     x={pt.x}
-                    y="220"
+                    y="235"
                     textAnchor="middle"
-                    className={`text-[10px] font-semibold transition-colors ${
-                      isHovered ? 'fill-slate-900 font-bold' : 'fill-slate-400'
+                    className={`text-xs font-bold transition-colors ${
+                      isHovered ? 'fill-orange-600 font-extrabold' : 'fill-slate-700'
                     }`}
                   >
                     {pt.label}
@@ -316,20 +327,20 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
 
           return (
             <div
-              className="absolute z-30 pointer-events-none bg-slate-900/95 backdrop-blur-md text-white px-2.5 py-1.5 rounded-lg shadow-xl border border-white/10 text-xs transition-all duration-150 whitespace-nowrap"
+              className="absolute z-30 pointer-events-none bg-slate-900/95 backdrop-blur-md text-white px-3 py-2 rounded-xl shadow-2xl border border-white/10 text-xs transition-all duration-150 whitespace-nowrap"
               style={{
                 left: `${(hoveredPoint.x / 800) * 100}%`,
-                top: `${(hoveredPoint.y / 230) * 100}%`,
+                top: `${(hoveredPoint.y / 250) * 100}%`,
                 transform: `translate(${translateX}, -100%)`,
-                marginTop: '-8px',
+                marginTop: '-10px',
               }}
             >
-              <div className="flex items-center gap-1.5 leading-none">
-                <span className="text-[10px] text-slate-300 font-bold uppercase">{hoveredPoint.label}</span>
-                <span className="text-slate-600 font-bold">·</span>
-                <span className="text-orange-400 font-black text-[11px]">{hoveredPoint.raw.count} orders</span>
-                <span className="text-slate-600 font-bold">·</span>
-                <span className="text-purple-400 font-black text-[11px]">₹{hoveredPoint.raw.revenue.toLocaleString('en-IN')}</span>
+              <div className="flex items-center gap-2 leading-none">
+                <span className="text-xs text-white font-extrabold uppercase tracking-wide">{hoveredPoint.label}</span>
+                <span className="text-slate-500 font-bold">·</span>
+                <span className="text-orange-400 font-black text-xs">{hoveredPoint.raw.count} orders</span>
+                <span className="text-slate-500 font-bold">·</span>
+                <span className="text-purple-400 font-black text-xs">₹{hoveredPoint.raw.revenue.toLocaleString('en-IN')}</span>
               </div>
               {/* Downward pointing caret */}
               <div
