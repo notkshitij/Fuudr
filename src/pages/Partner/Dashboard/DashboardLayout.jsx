@@ -125,23 +125,23 @@ const DashboardLayout = () => {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden overflow-y-auto">
         {/* Top Header for Mobile */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:hidden sticky top-0 z-30">
-          <div className="flex items-center gap-3">
+        <header className="h-14 sm:h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:hidden sticky top-0 z-30 shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
             <button 
               onClick={() => setIsMobileMenuOpen(true)}
-              className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+              className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg shrink-0"
             >
-              <MenuIcon size={24} />
+              <MenuIcon size={22} />
             </button>
-            <span className="font-bold text-lg">{user.restaurant_name}</span>
+            <span className="font-bold text-base truncate">{user.restaurant_name}</span>
           </div>
         </header>
 
         {/* Content Wrapper */}
-        <main className="flex-1 min-h-0 overflow-hidden bg-slate-50 p-4 lg:p-8 flex flex-col">
-          <div className="max-w-6xl mx-auto w-full flex-1 min-h-0 flex flex-col">
+        <main className="flex-1 bg-slate-50 p-3 sm:p-4 lg:p-8 overflow-x-hidden">
+          <div className="max-w-6xl mx-auto w-full">
             <Routes>
               <Route path="/" element={<Overview user={user} />} />
               <Route path="/menu" element={<MenuManager user={user} />} />
