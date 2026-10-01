@@ -613,7 +613,7 @@ export function Home() {
       </div>
 
       {/* FOOTER */}
-      <footer className="slice-footer" style={{ background: '#4f2e09', color: '#fff', position: 'relative', overflow: 'hidden', padding: '40px 40px 30px', textAlign: 'center' }}>
+      <footer className="slice-footer" style={{ background: '#4f2e09', color: '#fff', position: 'relative', overflow: 'hidden', padding: '40px 24px 30px', textAlign: 'center' }}>
         <div className="footer-content" style={{ position: 'relative', zIndex: 10, maxWidth: '1200px', margin: '0 auto' }}>
           
           <div className="footer-badge" style={{ width: '120px', height: '120px', borderRadius: '50%', border: '3px solid #FCA311', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', margin: '0 auto 30px', background: '#4f2e09', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
@@ -626,32 +626,51 @@ export function Home() {
 
 
 
-          <div className="footer-actions" style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '30px', flexWrap: 'wrap' }}>
-            <a 
+          {/* Footer CTA Section */}
+          <p className="footer-cta-eyebrow">Let's connect</p>
+
+          <div className="footer-actions">
+
+            <a
               href="https://play.google.com/store/search?q=fuudr&c=apps&hl=en_IN"
               target="_blank"
               rel="noopener noreferrer"
-              className="brutal-btn footer-playstore-btn" 
-              style={{ padding: '16px 32px', fontSize: '20px', borderRadius: '12px', textDecoration: 'none', color: '#000', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
+              className="brutal-btn footer-playstore-btn"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="24" height="24">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="22" height="22" style={{ flexShrink: 0 }}>
                 <path fill="#3bccff" d="M51.8 13.9C45.3 21 41 33.3 41 49.3v413.3c0 16.1 4.3 28.3 10.8 35.4l2.5 2.4 228.3-228.3v-12.5L54.3 11.5l-2.5 2.4z"/>
                 <path fill="#54e26f" d="M362.4 316.5l-79.8-79.8v-12.5l79.8-79.8 2.5 1.5 94.6 53.7c26.9 15.3 26.9 40.5 0 55.8l-94.6 53.7-2.5 7.4z"/>
                 <path fill="#ff3a44" d="M362.4 316.5l-79.8-79.8-230.8 230.8c16.3 17.3 43.1 18.5 72.1 2l238.5-135.3z"/>
                 <path fill="#ffc100" d="M362.4 195.5l-238.5-135.3c-29-16.5-55.8-15.3-72.1 2L282.6 293l79.8-97.5z"/>
               </svg>
-              Download on Play Store
+              <span className="footer-btn-main">Google Play Store</span>
             </a>
-            <button className="brutal-btn footer-join-btn" onClick={() => window.open('https://whatsapp.com/channel/0029VbCTk553QxS6ZxDutH1N', '_blank')} style={{ padding: '16px 32px', fontSize: '20px', borderRadius: '12px' }}>Join Community</button>
-            <a 
+
+            <button
+              className="brutal-btn footer-join-btn"
+              onClick={() => window.open('https://whatsapp.com/channel/0029VbCTk553QxS6ZxDutH1N', '_blank')}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="22" height="22" style={{ flexShrink: 0 }}>
+                <path fill="#25D366" d="M16 0C7.163 0 0 7.163 0 16c0 2.833.74 5.494 2.035 7.806L0 32l8.418-2.008A15.938 15.938 0 0016 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm0 29.333a13.27 13.27 0 01-6.77-1.853l-.486-.29-5.003 1.195 1.218-4.87-.316-.5A13.267 13.267 0 012.667 16C2.667 8.636 8.636 2.667 16 2.667S29.333 8.636 29.333 16 23.364 29.333 16 29.333zm7.27-9.946c-.397-.198-2.352-1.16-2.716-1.293-.364-.132-.63-.198-.895.198-.265.397-1.027 1.293-1.259 1.558-.232.265-.464.298-.861.1-.397-.198-1.676-.618-3.193-1.97-1.18-1.052-1.977-2.35-2.21-2.747-.232-.397-.025-.612.174-.81.179-.178.397-.464.596-.696.198-.232.265-.397.397-.662.132-.265.066-.497-.033-.696-.1-.198-.895-2.16-1.226-2.96-.323-.775-.65-.67-.895-.682l-.762-.013c-.265 0-.696.1-1.06.497-.364.397-1.392 1.36-1.392 3.316s1.425 3.844 1.623 4.109c.198.265 2.804 4.28 6.793 5.998.95.41 1.691.655 2.269.839.953.304 1.82.261 2.505.158.764-.114 2.352-.962 2.683-1.89.33-.927.33-1.722.232-1.89-.1-.165-.364-.265-.762-.463z"/>
+              </svg>
+              <span className="footer-btn-main">Join Community</span>
+            </button>
+
+            <a
               href="https://wa.me/919413973399"
               target="_blank"
               rel="noopener noreferrer"
-              className="brutal-btn footer-register-btn" 
-              style={{ padding: '16px 32px', fontSize: '20px', borderRadius: '12px', textDecoration: 'none', color: '#000', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+              className="brutal-btn footer-register-btn"
             >
-              Request Partnership
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              <span className="footer-btn-main">Partner With Us</span>
             </a>
+
           </div>
 
           <div className="footer-socials" style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '40px', flexWrap: 'wrap' }}>
