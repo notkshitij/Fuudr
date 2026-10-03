@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "vite",
     "build": "node scripts/prerender.js",
-    "download-images": "node scripts/download_images.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },

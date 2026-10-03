@@ -1,4 +1,13 @@
 {
+  "redirects": [
+    { "source": "/terms-of-service", "destination": "/terms", "permanent": true },
+    {
+      "source": "/((?!api/).*)",
+      "has": [{ "type": "host", "value": "fuudr-web.vercel.app" }],
+      "destination": "https://fuudr.com/$1",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     { "source": "/privacy", "destination": "/privacy.html" },
     { "source": "/terms", "destination": "/terms.html" },

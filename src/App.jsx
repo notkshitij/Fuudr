@@ -29,7 +29,7 @@ function PageLoader() {
     <div className="flex items-center justify-center min-h-[80vh] bg-[var(--bg-light)] font-[var(--sans)] text-[var(--fg)]">
       <div className="flex flex-col items-center gap-5 p-8 border-[3px] border-black rounded-2xl shadow-[6px_6px_0px_rgba(0,0,0,1)] bg-white">
         <div className="w-10 h-10 rounded-full border-4 border-gray-200 border-t-[var(--acc)] animate-spin" />
-        <span className="font-[var(--xl)] text-lg uppercase tracking-wider text-black">Loading TasteBite...</span>
+        <span className="font-[var(--xl)] text-lg uppercase tracking-wider text-black">Loading Fuudr...</span>
       </div>
     </div>
   );
