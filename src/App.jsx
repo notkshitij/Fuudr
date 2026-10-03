@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Home } from './pages/Home/Home';
-import { ProtectedRoute } from './pages/AdminPortal/ProtectedRoute';
 import { SuperAdminRoute } from './pages/AdminFuudr/components/SuperAdminRoute';
 import ScrollToTop from './components/ScrollToTop';
 import './App.css';
@@ -9,7 +8,6 @@ import './App.css';
 import { PartnerRoute } from './pages/Partner/components/PartnerRoute';
 
 // Synchronous imports to allow proper static HTML pre-rendering
-import { AdminPortal } from './pages/AdminPortal/AdminPortal';
 import SignIn from './pages/Partner/SignIn';
 import SignUp from './pages/Partner/SignUp';
 import ProfileSetup from './pages/Partner/ProfileSetup';
@@ -62,12 +60,6 @@ export default function App() {
             <Route path="orders/:id" element={<ManageOrder />} />
             <Route path="restaurants" element={<RestaurantsList />} />
           </Route>
-
-          <Route path="/fuudr-backstage" element={
-            <SuperAdminRoute>
-              <AdminPortal />
-            </SuperAdminRoute>
-          } />
 
           {/* Partner Portal Routes */}
           <Route path="/partner" element={<SignIn />} />
