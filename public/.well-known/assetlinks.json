@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.fuudr.app",
+      "sha256_cert_fingerprints": [
+        "71:19:F2:AE:C0:1C:F4:02:35:B9:34:F3:6B:48:3C:2B:40:89:0A:F4:50:76:FF:85:AD:F9:85:40:BF:03:74:15"
+      ]
+    }
+  }
+]
