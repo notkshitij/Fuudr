@@ -263,7 +263,7 @@ export function Home() {
             {/* Google Play Button */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', position: 'relative' }}>
               <a
-                href="https://play.google.com/store/search?q=fuudr&c=apps&hl=en_IN"
+                href="https://play.google.com/store/apps/details?id=com.fuudr.app"
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -632,7 +632,7 @@ export function Home() {
           <div className="footer-actions">
 
             <a
-              href="https://play.google.com/store/search?q=fuudr&c=apps&hl=en_IN"
+              href="https://play.google.com/store/apps/details?id=com.fuudr.app"
               target="_blank"
               rel="noopener noreferrer"
               className="brutal-btn footer-playstore-btn"

@@ -20,6 +20,7 @@ import RestaurantsList from './pages/AdminFuudr/RestaurantsList';
 import Privacy from './pages/Privacy/Privacy';
 import TermsOfService from './pages/TermsOfService/TermsOfService';
 import DeleteAccount from './pages/DeleteAccount/DeleteAccount';
+import Share from './pages/Share/Share';
 import { NotFound } from './pages/NotFound/NotFound';
 
 // A premium Brutalist-styled fallback loader that matches the application's design language
@@ -47,6 +48,7 @@ export default function App() {
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/delete-account" element={<DeleteAccount />} />
+          <Route path="/share/*" element={<Share />} />
 
 
           {/* Super Admin — password protected */}
