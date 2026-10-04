@@ -19,44 +19,8 @@ const playDing = () => {
   oscillator.stop(ctx.currentTime + 0.4);
 };
 
-const sendEmailNotification = async (order) => {
-  try {
-    let itemsList = [];
-    if (order.bill?.items && Array.isArray(order.bill.items)) {
-      itemsList = order.bill.items.map(i => `${i.name || i.dishName} x${i.qty || i.quantity || 1}`);
-    } else if (Array.isArray(order.items)) {
-      itemsList = order.items.map(i => `${i.dishName || i.name} x${i.quantity || i.qty || 1}`);
-    }
-    const totalPrice = order.bill?.total ?? order.total_price ?? 0;
-
-    await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${import.meta.env.VITE_RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'Fuudr Orders <orders@fuudr.com>',
-        to: ['harshagrawal7878@gmail.com'],
-        subject: `🛍️ New Order - ${order.restaurant_name || 'Restaurant'}`,
-        html: `
-          <h2>New Order Received!</h2>
-          <p><strong>Order ID:</strong> #${order.id?.slice(-8).toUpperCase()}</p>
-          <p><strong>Customer:</strong> ${order.delivery_name || '—'}</p>
-          <p><strong>Address:</strong> ${order.delivery_address || '—'}</p>
-          <p><strong>Restaurant:</strong> ${order.restaurant_name || '—'}</p>
-          <p><strong>Items:</strong> ${itemsList.join(', ')}</p>
-          <p><strong>Total:</strong> ₹${totalPrice}</p>
-          <p><strong>Payment:</strong> ${order.bill?.payment_method ?? order.payment_method ?? '—'}</p>
-          <p><strong>Status:</strong> ${order.status}</p>
-          <p><strong>Time:</strong> ${new Date(order.created_at).toLocaleString('en-IN')}</p>
-        `
-      })
-    });
-  } catch (err) {
-    console.error('Email failed to send:', err);
-  }
-};
+// NOTE: order emails are sent server-side only (Supabase database webhook -> /api/notify-order).
+// No email API keys exist in the browser.
 
 export function useNewOrderNotification() {
   const [newOrder, setNewOrder] = useState(null);
@@ -93,7 +57,6 @@ export function useNewOrderNotification() {
 
           setNewOrder(orderWithRestaurant);
           playDing();
-          sendEmailNotification(orderWithRestaurant);
 
           const totalPrice = orderWithRestaurant.bill?.total ?? orderWithRestaurant.total_price ?? 0;
 
