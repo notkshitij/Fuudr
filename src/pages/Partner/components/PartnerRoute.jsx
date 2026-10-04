@@ -122,20 +122,6 @@ export function PartnerAuthForm({ onAuthenticated, initialEmail = '' }) {
           console.warn("login_partner RPC attempt error:", rpcErr);
         }
 
-        // Direct table query check
-        if (!partnerData) {
-          const { data: directData, error: directError } = await supabase
-            .from('partners')
-            .select('*')
-            .ilike('email', cleanEmail)
-            .eq('password', password)
-            .maybeSingle();
-
-          if (directData && !directError) {
-            partnerData = directData;
-          }
-        }
-
         // If found in database, seamlessly sync into Supabase Auth
         if (partnerData) {
           try {
