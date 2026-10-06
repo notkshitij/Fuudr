@@ -27,8 +27,7 @@ export default function RestaurantsList() {
   const fetchRestaurants = async () => {
     try {
       const { data, error } = await supabase
-        .from('partners')
-        .select('*')
+        .rpc('admin_list_partners')
         .order('created_at', { ascending: false });
 
       if (error) {
