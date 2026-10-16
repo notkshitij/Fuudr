@@ -12,6 +12,20 @@ const STEPS = [
 
 const STEP_INDEX = { placed: 0, preparing: 1, on_the_way: 2, delivered: 3 };
 
+const parseBill = (bill) => {
+  if (!bill) return {};
+  if (typeof bill === 'object') return bill;
+  try {
+    return JSON.parse(bill);
+  } catch (error) {
+    console.error('Unable to parse order bill:', error);
+    return {};
+  }
+};
+
+const getPayableTotal = (order) =>
+  order?.bill?.customer_total ?? order?.bill?.total ?? order?.total_price ?? 0;
+
 function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
   const R = 6371; // km
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -224,7 +238,15 @@ export default function ManageOrder() {
         quantity: item.qty || item.quantity || 1,
         price: item.price || 0,
         isVeg: item.isVeg !== undefined ? item.isVeg : true,
-        imageUrl: item.imageUrl || null
+        imageUrl: item.imageUrl || null,
+        variantName: item.variantName || item.variant_name || null,
+        addons: Array.isArray(item.addons) ? item.addons.map(addon => ({
+          id: addon.addon_id || addon.id,
+          name: addon.name || addon.addonName || 'Add-on',
+          quantity: addon.qty || addon.quantity || 1,
+          price: addon.price || 0,
+          isVeg: addon.isVeg !== undefined ? addon.isVeg : true
+        })) : []
       }));
     }
     if (Array.isArray(order.items)) {
@@ -234,7 +256,15 @@ export default function ManageOrder() {
         quantity: item.quantity || item.qty || 1,
         price: item.price || 0,
         isVeg: item.isVeg !== undefined ? item.isVeg : true,
-        imageUrl: item.imageUrl || null
+        imageUrl: item.imageUrl || null,
+        variantName: item.variantName || item.variant_name || null,
+        addons: Array.isArray(item.addons) ? item.addons.map(addon => ({
+          id: addon.addon_id || addon.id,
+          name: addon.name || addon.addonName || 'Add-on',
+          quantity: addon.qty || addon.quantity || 1,
+          price: addon.price || 0,
+          isVeg: addon.isVeg !== undefined ? addon.isVeg : true
+        })) : []
       }));
     }
     return [];
@@ -259,6 +289,7 @@ export default function ManageOrder() {
     if (!error && data) {
       setOrder({
         ...data,
+        bill: parseBill(data.bill),
         restaurant_name: data.partners?.restaurant_name ?? data.restaurant_name,
         is_poornima: data.partners?.is_poornima ?? data.is_poornima ?? false
       });
@@ -328,6 +359,7 @@ export default function ManageOrder() {
           .label { color: #666; }
           .items-header { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #666; margin-bottom: 10px; }
           .item-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+          .addon-row { display: flex; justify-content: space-between; padding-left: 16px; font-size: 11px; color: #666; margin: -2px 0 6px; }
           .total-row { display: flex; justify-content: space-between; font-size: 16px; font-weight: 700; margin-top: 4px; }
           .footer { text-align: center; font-size: 11px; color: #999; margin-top: 24px; }
           @media print { body { padding: 20px; } }
@@ -346,18 +378,32 @@ export default function ManageOrder() {
           <div class="divider"></div>
           <div class="row"><span class="label">Customer</span><span>${order.delivery_name || '—'}</span></div>
           <div class="row"><span class="label">Address</span><span style="max-width:200px;text-align:right">${order.delivery_address || '—'}</span></div>
+          <div class="row"><span class="label">Delivery instructions</span><span style="max-width:200px;text-align:right">${order.delivery_instructions || 'None provided'}</span></div>
           <div class="row"><span class="label">Pincode</span><span>${order.delivery_pincode || '—'}</span></div>
           <div class="row"><span class="label">Payment</span><span>${order.payment_method || '—'}</span></div>
           <div class="divider"></div>
           <div class="items-header">ITEMS</div>
           ${items.map(item => `
             <div class="item-row">
-              <span>${item.dishName} x${item.quantity}</span>
+              <span>${item.dishName}${item.variantName ? ` (${item.variantName})` : ''} x${item.quantity}</span>
               <span>₹${item.price * item.quantity}</span>
             </div>
+            ${item.addons.map(addon => `
+              <div class="addon-row">
+                <span>+ ${addon.name} x${addon.quantity}</span>
+                <span>₹${addon.price * addon.quantity}</span>
+              </div>
+            `).join('')}
           `).join('')}
           <div class="divider"></div>
-          <div class="total-row"><span>TOTAL</span><span>₹${order.bill?.total ?? order.total_price}</span></div>
+          <div class="row"><span class="label">Items subtotal</span><span>₹${order.bill?.subtotal ?? 0}</span></div>
+          ${(order.bill?.addons_total ?? 0) > 0 ? `<div class="row"><span class="label">Add-ons</span><span>₹${order.bill.addons_total}</span></div>` : ''}
+          <div class="row"><span class="label">Delivery fee</span><span>₹${order.bill?.delivery_fee ?? 0}</span></div>
+          ${(order.bill?.taxes ?? 0) > 0 ? `<div class="row"><span class="label">Taxes & charges</span><span>₹${order.bill.taxes}</span></div>` : ''}
+          ${(order.bill?.discount ?? 0) > 0 ? `<div class="row"><span class="label">Coupon discount${order.bill?.coupon_code ? ` (${order.bill.coupon_code})` : ''}</span><span>-₹${order.bill.discount}</span></div>` : ''}
+          ${order.bill?.coupon_code && !(order.bill?.discount > 0) ? `<div class="row"><span class="label">Coupon applied</span><span>${order.bill.coupon_code}</span></div>` : ''}
+          <div class="divider"></div>
+          <div class="total-row"><span>TOTAL</span><span>₹${getPayableTotal(order)}</span></div>
           <div class="footer">Thank you for ordering with Fuudr!<br/>fuudr.com</div>
         </div>
         <script>window.onload = () => { window.print(); }</script>
@@ -690,6 +736,7 @@ export default function ManageOrder() {
             } />
             <InfoRow icon={<CreditCard size={16} />} label="Payment" value={order.bill?.payment_method ?? order.payment_method ?? '—'} />
           </div>
+
         </div>
 
         {/* Order Items */}
@@ -697,50 +744,89 @@ export default function ManageOrder() {
           <h3 className="font-bold text-slate-900 mb-5 text-base">Order Items</h3>
           <div className="space-y-3 flex-1">
             {items.map((item, index) => (
-              <div key={index} className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0 border border-slate-200">
-                  {item.imageUrl
-                    ? <img src={item.imageUrl} alt={item.dishName} className="w-full h-full object-cover" />
-                    : <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-bold">?</div>}
+              <div key={index} className="rounded-xl border border-slate-100 p-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0 border border-slate-200">
+                    {item.imageUrl
+                      ? <img src={item.imageUrl} alt={item.dishName} className="w-full h-full object-cover" />
+                      : <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-bold">?</div>}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-slate-900 text-sm truncate">{item.dishName}</p>
+                    {item.variantName && <p className="text-xs font-semibold text-orange-600 mt-0.5">Variant: {item.variantName}</p>}
+                    <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-2">
+                      <span>
+                        <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1 ${item.isVeg ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                        {item.isVeg ? 'Veg' : 'Non-veg'} · Qty: {item.quantity}
+                      </span>
+                      {item.menuItemId && videoUrls[item.menuItemId] && videoUrls[item.menuItemId].length > 0 && (
+                        <button
+                          onClick={() => {
+                            setActiveVideoList(videoUrls[item.menuItemId]);
+                            setActiveVideoIndex(0);
+                          }}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 hover:bg-orange-100 text-orange-600 text-[10px] font-bold transition-all border border-orange-100 shadow-sm"
+                        >
+                          <Flame size={10} className="animate-pulse" />
+                          Watch {videoUrls[item.menuItemId].length > 1 ? `${videoUrls[item.menuItemId].length} Reels` : 'Reel'}
+                        </button>
+                      )}
+                    </p>
+                  </div>
+                  <p className="font-black text-slate-900 text-sm flex-shrink-0">₹{item.price * item.quantity}</p>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-slate-900 text-sm truncate">{item.dishName}</p>
-                  <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-2">
-                    <span>
-                      <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1 ${item.isVeg ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                      {item.isVeg ? 'Veg' : 'Non-veg'} · Qty: {item.quantity}
-                    </span>
-                    {item.menuItemId && videoUrls[item.menuItemId] && videoUrls[item.menuItemId].length > 0 && (
-                      <button
-                        onClick={() => {
-                          setActiveVideoList(videoUrls[item.menuItemId]);
-                          setActiveVideoIndex(0);
-                        }}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 hover:bg-orange-100 text-orange-600 text-[10px] font-bold transition-all border border-orange-100 shadow-sm"
-                      >
-                        <Flame size={10} className="animate-pulse" />
-                        Watch {videoUrls[item.menuItemId].length > 1 ? `${videoUrls[item.menuItemId].length} Reels` : 'Reel'}
-                      </button>
-                    )}
-                  </p>
-                </div>
-                <p className="font-black text-slate-900 text-sm flex-shrink-0">₹{item.price * item.quantity}</p>
+                {item.addons.length > 0 && (
+                  <div className="mt-3 ml-[60px] space-y-2 border-l-2 border-orange-100 pl-3">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Add-ons</p>
+                    {item.addons.map((addon, addonIndex) => (
+                      <div key={addon.id || addonIndex} className="flex items-center justify-between gap-3 text-xs">
+                        <span className="font-semibold text-slate-600">+ {addon.name} × {addon.quantity}</span>
+                        <span className="font-bold text-slate-700">₹{addon.price * addon.quantity}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
+          {order.delivery_instructions && (
+            <div className="mt-5">
+              <p className="text-[10px] font-black uppercase tracking-wider text-red-600">Delivery Instructions</p>
+              <p className="mt-1 text-sm font-black leading-relaxed text-slate-800">{order.delivery_instructions}</p>
+            </div>
+          )}
           <div className="border-t border-slate-100 pt-4 mt-5 space-y-2">
             <div className="flex justify-between items-center text-xs text-slate-500 font-bold">
-              <span>Subtotal</span>
+              <span>Items Subtotal</span>
               <span>₹{order.bill?.subtotal ?? 0}</span>
             </div>
+            {(order.bill?.addons_total ?? 0) > 0 && (
+              <div className="flex justify-between items-center text-xs text-slate-500 font-bold">
+                <span>Add-ons Total</span>
+                <span>₹{order.bill.addons_total}</span>
+              </div>
+            )}
             <div className="flex justify-between items-center text-xs text-slate-500 font-bold">
               <span>Delivery Fee</span>
               <span>₹{order.bill?.delivery_fee ?? 0}</span>
             </div>
             {order.bill?.discount > 0 && (
               <div className="flex justify-between items-center text-xs text-rose-500 font-bold">
-                <span>Discount</span>
+                <span>
+                  Coupon Discount
+                  {order.bill?.coupon_code && (
+                    <span className="ml-1.5 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-black text-emerald-700 border border-emerald-100">
+                      {order.bill.coupon_code}
+                    </span>
+                  )}
+                </span>
                 <span>-₹{order.bill.discount}</span>
+              </div>
+            )}
+            {order.bill?.coupon_code && !(order.bill?.discount > 0) && (
+              <div className="flex justify-between items-center text-xs text-emerald-700 font-bold">
+                <span>Coupon Applied</span>
+                <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-black border border-emerald-100">{order.bill.coupon_code}</span>
               </div>
             )}
             {order.bill?.taxes > 0 && (
@@ -751,7 +837,7 @@ export default function ManageOrder() {
             )}
             <div className="border-t border-dashed border-slate-200 pt-3 mt-1 flex justify-between items-center">
               <span className="text-sm font-black text-slate-800 flex items-center gap-1"><IndianRupee size={13} />Grand Total</span>
-              <span className="text-xl font-black text-slate-950">₹{order.bill?.total ?? order.total_price ?? 0}</span>
+              <span className="text-xl font-black text-slate-950">₹{getPayableTotal(order)}</span>
             </div>
           </div>
         </div>

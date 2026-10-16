@@ -73,7 +73,7 @@ export default function AdminFuudr() {
         data.forEach(o => {
           if (s[o.status] !== undefined) s[o.status]++;
           if (o.status !== 'cancelled') {
-            const totalPrice = o.bill?.total ?? o.total_price ?? 0;
+            const totalPrice = o.bill?.customer_total ?? o.bill?.total ?? o.total_price ?? 0;
             s.revenue += Number(totalPrice) || 0;
           }
         });

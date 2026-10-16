@@ -34,7 +34,7 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
       const orderKey = new Date(order.created_at).toISOString().split('T')[0];
       if (dayMap[orderKey]) {
         dayMap[orderKey].count += 1;
-        const rev = Number(order.bill?.total ?? order.total_price ?? 0);
+        const rev = Number(order.bill?.customer_total ?? order.bill?.total ?? order.total_price ?? 0);
         dayMap[orderKey].revenue += isNaN(rev) ? 0 : rev;
       }
     });

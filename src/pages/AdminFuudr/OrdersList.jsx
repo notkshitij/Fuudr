@@ -309,7 +309,7 @@ export default function OrdersList() {
 
                   const preview = items.slice(0, 2).map(i => i.dishName).join(', ');
                   const extra = items.length > 2 ? ` +${items.length - 2}` : '';
-                  const totalPrice = order.bill?.total ?? order.total_price ?? 0;
+                  const totalPrice = order.bill?.customer_total ?? order.bill?.total ?? order.total_price ?? 0;
                   return (
                     <tr key={order.id} className="hover:bg-slate-50/70 transition-colors">
                       <td className="px-5 py-4 whitespace-nowrap">

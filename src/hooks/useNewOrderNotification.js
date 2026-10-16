@@ -27,7 +27,7 @@ const sendEmailNotification = async (order) => {
     } else if (Array.isArray(order.items)) {
       itemsList = order.items.map(i => `${i.dishName || i.name} x${i.quantity || i.qty || 1}`);
     }
-    const totalPrice = order.bill?.total ?? order.total_price ?? 0;
+    const totalPrice = order.bill?.customer_total ?? order.bill?.total ?? order.total_price ?? 0;
 
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -95,7 +95,7 @@ export function useNewOrderNotification() {
           playDing();
           sendEmailNotification(orderWithRestaurant);
 
-          const totalPrice = orderWithRestaurant.bill?.total ?? orderWithRestaurant.total_price ?? 0;
+          const totalPrice = orderWithRestaurant.bill?.customer_total ?? orderWithRestaurant.bill?.total ?? orderWithRestaurant.total_price ?? 0;
 
           if ('Notification' in window && Notification.permission === 'granted') {
             new Notification('🛎 New Order — Fuudr', {
