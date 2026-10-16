@@ -58,8 +58,8 @@ export function SuperAdminRoute({ children }) {
       return true;
     }
 
-    // 2. Check user app_metadata / user_metadata role
-    if (user.app_metadata?.role === 'super_admin' || user.user_metadata?.role === 'super_admin') {
+    // 2. Check app_metadata role (can only be set by the server, never by the user)
+    if (user.app_metadata?.role === 'super_admin') {
       return true;
     }
 
@@ -69,7 +69,7 @@ export function SuperAdminRoute({ children }) {
         .from('admin_users')
         .select('id, email, is_active')
         .eq('email', userEmail)
-        .single();
+        .maybeSingle();
       
       if (!error && data && data.is_active !== false) {
         return true;
@@ -84,7 +84,7 @@ export function SuperAdminRoute({ children }) {
         .from('admin_config')
         .select('value')
         .eq('key', 'super_admin_email')
-        .single();
+        .maybeSingle();
 
       if (!error && data?.value && data.value.toLowerCase() === userEmail) {
         return true;

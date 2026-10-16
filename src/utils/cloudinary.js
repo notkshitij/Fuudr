@@ -58,11 +58,10 @@ const compressImage = (file, maxWidth = 1200, maxHeight = 1200, quality = 0.8) =
 
 export const uploadToCloudinary = async (file, resourceType = 'auto') => {
   const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-  const apiKey = import.meta.env.VITE_CLOUDINARY_API_KEY;
-  const apiSecret = import.meta.env.VITE_CLOUDINARY_API_SECRET;
+  const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
-  if (!cloudName || !apiKey || !apiSecret) {
-    throw new Error('Cloudinary credentials are missing in environment variables.');
+  if (!cloudName || !uploadPreset) {
+    throw new Error('Cloudinary cloud name or upload preset is missing in environment variables.');
   }
 
   let fileToUpload = file;
@@ -74,20 +73,11 @@ export const uploadToCloudinary = async (file, resourceType = 'auto') => {
     }
   }
 
-  const timestamp = Math.round(new Date().getTime() / 1000);
-  const strToSign = `timestamp=${timestamp}${apiSecret}`;
-
-  const encoder = new TextEncoder();
-  const data = encoder.encode(strToSign);
-  const hashBuffer = await crypto.subtle.digest('SHA-1', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const signature = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
+  // Unsigned upload: no API secret is ever sent from or stored in the browser.
+  // Restrictions (folder, allowed formats, size) are enforced by the preset in Cloudinary.
   const formData = new FormData();
   formData.append('file', fileToUpload);
-  formData.append('api_key', apiKey);
-  formData.append('timestamp', timestamp);
-  formData.append('signature', signature);
+  formData.append('upload_preset', uploadPreset);
 
   const url = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
 

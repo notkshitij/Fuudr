@@ -1,27 +1,39 @@
 import nodemailer from 'nodemailer';
+import { timingSafeEqual } from 'node:crypto';
 
 const GMAIL_USER = 'harshagrawal7878@gmail.com';
 
-export default async function handler(req, res) {
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+const escapeHtml = (value) =>
+  String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+const isAuthorized = (authHeader, secret) => {
+  if (!secret || typeof authHeader !== 'string') return false;
+  const expected = Buffer.from(`Bearer ${secret}`);
+  const received = Buffer.from(authHeader);
+  return expected.length === received.length && timingSafeEqual(expected, received);
+};
+
+export default async function handler(req, res) {
+  // Server-to-server webhook only: no CORS headers on purpose.
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Basic security token check
-  const authHeader = req.headers['authorization'];
+  // Security token check (fails closed if the secret is not configured)
   const expectedToken = process.env.WEBHOOK_SECRET;
+  if (!expectedToken) {
+    console.error('WEBHOOK_SECRET is not set; refusing to process requests');
+    return res.status(500).json({ error: 'Server misconfigured' });
+  }
   
-  if (expectedToken && authHeader !== `Bearer ${expectedToken}`) {
-    console.warn('Unauthorized webhook access attempt', { authHeader });
+  if (!isAuthorized(req.headers['authorization'], expectedToken)) {
+    console.warn('Unauthorized webhook access attempt');
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -95,11 +107,11 @@ export default async function handler(req, res) {
           </p>
           <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
           <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-            <tr><td style="padding: 6px 0; color: #888;">Order Status:</td><td style="padding: 6px 0; font-weight: bold; text-align: right; color: ${isCancelledUpdate ? '#d32f2f' : '#FF4500'};">${(order.status || 'placed').toUpperCase()}</td></tr>
-            <tr><td style="padding: 6px 0; color: #888;">Order ID:</td><td style="padding: 6px 0; font-weight: bold; text-align: right;">${order.id}</td></tr>
-            <tr><td style="padding: 6px 0; color: #888;">Customer:</td><td style="padding: 6px 0; font-weight: bold; text-align: right;">${order.delivery_name || 'N/A'}</td></tr>
-            <tr><td style="padding: 6px 0; color: #888;">Address:</td><td style="padding: 6px 0; font-weight: bold; text-align: right;">${order.delivery_address || 'N/A'}</td></tr>
-            <tr><td style="padding: 6px 0; color: #888;">Total Amount:</td><td style="padding: 6px 0; font-weight: bold; text-align: right; color: #2e7d32; font-size: 16px;">₹${totalPrice}</td></tr>
+            <tr><td style="padding: 6px 0; color: #888;">Order Status:</td><td style="padding: 6px 0; font-weight: bold; text-align: right; color: ${isCancelledUpdate ? '#d32f2f' : '#FF4500'};">${escapeHtml((order.status || 'placed').toUpperCase())}</td></tr>
+            <tr><td style="padding: 6px 0; color: #888;">Order ID:</td><td style="padding: 6px 0; font-weight: bold; text-align: right;">${escapeHtml(order.id)}</td></tr>
+            <tr><td style="padding: 6px 0; color: #888;">Customer:</td><td style="padding: 6px 0; font-weight: bold; text-align: right;">${escapeHtml(order.delivery_name || 'N/A')}</td></tr>
+            <tr><td style="padding: 6px 0; color: #888;">Address:</td><td style="padding: 6px 0; font-weight: bold; text-align: right;">${escapeHtml(order.delivery_address || 'N/A')}</td></tr>
+            <tr><td style="padding: 6px 0; color: #888;">Total Amount:</td><td style="padding: 6px 0; font-weight: bold; text-align: right; color: #2e7d32; font-size: 16px;">₹${escapeHtml(totalPrice)}</td></tr>
           </table>
           <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
           <div style="text-align: center; margin-top: 25px;">

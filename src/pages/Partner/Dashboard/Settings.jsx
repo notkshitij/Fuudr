@@ -8,6 +8,7 @@ import { supabase } from '../../../supabaseClient';
 import { uploadToCloudinary } from '../../../utils/cloudinary';
 import AddressAutocomplete from '../../../components/Partner/AddressAutocomplete';
 import SimpleTimePicker from '../../../components/Partner/SimpleTimePicker';
+import ChangePasswordCard from './ChangePasswordCard';
 
 const restaurantTypes = [
   { value: 'Restaurant', label: 'Restaurant' },
@@ -144,7 +145,7 @@ const Settings = ({ user }) => {
         .from('partners')
         .update(updateData)
         .eq('id', user.id)
-        .select();
+        .select('id');
 
       if (error) throw error;
       if (!data || data.length === 0) throw new Error("Update blocked by security policies.");
@@ -545,6 +546,8 @@ const Settings = ({ user }) => {
           </button>
         </div>
       </form>
+
+      <ChangePasswordCard />
     </div>
   );
 };

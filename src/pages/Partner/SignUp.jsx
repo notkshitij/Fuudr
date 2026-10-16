@@ -108,7 +108,7 @@ const SignUp = () => {
 
       // 2. Save Partner record in database table (via RPC or direct insert)
       let partnerData = null;
-      try {
+      {
         const { data: rpcData, error: rpcError } = await supabase
           .rpc('register_partner', {
             p_restaurant_name: formData.restaurantName,
@@ -123,56 +123,21 @@ const SignUp = () => {
             p_avg_rating: formData.avgRating,
             p_total_reviews: formData.totalReviews,
             p_restaurant_type: formData.restaurantType,
-            p_provides_delivery: formData.providesDelivery === 'yes'
+            p_provides_delivery: formData.providesDelivery === 'yes',
+            p_is_poornima: Boolean(formData.isPoornima)
           });
 
-        if (!rpcError && rpcData) {
-          partnerData = rpcData;
-        }
-      } catch (rpcErr) {
-        console.warn("register_partner RPC error:", rpcErr);
+        if (rpcError) throw rpcError;
+        partnerData = rpcData;
       }
 
-      // Fallback: Direct insert into partners table if RPC is not available
       if (!partnerData) {
-        const { data: insertedData, error: insertError } = await supabase
-          .from('partners')
-          .insert({
-            restaurant_name: formData.restaurantName,
-            owner_name: formData.ownerName,
-            mobile_number: formData.mobileNumber,
-            email: cleanEmail,
-            password: formData.password,
-            address: formData.address,
-            latitude: formData.latitude,
-            longitude: formData.longitude,
-            google_map_link: formData.googleMapLink || null,
-            avg_rating: formData.avgRating,
-            total_reviews: formData.totalReviews,
-            restaurant_type: formData.restaurantType,
-            provides_delivery: formData.providesDelivery === 'yes',
-            is_poornima: Boolean(formData.isPoornima)
-          })
-          .select()
-          .single();
-
-        if (insertError) {
-          throw insertError;
-        }
-        partnerData = insertedData;
+        throw new Error('Could not create your account. Please try again.');
       }
 
-      // 3. Update is_poornima in partners table if checked
+      // 3. is_poornima is now saved by register_partner itself
       if (formData.isPoornima && partnerData?.id) {
-        try {
-          await supabase
-            .from('partners')
-            .update({ is_poornima: true })
-            .eq('id', partnerData.id);
-          partnerData.is_poornima = true;
-        } catch (updateErr) {
-          console.warn("Could not set is_poornima during registration:", updateErr);
-        }
+        partnerData.is_poornima = true;
       }
 
       // 4. Save user session in localStorage (matching existing structure)

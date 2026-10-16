@@ -3,7 +3,7 @@
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://fuudr.com/</loc>
-    <lastmod>2026-07-14</lastmod>
+    <lastmod>2026-10-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <image:image>
@@ -31,18 +31,6 @@
       <image:title>Brutal Double Cheeseburger</image:title>
       <image:caption>Sizzling burger reviews and visual orders on Fuudr feed.</image:caption>
     </image:image>
-  </url>
-  <url>
-    <loc>https://fuudr.com/partner</loc>
-    <lastmod>2026-07-14</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://fuudr.com/partner/signup</loc>
-    <lastmod>2026-07-14</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://fuudr.com/privacy</loc>

@@ -85,9 +85,7 @@ export function PartnerAuthForm({ onAuthenticated, initialEmail = '' }) {
       if (!authError && authData?.user) {
         // Fetch full restaurant partner profile from database
         const { data: profileData } = await supabase
-          .from('partners')
-          .select('*')
-          .ilike('email', cleanEmail)
+          .rpc('get_my_partner')
           .maybeSingle();
 
         if (profileData) {
@@ -120,20 +118,6 @@ export function PartnerAuthForm({ onAuthenticated, initialEmail = '' }) {
           }
         } catch (rpcErr) {
           console.warn("login_partner RPC attempt error:", rpcErr);
-        }
-
-        // Direct table query check
-        if (!partnerData) {
-          const { data: directData, error: directError } = await supabase
-            .from('partners')
-            .select('*')
-            .ilike('email', cleanEmail)
-            .eq('password', password)
-            .maybeSingle();
-
-          if (directData && !directError) {
-            partnerData = directData;
-          }
         }
 
         // If found in database, seamlessly sync into Supabase Auth
@@ -645,9 +629,7 @@ export function PartnerRoute({ children }) {
           } else {
             // Fetch partner record for the active session user
             const { data: profile } = await supabase
-              .from('partners')
-              .select('*')
-              .ilike('email', session.user.email)
+              .rpc('get_my_partner')
               .maybeSingle();
 
             if (profile) {
@@ -673,9 +655,7 @@ export function PartnerRoute({ children }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         const { data: profile } = await supabase
-          .from('partners')
-          .select('*')
-          .ilike('email', session.user.email)
+          .rpc('get_my_partner')
           .maybeSingle();
 
         if (profile) {

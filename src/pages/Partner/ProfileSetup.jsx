@@ -128,7 +128,7 @@ const ProfileSetup = () => {
         .from('partners')
         .update(updateData)
         .eq('id', user.id)
-        .select();
+        .select('id');
 
       if (error) throw error;
       if (!data || data.length === 0) {
