@@ -120,34 +120,7 @@ export default function AdminFuudr() {
   return (
     <div className="font-outfit space-y-8">
 
-      {/* ── Page Header ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
-        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-          <button
-            onClick={() => navigate('/adminfuudr/restaurants')}
-            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-5 sm:py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-bold shadow-sm hover:bg-slate-50 hover:-translate-y-0.5 active:translate-y-0 transition-all whitespace-nowrap"
-          >
-            <Store size={16} className="text-orange-500 sm:w-[18px] sm:h-[18px]" />
-            <span>Restaurants</span>
-            {partnerStats.total > 0 && (
-              <span className="text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-extrabold">
-                {partnerStats.total}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => navigate('/adminfuudr/orders')}
-            className="group flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-5 sm:py-2.5 bg-orange-500 text-white rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-orange-500/25 hover:bg-orange-600 hover:-translate-y-0.5 active:translate-y-0 transition-all whitespace-nowrap"
-          >
-            <span className="relative flex h-2 w-2 flex-shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
-            </span>
-            <span className="hidden xs:inline sm:inline">View </span>Live Orders
-            <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform flex-shrink-0 sm:w-[17px] sm:h-[17px]" />
-          </button>
-        </div>
-      </div>
+
 
       {/* ── Master Platform ON/OFF Switch ── */}
       <PlatformStatusToggle />
