@@ -164,42 +164,10 @@ export default function AdminFuudr() {
       {/* ── Orders & Sales Analytics Graph ── */}
       <OrdersAnalyticsChart orders={allOrders} loading={loading} />
 
-      {/* ── Status Breakdown + Recent Orders ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Status Breakdown */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-6">
-          <h2 className="font-bold text-slate-900 mb-5 text-base">Order Status Breakdown</h2>
-          <div className="space-y-3">
-            {Object.entries(STATUS_CONFIG).map(([key, cfg]) => {
-              const count = stats[key] || 0;
-              const pct = stats.total > 0 ? Math.round((count / stats.total) * 100) : 0;
-              const Icon = cfg.icon;
-              return (
-                <div key={key}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-6 h-6 rounded-lg ${cfg.bg} flex items-center justify-center`}>
-                        <Icon size={13} className={cfg.color} />
-                      </div>
-                      <span className="text-sm font-semibold text-slate-700">{cfg.label}</span>
-                    </div>
-                    <span className="text-sm font-bold text-slate-900">{loading ? '—' : count}</span>
-                  </div>
-                  <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${cfg.dot} transition-all duration-700`}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
+      {/* ── Recent Orders ── */}
+      <div className="grid grid-cols-1 gap-6">
         {/* Recent Orders */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 p-6">
+        <div className="bg-white rounded-2xl border border-slate-100 p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="font-bold text-slate-900 text-base">Recent Orders</h2>
             <button
