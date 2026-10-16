@@ -121,11 +121,7 @@ export default function AdminFuudr() {
     <div className="font-outfit space-y-8">
 
       {/* ── Page Header ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Super Admin Dashboard</h1>
-          <p className="text-slate-500 mt-1 font-medium">Real-time overview of all Fuudr orders, partner outlets & deliveries.</p>
-        </div>
+      <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
         <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <button
             onClick={() => navigate('/adminfuudr/restaurants')}
