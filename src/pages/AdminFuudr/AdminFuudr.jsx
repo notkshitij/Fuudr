@@ -254,7 +254,9 @@ export default function AdminFuudr() {
                           )}
                         </div>
                       )}
-                      <p className="text-xs text-slate-400 mt-0.5">#{order.id.split('-').pop().toUpperCase()} · {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
                     </div>
                     <div className="relative flex items-center gap-2 flex-shrink-0">
                       <button

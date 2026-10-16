@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import { Eye, Search, Filter, Package, Clock, Bike, CheckCircle, RefreshCw, GraduationCap, Trash2, X, Loader2 } from 'lucide-react';
+import { Eye, Search, Filter, Package, Clock, Bike, CheckCircle, RefreshCw, GraduationCap, Trash2, X, Loader2, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const STATUS_CONFIG = {
   all:        { label: 'All Orders',  color: 'text-slate-700',   bg: 'bg-slate-100',  dot: 'bg-slate-400' },
@@ -11,6 +11,12 @@ const STATUS_CONFIG = {
   delivered:  { label: 'Delivered',   color: 'text-emerald-700', bg: 'bg-emerald-50',  dot: 'bg-emerald-500', icon: CheckCircle },
   cancelled:  { label: 'Cancelled',   color: 'text-rose-700',    bg: 'bg-rose-50',     dot: 'bg-rose-500',    icon: CheckCircle },
 };
+
+const TODAY = new Intl.DateTimeFormat('en-CA', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+}).format(new Date());
 
 export default function OrdersList() {
   const [orders, setOrders]       = useState([]);
@@ -22,7 +28,23 @@ export default function OrdersList() {
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(() => new Date());
   const navigate = useNavigate();
+
+  const calendarDays = useMemo(() => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const leadingDays = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    return [
+      ...Array(leadingDays).fill(null),
+      ...Array.from({ length: daysInMonth }, (_, index) => index + 1),
+    ];
+  }, [calendarMonth]);
+
+  const dateKey = (year, month, day) =>
+    `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
   const handleDeleteOrder = async () => {
     if (!orderToDelete) return;
@@ -121,6 +143,12 @@ export default function OrdersList() {
     return () => supabase.removeChannel(sub);
   }, []);
 
+  useEffect(() => {
+    const closeCalendar = () => setCalendarOpen(false);
+    window.addEventListener('click', closeCalendar);
+    return () => window.removeEventListener('click', closeCalendar);
+  }, []);
+
   // Tab counts
   const counts = useMemo(() => {
     const c = { all: orders.length, placed: 0, preparing: 0, on_the_way: 0, delivered: 0, cancelled: 0 };
@@ -188,34 +216,117 @@ export default function OrdersList() {
       </div>
 
       {/* ── Filters Row ── */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-wrap gap-3">
         {/* Search */}
-        <div className="relative flex-1">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+        <div className="relative min-w-0 flex-1 basis-[180px]">
+          <Search size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search by name, order ID, address, restaurant..."
+            placeholder="Order ID, customer, restaurant..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-900 placeholder-slate-400 outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+            className="h-11 w-full pl-11 pr-4 bg-white border border-slate-200 rounded-[14px] text-sm font-medium text-slate-900 placeholder-slate-400 outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
           />
         </div>
         {/* Date Filter */}
-        <div className="relative">
-          <input
-            type="date"
-            value={dateFilter}
-            onChange={e => setDateFilter(e.target.value)}
-            className="w-full sm:w-auto px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-500 outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all cursor-pointer"
-          />
-          {dateFilter && (
-            <button
-              onClick={() => setDateFilter('')}
-              className="absolute right-10 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full p-0.5"
-              title="Clear date filter"
+        <div className="relative h-11 w-28 sm:w-32 flex-shrink-0">
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              setCalendarOpen(open => !open);
+            }}
+            className="absolute inset-0 flex items-center justify-center gap-1.5 overflow-hidden rounded-[14px] border border-slate-200 bg-white px-3 text-slate-700 hover:border-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+          >
+            <CalendarDays size={16} className="text-slate-500" />
+            <span className="text-sm font-bold whitespace-nowrap">
+              {!dateFilter
+                ? 'Date'
+                : dateFilter === TODAY
+                  ? 'Today'
+                  : new Date(`${dateFilter}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </span>
+          </button>
+          {calendarOpen && (
+            <div
+              onClick={(event) => event.stopPropagation()}
+              className="absolute right-0 top-full z-40 mt-2 w-[280px] max-w-[calc(100vw-2rem)] rounded-md border border-slate-200 bg-white p-3 shadow-2xl"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            </button>
+              <div className="mb-3 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setCalendarMonth(month => new Date(month.getFullYear(), month.getMonth() - 1, 1))}
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100"
+                  aria-label="Previous month"
+                >
+                  <ChevronLeft size={17} />
+                </button>
+                <p className="text-sm font-black text-slate-800">
+                  {calendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setCalendarMonth(month => new Date(month.getFullYear(), month.getMonth() + 1, 1))}
+                  className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100"
+                  aria-label="Next month"
+                >
+                  <ChevronRight size={17} />
+                </button>
+              </div>
+              <div className="grid grid-cols-7 gap-1 text-center">
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+                  <span key={`${day}-${index}`} className="py-1 text-[10px] font-bold text-slate-400">{day}</span>
+                ))}
+                {calendarDays.map((day, index) => {
+                  if (!day) return <span key={`empty-${index}`} />;
+                  const key = dateKey(calendarMonth.getFullYear(), calendarMonth.getMonth(), day);
+                  const selected = dateFilter === key;
+                  const today = TODAY === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => {
+                        setDateFilter(key);
+                        setCalendarOpen(false);
+                      }}
+                      className={`h-8 rounded-md text-xs font-bold transition-colors ${
+                        selected
+                          ? 'bg-orange-500 text-white'
+                          : today
+                            ? 'bg-orange-50 text-orange-600'
+                            : 'text-slate-600 hover:bg-slate-100'
+                      }`}
+                    >
+                      {day}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDateFilter('');
+                    setCalendarOpen(false);
+                  }}
+                  className="text-xs font-bold text-slate-500 hover:text-slate-800"
+                >
+                  All dates
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDateFilter(TODAY);
+                    setCalendarMonth(new Date());
+                    setCalendarOpen(false);
+                  }}
+                  className="text-xs font-bold text-orange-600 hover:text-orange-700"
+                >
+                  Today
+                </button>
+              </div>
+            </div>
           )}
         </div>
         {/* Campus Filter Toggle */}
