@@ -57,8 +57,9 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
       }
     });
 
-    const avgOrders = (totalOrders / (chartData.length || 1)).toFixed(1);
-    return { totalOrders, totalRevenue, peakDay, avgOrders };
+    const avgOrders = Math.round(totalOrders / (chartData.length || 1));
+    const avgRevenue = totalRevenue / (chartData.length || 1);
+    return { totalOrders, totalRevenue, peakDay, avgOrders, avgRevenue };
   }, [chartData, metric]);
 
   // Chart dimensions & SVG path calculations
@@ -152,6 +153,25 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
                 {r}
               </button>
             ))}
+          </div>
+
+          {/* Daily averages for the selected range */}
+          <div className="ml-auto flex items-center gap-2.5 sm:gap-4 pl-1 sm:pl-3 flex-shrink-0">
+            {metric === 'orders' ? (
+              <div className="text-right leading-none">
+                <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wide text-slate-400 whitespace-nowrap">Avg Orders</p>
+                <p className="mt-1 text-xs sm:text-sm font-black text-orange-600">
+                  {loading ? '—' : totals.avgOrders}
+                </p>
+              </div>
+            ) : (
+              <div className="text-right leading-none">
+                <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wide text-slate-400 whitespace-nowrap">Avg Sales</p>
+                <p className="mt-1 text-xs sm:text-sm font-black text-purple-600 whitespace-nowrap">
+                  {loading ? '—' : `₹${Math.round(totals.avgRevenue).toLocaleString('en-IN')}`}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
