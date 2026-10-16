@@ -136,11 +136,15 @@ export default function OrdersList() {
 
   useEffect(() => {
     fetchOrders();
+    const refreshInterval = window.setInterval(fetchOrders, 5000);
     const sub = supabase
       .channel('orders_channel')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, fetchOrders)
       .subscribe();
-    return () => supabase.removeChannel(sub);
+    return () => {
+      window.clearInterval(refreshInterval);
+      supabase.removeChannel(sub);
+    };
   }, []);
 
   useEffect(() => {
@@ -185,40 +189,31 @@ export default function OrdersList() {
     });
   }, [orders, activeTab, campusFilter, search, dateFilter]);
 
-  const activeOrders = counts.placed + counts.preparing + counts.on_the_way;
-
   return (
     <div className="font-outfit space-y-6">
 
       {/* ── Header ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Incoming Orders</h2>
-          <p className="text-slate-500 mt-1 font-medium">Manage and track all real-time delivery orders.</p>
+      <div className="flex items-start sm:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight whitespace-nowrap">Incoming Orders</h2>
+          <p className="text-xs sm:text-base text-slate-500 mt-1 font-medium truncate">Live queue across campus &amp; cloud kitchens</p>
         </div>
-        <div className="flex items-center gap-3">
-          {activeOrders > 0 && (
-            <div className="flex items-center gap-2 bg-orange-50 text-orange-600 border border-orange-100 px-4 py-2 rounded-xl font-bold text-sm">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
-              </span>
-              {activeOrders} Active
-            </div>
-          )}
-          <button
-            onClick={() => { setLoading(true); fetchOrders(); }}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl font-semibold text-sm hover:bg-slate-50 transition-all"
-          >
-            <RefreshCw size={15} /> Refresh
-          </button>
-        </div>
+        <button
+          onClick={() => { setLoading(true); fetchOrders(); }}
+          className="flex flex-shrink-0 items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-emerald-700 hover:bg-emerald-100 transition-all"
+          title="Orders refresh automatically every 5 seconds"
+        >
+          <span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />
+          <span>Auto (5s)</span>
+          <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
+        </button>
       </div>
 
       {/* ── Filters Row ── */}
-      <div className="flex flex-wrap gap-3">
-        {/* Search */}
-        <div className="relative min-w-0 flex-1 basis-[180px]">
+      <div className="space-y-3">
+        <div className="flex gap-3">
+          {/* Search */}
+          <div className="relative min-w-0 flex-1 basis-[180px]">
           <Search size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
@@ -227,9 +222,9 @@ export default function OrdersList() {
             onChange={e => setSearch(e.target.value)}
             className="h-11 w-full pl-11 pr-4 bg-white border border-slate-200 rounded-[14px] text-sm font-medium text-slate-900 placeholder-slate-400 outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
           />
-        </div>
-        {/* Date Filter */}
-        <div className="relative h-11 w-28 sm:w-32 flex-shrink-0">
+          </div>
+          {/* Date Filter */}
+          <div className="relative h-11 w-28 sm:w-32 flex-shrink-0">
           <button
             type="button"
             onClick={(event) => {
@@ -328,43 +323,49 @@ export default function OrdersList() {
               </div>
             </div>
           )}
+          </div>
         </div>
-        {/* Campus Filter Toggle */}
-        <button
-          onClick={() => setCampusFilter(prev => prev === 'poornima_only' ? 'all' : 'poornima_only')}
-          className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-sm font-bold transition-all border ${
-            campusFilter === 'poornima_only'
-              ? 'bg-purple-600 text-white border-purple-600 shadow-sm shadow-purple-500/20'
-              : 'bg-white border-slate-200 text-purple-700 hover:bg-purple-50 hover:border-purple-200'
-          }`}
-          title="Filter only orders from cafes inside Poornima campus"
-        >
-          <GraduationCap size={16} />
-          <span>Inside Poornima</span>
-          {poornimaOrderCount > 0 && (
-            <span className={`text-xs px-1.5 py-0.2 rounded-full font-extrabold ${
-              campusFilter === 'poornima_only' ? 'bg-purple-800 text-white' : 'bg-purple-100 text-purple-800'
-            }`}>
-              {poornimaOrderCount}
-            </span>
-          )}
-        </button>
 
-        {/* Status tabs */}
-        <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl p-1 overflow-x-auto">
-          {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
-            <button
-              key={key}
-              onClick={() => setActiveTab(key)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${
-                activeTab === key ? `${cfg.bg} ${cfg.color}` : 'text-slate-500 hover:bg-slate-50'
-              }`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-              <span className="hidden md:inline">{cfg.label}</span>
-              <span className="text-xs opacity-70">{counts[key]}</span>
-            </button>
-          ))}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {/* Status tabs */}
+          <div className="flex flex-shrink-0 items-center gap-2">
+            {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-bold transition-all ${
+                  activeTab === key
+                    ? `${cfg.bg} ${cfg.color} border-current`
+                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                <span>{cfg.label}</span>
+                <span className="text-xs opacity-70">{counts[key]}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Campus Filter Toggle */}
+          <button
+            onClick={() => setCampusFilter(prev => prev === 'poornima_only' ? 'all' : 'poornima_only')}
+            className={`flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-bold transition-all ${
+              campusFilter === 'poornima_only'
+                ? 'border-purple-600 bg-purple-100 text-purple-700'
+                : 'border-slate-200 bg-white text-purple-700 hover:bg-purple-50'
+            }`}
+            title="Filter only orders from cafes inside Poornima campus"
+          >
+            <GraduationCap size={16} />
+            <span>Inside Poornima</span>
+            {poornimaOrderCount > 0 && (
+              <span className={`text-xs px-1.5 py-0.2 rounded-full font-extrabold ${
+                campusFilter === 'poornima_only' ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-800'
+              }`}>
+                {poornimaOrderCount}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
