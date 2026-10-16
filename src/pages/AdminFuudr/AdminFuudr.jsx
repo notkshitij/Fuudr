@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, ShoppingBag, CheckCircle, Clock, Bike, Package, TrendingUp, Zap, Store, GraduationCap } from 'lucide-react';
+import { ArrowRight, ChevronDown, ShoppingBag, CheckCircle, Clock, Bike, Package, TrendingUp, Zap, Store, GraduationCap } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 import { PlatformStatusToggle } from './components/PlatformStatusToggle';
 import { OrdersAnalyticsChart } from './components/OrdersAnalyticsChart';
@@ -20,6 +20,8 @@ export default function AdminFuudr() {
   const [allOrders, setAllOrders] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [updatingOrderId, setUpdatingOrderId] = useState(null);
+  const [openStatusDropdownId, setOpenStatusDropdownId] = useState(null);
 
   const fetchDashboardData = async () => {
     try {
@@ -101,6 +103,39 @@ export default function AdminFuudr() {
     return () => supabase.removeChannel(sub);
   }, []);
 
+  useEffect(() => {
+    const closeStatusDropdown = () => setOpenStatusDropdownId(null);
+    window.addEventListener('click', closeStatusDropdown);
+    return () => window.removeEventListener('click', closeStatusDropdown);
+  }, []);
+
+  const handleRecentOrderStatusChange = async (event, order, newStatus) => {
+    event.stopPropagation();
+    setOpenStatusDropdownId(null);
+    if (newStatus === order.status) return;
+
+    setUpdatingOrderId(order.id);
+    setRecentOrders(current => current.map(item =>
+      item.id === order.id ? { ...item, status: newStatus } : item
+    ));
+
+    const { error } = await supabase
+      .from('orders')
+      .update({ status: newStatus })
+      .eq('id', order.id);
+
+    if (error) {
+      setRecentOrders(current => current.map(item =>
+        item.id === order.id ? { ...item, status: order.status } : item
+      ));
+      console.error('Error updating order status:', error);
+      alert(`Could not update order status: ${error.message}`);
+    } else {
+      await fetchDashboardData();
+    }
+    setUpdatingOrderId(null);
+  };
+
   const activeCount = stats.placed + stats.preparing + stats.on_the_way;
 
   const statCards = [
@@ -126,20 +161,20 @@ export default function AdminFuudr() {
       <PlatformStatusToggle />
 
       {/* ── Stat Cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-4 gap-2 sm:gap-4">
         {statCards.map(({ label, value, icon: Icon, accent, pulse }) => {
           const a = accentMap[accent];
           return (
             <div
               key={label}
-              className={`bg-white rounded-2xl border ${a.card} p-4 sm:p-5 flex flex-col justify-between min-h-[110px] sm:min-h-[130px] shadow-sm hover:shadow-md transition-all`}
+              className={`min-w-0 bg-white rounded-md sm:rounded-2xl border ${a.card} p-2 sm:p-5 flex flex-col justify-between min-h-[82px] sm:min-h-[130px] shadow-sm hover:shadow-md transition-all`}
             >
               <div className="flex items-center justify-between">
-                <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center ${a.icon}`}>
-                  <Icon size={18} className="sm:w-5 sm:h-5" />
+                <div className={`w-6 h-6 sm:w-10 sm:h-10 rounded-md sm:rounded-xl flex items-center justify-center ${a.icon}`}>
+                  <Icon size={14} className="sm:w-5 sm:h-5" />
                 </div>
                 {pulse && (
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+                  <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
                     <span className="relative flex h-1.5 w-1.5">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500"></span>
@@ -148,11 +183,11 @@ export default function AdminFuudr() {
                   </span>
                 )}
               </div>
-              <div className="mt-2 sm:mt-3">
-                <p className={`text-xl sm:text-2xl font-black tracking-tight leading-none ${a.val}`}>
+              <div className="mt-1.5 sm:mt-3">
+                <p className={`text-[11px] min-[375px]:text-xs sm:text-2xl font-black tracking-tight leading-none whitespace-nowrap ${a.val}`}>
                   {loading ? '—' : value}
                 </p>
-                <p className="text-xs font-semibold text-slate-500 mt-1.5 leading-tight">
+                <p className="text-[8px] min-[375px]:text-[9px] sm:text-xs font-semibold text-slate-500 mt-1 sm:mt-1.5 leading-tight whitespace-nowrap">
                   {label}
                 </p>
               </div>
@@ -190,14 +225,19 @@ export default function AdminFuudr() {
             </div>
           ) : (
             <div className="space-y-2">
-              {recentOrders.map(order => {
+              {recentOrders.map((order, orderIndex) => {
                 const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.placed;
                 const Icon = cfg.icon;
                 return (
-                  <button
+                  <div
                     key={order.id}
                     onClick={() => navigate(`/adminfuudr/orders/${order.id}`)}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors text-left group"
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') navigate(`/adminfuudr/orders/${order.id}`);
+                    }}
+                    role="link"
+                    tabIndex={0}
+                    className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-slate-50 transition-colors text-left group cursor-pointer"
                   >
                     <div className={`w-9 h-9 rounded-xl ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
                       <Icon size={16} className={cfg.color} />
@@ -216,11 +256,47 @@ export default function AdminFuudr() {
                       )}
                       <p className="text-xs text-slate-400 mt-0.5">#{order.id.split('-').pop().toUpperCase()} · {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className={`text-xs font-bold px-2 py-1 rounded-lg ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
+                    <div className="relative flex items-center gap-2 flex-shrink-0">
+                      <button
+                        type="button"
+                        disabled={updatingOrderId === order.id}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setOpenStatusDropdownId(current => current === order.id ? null : order.id);
+                        }}
+                        onKeyDown={(event) => event.stopPropagation()}
+                        aria-expanded={openStatusDropdownId === order.id}
+                        aria-haspopup="menu"
+                        aria-label={`Change status for order ${order.id}`}
+                        className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-md cursor-pointer disabled:cursor-wait disabled:opacity-60 ${cfg.bg} ${cfg.color}`}
+                      >
+                        {cfg.label}
+                        <ChevronDown size={12} className={`transition-transform ${openStatusDropdownId === order.id ? 'rotate-180' : ''}`} />
+                      </button>
+                      {openStatusDropdownId === order.id && (
+                        <div
+                          role="menu"
+                          onClick={(event) => event.stopPropagation()}
+                          className={`absolute right-5 z-30 w-36 overflow-hidden rounded-md border border-slate-200 bg-white p-1 shadow-xl ${
+                            orderIndex >= recentOrders.length - 2 ? 'bottom-full mb-1' : 'top-full mt-1'
+                          }`}
+                        >
+                          {Object.entries(STATUS_CONFIG).map(([status, config]) => (
+                            <button
+                              key={status}
+                              type="button"
+                              role="menuitem"
+                              onClick={(event) => handleRecentOrderStatusChange(event, order, status)}
+                              className={`w-full rounded-sm px-2.5 py-2 text-left text-xs font-bold hover:bg-slate-50 ${status === order.status ? `${config.bg} ${config.color}` : 'text-slate-600'}`}
+                            >
+                              {config.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                       <ArrowRight size={14} className="text-slate-300 group-hover:text-slate-500 transition-colors" />
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>
