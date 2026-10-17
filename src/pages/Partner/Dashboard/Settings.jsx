@@ -26,6 +26,7 @@ const Settings = ({ user, onUserUpdated }) => {
   const [successMsg, setSuccessMsg] = useState('');
   const [activeTab, setActiveTab] = useState('basic');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [googlePlaceSelected, setGooglePlaceSelected] = useState(false);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -49,9 +50,8 @@ const Settings = ({ user, onUserUpdated }) => {
     latitude: null,
     longitude: null,
     google_map_link: '',
-    google_rating: 0.0,
-    google_review_count: 0,
-    google_place_id: '',
+    avg_rating: 0.0,
+    total_reviews: 0,
     restaurant_type: '',
     provides_delivery: true,
     is_poornima: false,
@@ -74,9 +74,8 @@ const Settings = ({ user, onUserUpdated }) => {
         latitude: user.latitude || null,
         longitude: user.longitude || null,
         google_map_link: user.google_map_link || '',
-        google_rating: user.google_rating ?? user.avg_rating ?? 0.0,
-        google_review_count: user.google_review_count ?? user.total_reviews ?? 0,
-        google_place_id: user.google_place_id || '',
+        avg_rating: user.avg_rating ?? 0.0,
+        total_reviews: user.total_reviews ?? 0,
         restaurant_type: user.restaurant_type || '',
         provides_delivery: user.provides_delivery ?? true,
         is_poornima: user.is_poornima ?? false,
@@ -147,16 +146,30 @@ const Settings = ({ user, onUserUpdated }) => {
         .from('partners')
         .update(updateData)
         .eq('id', user.id)
-        .select('id, google_rating, google_review_count, google_place_id')
+        .select('id, avg_rating, total_reviews')
         .single();
 
       if (error) throw error;
       if (!data) throw new Error("Update blocked by security policies.");
 
-      const savedRating = Number(data.google_rating ?? 0);
-      const savedReviewCount = Number(data.google_review_count ?? 0);
-      const requestedRating = Number(updateData.google_rating ?? 0);
-      const requestedReviewCount = Number(updateData.google_review_count ?? 0);
+      let savedRating = Number(data.avg_rating ?? 0);
+      let savedReviewCount = Number(data.total_reviews ?? 0);
+      const requestedRating = Number(formData.avg_rating ?? 0);
+      const requestedReviewCount = Number(formData.total_reviews ?? 0);
+
+      if (googlePlaceSelected) {
+        const { data: googleMetrics, error: ratingError } = await supabase.rpc(
+          'refresh_my_google_rating',
+          {
+            p_rating: requestedRating,
+            p_total_reviews: requestedReviewCount,
+          }
+        );
+        if (ratingError) throw ratingError;
+        savedRating = Number(googleMetrics?.avg_rating ?? 0);
+        savedReviewCount = Number(googleMetrics?.total_reviews ?? 0);
+      }
+
       const ratingMatches = Math.abs(savedRating - requestedRating) < 0.01;
       const reviewCountMatches = savedReviewCount === requestedReviewCount;
       if (!ratingMatches || !reviewCountMatches) {
@@ -164,9 +177,10 @@ const Settings = ({ user, onUserUpdated }) => {
       }
 
       setSuccessMsg('Settings saved successfully!');
-      const updatedUser = { ...user, ...updateData, google_rating: savedRating, google_review_count: savedReviewCount };
+      const updatedUser = { ...user, ...updateData, avg_rating: savedRating, total_reviews: savedReviewCount };
       localStorage.setItem('partnerUser', JSON.stringify(updatedUser));
       onUserUpdated?.(updatedUser);
+      setGooglePlaceSelected(false);
     } catch (err) {
       console.error(err);
       setErrorMsg(err.message || 'Failed to save settings. Please try again.');
@@ -329,9 +343,10 @@ const Settings = ({ user, onUserUpdated }) => {
                 <AddressAutocomplete
                   value={formData.address}
                   onError={setErrorMsg}
-                  onSelect={({ address, latitude, longitude, googleMapLink, rating, userRatingCount, placeId }) => {
+                  onSelect={({ address, latitude, longitude, googleMapLink, rating, userRatingCount }) => {
                     setErrorMsg('');
-                    setFormData(prev => ({ ...prev, address, latitude, longitude, google_map_link: googleMapLink, google_rating: rating, google_review_count: userRatingCount, google_place_id: placeId }));
+                    setGooglePlaceSelected(Boolean(address && latitude != null && longitude != null));
+                    setFormData(prev => ({ ...prev, address, latitude, longitude, google_map_link: googleMapLink, avg_rating: rating, total_reviews: userRatingCount }));
                   }}
                 />
                 {formData.latitude && formData.longitude && (
@@ -344,8 +359,8 @@ const Settings = ({ user, onUserUpdated }) => {
                         View on Google Maps
                       </a>
                     )}
-                    {(formData.google_rating > 0 || formData.google_review_count > 0) && (
-                      <p className="text-slate-500">★ {formData.google_rating} ({formData.google_review_count} Google reviews)</p>
+                    {(formData.avg_rating > 0 || formData.total_reviews > 0) && (
+                      <p className="text-slate-500">★ {formData.avg_rating} ({formData.total_reviews} Google reviews)</p>
                     )}
                   </div>
                 )}
