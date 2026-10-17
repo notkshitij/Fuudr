@@ -49,11 +49,13 @@ const Overview = ({ user }) => {
         setRecentDishes(items.slice(0, 4));
 
         // Fetch partner details (avg rating, total reviews, is_open)
-        const { data: partnerData } = await supabase
+        const { data: partnerData, error: partnerError } = await supabase
           .from('partners')
-          .select('avg_rating, total_reviews, is_open, opening_time, closing_time')
+          .select('google_rating, google_review_count, avg_rating, total_reviews, is_open, opening_time, closing_time')
           .eq('id', user.id)
           .single();
+
+        if (partnerError) throw partnerError;
 
         // Fetch accompaniments / addons count
         let addonCount = 0;
@@ -72,8 +74,8 @@ const Overview = ({ user }) => {
           inStockCount: inStock,
           outOfStockCount: outOfStock,
           addonCount: addonCount,
-          avgRating: partnerData?.avg_rating || null,
-          totalReviews: partnerData?.total_reviews || 0
+          avgRating: partnerData?.google_rating ?? partnerData?.avg_rating ?? null,
+          totalReviews: partnerData?.google_review_count ?? partnerData?.total_reviews ?? 0
         });
 
         // Default to true if column is null

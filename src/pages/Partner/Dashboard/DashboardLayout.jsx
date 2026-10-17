@@ -146,7 +146,7 @@ const DashboardLayout = () => {
               <Route path="/" element={<Overview user={user} />} />
               <Route path="/menu" element={<MenuManager user={user} />} />
               <Route path="/addons" element={<AddonsManager user={user} />} />
-              <Route path="/settings" element={<Settings user={user} />} />
+              <Route path="/settings" element={<Settings user={user} onUserUpdated={setUser} />} />
             </Routes>
           </div>
         </main>

@@ -20,7 +20,7 @@ const restaurantTypes = [
   { value: 'Cloud Kitchen', label: 'Cloud Kitchen' }
 ];
 
-const Settings = ({ user }) => {
+const Settings = ({ user, onUserUpdated }) => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -49,8 +49,9 @@ const Settings = ({ user }) => {
     latitude: null,
     longitude: null,
     google_map_link: '',
-    avg_rating: 0.0,
-    total_reviews: 0,
+    google_rating: 0.0,
+    google_review_count: 0,
+    google_place_id: '',
     restaurant_type: '',
     provides_delivery: true,
     is_poornima: false,
@@ -73,8 +74,9 @@ const Settings = ({ user }) => {
         latitude: user.latitude || null,
         longitude: user.longitude || null,
         google_map_link: user.google_map_link || '',
-        avg_rating: user.avg_rating || 0.0,
-        total_reviews: user.total_reviews || 0,
+        google_rating: user.google_rating ?? user.avg_rating ?? 0.0,
+        google_review_count: user.google_review_count ?? user.total_reviews ?? 0,
+        google_place_id: user.google_place_id || '',
         restaurant_type: user.restaurant_type || '',
         provides_delivery: user.provides_delivery ?? true,
         is_poornima: user.is_poornima ?? false,
@@ -145,14 +147,26 @@ const Settings = ({ user }) => {
         .from('partners')
         .update(updateData)
         .eq('id', user.id)
-        .select('id');
+        .select('id, google_rating, google_review_count, google_place_id')
+        .single();
 
       if (error) throw error;
-      if (!data || data.length === 0) throw new Error("Update blocked by security policies.");
+      if (!data) throw new Error("Update blocked by security policies.");
+
+      const savedRating = Number(data.google_rating ?? 0);
+      const savedReviewCount = Number(data.google_review_count ?? 0);
+      const requestedRating = Number(updateData.google_rating ?? 0);
+      const requestedReviewCount = Number(updateData.google_review_count ?? 0);
+      const ratingMatches = Math.abs(savedRating - requestedRating) < 0.01;
+      const reviewCountMatches = savedReviewCount === requestedReviewCount;
+      if (!ratingMatches || !reviewCountMatches) {
+        throw new Error(`Google data was not saved correctly (requested ${requestedRating}★/${requestedReviewCount} reviews, database returned ${savedRating}★/${savedReviewCount} reviews).`);
+      }
 
       setSuccessMsg('Settings saved successfully!');
-      localStorage.setItem('partnerUser', JSON.stringify({ ...user, ...updateData }));
-      setTimeout(() => window.location.reload(), 1500);
+      const updatedUser = { ...user, ...updateData, google_rating: savedRating, google_review_count: savedReviewCount };
+      localStorage.setItem('partnerUser', JSON.stringify(updatedUser));
+      onUserUpdated?.(updatedUser);
     } catch (err) {
       console.error(err);
       setErrorMsg(err.message || 'Failed to save settings. Please try again.');
@@ -314,8 +328,10 @@ const Settings = ({ user }) => {
                 <label className={labelClasses}>Physical Address</label>
                 <AddressAutocomplete
                   value={formData.address}
-                  onSelect={({ address, latitude, longitude, googleMapLink, rating, userRatingCount }) => {
-                    setFormData(prev => ({ ...prev, address, latitude, longitude, google_map_link: googleMapLink, avg_rating: rating, total_reviews: userRatingCount }));
+                  onError={setErrorMsg}
+                  onSelect={({ address, latitude, longitude, googleMapLink, rating, userRatingCount, placeId }) => {
+                    setErrorMsg('');
+                    setFormData(prev => ({ ...prev, address, latitude, longitude, google_map_link: googleMapLink, google_rating: rating, google_review_count: userRatingCount, google_place_id: placeId }));
                   }}
                 />
                 {formData.latitude && formData.longitude && (
@@ -328,8 +344,8 @@ const Settings = ({ user }) => {
                         View on Google Maps
                       </a>
                     )}
-                    {(formData.avg_rating > 0 || formData.total_reviews > 0) && (
-                      <p className="text-slate-500">★ {formData.avg_rating} ({formData.total_reviews} reviews)</p>
+                    {(formData.google_rating > 0 || formData.google_review_count > 0) && (
+                      <p className="text-slate-500">★ {formData.google_rating} ({formData.google_review_count} Google reviews)</p>
                     )}
                   </div>
                 )}

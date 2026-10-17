@@ -24,6 +24,7 @@ function createSessionToken() {
 const AddressAutocomplete = ({
   value,
   onSelect,
+  onError,
   placeholder = 'Search your restaurant address...',
   required = false,
 }) => {
@@ -105,14 +106,19 @@ const AddressAutocomplete = ({
 
     try {
       const res = await fetch(
-        `https://places.googleapis.com/v1/places/${placeId}?fields=location,formattedAddress,googleMapsUri,rating,userRatingCount&sessionToken=${sessionTokenRef.current}`,
+        `https://places.googleapis.com/v1/places/${placeId}?sessionToken=${sessionTokenRef.current}`,
         {
           headers: {
             'X-Goog-Api-Key': GOOGLE_MAPS_API_KEY,
+            'X-Goog-FieldMask': 'location,formattedAddress,googleMapsUri,rating,userRatingCount',
           },
         }
       );
       const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error?.message || 'Google could not load this restaurant.');
+      }
 
       if (data.location) {
         setIsConfirmed(true);
@@ -124,13 +130,17 @@ const AddressAutocomplete = ({
           latitude: lat,
           longitude: lng,
           googleMapLink: data.googleMapsUri || fallbackLink,
-          rating: data.rating || 0,
-          userRatingCount: data.userRatingCount || 0,
+          rating: Number(data.rating ?? 0),
+          userRatingCount: Number(data.userRatingCount ?? 0),
           placeId,
         });
+      } else {
+        throw new Error('Google did not return location details for this selection.');
       }
     } catch (err) {
       console.error('Place details error:', err);
+      setIsConfirmed(false);
+      onError?.(err.message || 'Failed to load restaurant details from Google.');
     } finally {
       setLoading(false);
       // New session token for the next search (session ends after Place Details call)
