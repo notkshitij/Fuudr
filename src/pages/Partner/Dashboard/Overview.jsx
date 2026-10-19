@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../../supabaseClient';
 import { Link } from 'react-router-dom';
+import AdaptiveVideo from '../../../components/AdaptiveVideo';
 
 const Overview = ({ user }) => {
   const [stats, setStats] = useState({
@@ -405,7 +406,7 @@ const Overview = ({ user }) => {
                   {/* Thumbnail */}
                   <div className="relative aspect-[4/3] bg-slate-200 overflow-hidden">
                     {hasVideo ? (
-                      <video 
+                      <AdaptiveVideo
                         src={dish.reels[0].video_url} 
                         poster={dish.image_url || undefined}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

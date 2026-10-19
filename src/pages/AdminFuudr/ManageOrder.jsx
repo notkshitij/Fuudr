@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { ArrowLeft, MapPin, CreditCard, Clock, Package, Flame, Bike, CheckCircle, ChevronRight, IndianRupee, UtensilsCrossed, Printer, Navigation, Phone, GraduationCap, Trash2, X, Loader2 } from 'lucide-react';
+import AdaptiveVideo from '../../components/AdaptiveVideo';
 
 const STEPS = [
   { key: 'placed',     label: 'Placed',     icon: Package, desc: 'Order placed' },
@@ -893,7 +894,7 @@ export default function ManageOrder() {
                 </button>
               )}
 
-              <video
+              <AdaptiveVideo
                 key={activeVideoList[activeVideoIndex]}
                 src={activeVideoList[activeVideoIndex]}
                 controls

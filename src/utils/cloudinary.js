@@ -1,3 +1,5 @@
+import { supabase } from '../supabaseClient';
+
 const compressImage = (file, maxWidth = 1200, maxHeight = 1200, quality = 0.8) => {
   return new Promise((resolve) => {
     if (!file || !file.type || !file.type.startsWith('image/') || file.type === 'image/gif') {
@@ -58,10 +60,10 @@ const compressImage = (file, maxWidth = 1200, maxHeight = 1200, quality = 0.8) =
 
 export const uploadToCloudinary = async (file, resourceType = 'auto') => {
   const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-  const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+  const apiKey = import.meta.env.VITE_CLOUDINARY_API_KEY;
 
-  if (!cloudName || !uploadPreset) {
-    throw new Error('Cloudinary cloud name or upload preset is missing in environment variables.');
+  if (!cloudName || !apiKey) {
+    throw new Error('Cloudinary cloud name or API key is missing in environment variables.');
   }
 
   let fileToUpload = file;
@@ -73,11 +75,28 @@ export const uploadToCloudinary = async (file, resourceType = 'auto') => {
     }
   }
 
-  // Unsigned upload: no API secret is ever sent from or stored in the browser.
-  // Restrictions (folder, allowed formats, size) are enforced by the preset in Cloudinary.
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error('Please sign in again before uploading an image.');
+  }
+
+  const signatureResponse = await fetch('/api/cloudinary-signature', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${session.access_token}`,
+    },
+  });
+  const signatureData = await signatureResponse.json().catch(() => ({}));
+  if (!signatureResponse.ok) {
+    throw new Error(signatureData.error || 'Could not authorize the image upload.');
+  }
+
   const formData = new FormData();
   formData.append('file', fileToUpload);
-  formData.append('upload_preset', uploadPreset);
+  formData.append('api_key', apiKey);
+  formData.append('timestamp', String(signatureData.timestamp));
+  formData.append('signature', signatureData.signature);
 
   const url = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
 
@@ -91,4 +110,3 @@ export const uploadToCloudinary = async (file, resourceType = 'auto') => {
   const result = await response.json();
   return result.secure_url;
 };
-

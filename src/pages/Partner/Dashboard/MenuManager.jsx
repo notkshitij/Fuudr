@@ -17,10 +17,13 @@ import {
   Check, 
   Sparkles, 
   Search,
-  ExternalLink 
+  ExternalLink,
+  LoaderCircle
 } from 'lucide-react';
 import { supabase } from '../../../supabaseClient';
 import { uploadToCloudinary } from '../../../utils/cloudinary';
+import { deleteBunnyVideo, uploadVideoToBunny } from '../../../utils/bunnyStream';
+import AdaptiveVideo from '../../../components/AdaptiveVideo';
 
 const ReelPlayer = ({ item, onClose }) => {
   const reels = (item.reels || []).filter(r => r.video_url);
@@ -81,7 +84,7 @@ const ReelPlayer = ({ item, onClose }) => {
         style={{ width: 'min(380px, 90vw)', aspectRatio: '9/16', borderRadius: '2rem' }}
         onClick={(e) => { e.stopPropagation(); togglePlay(); }}
       >
-        <video
+        <AdaptiveVideo
           key={videoUrl}
           ref={videoRef}
           src={videoUrl}
@@ -160,6 +163,7 @@ const MenuManager = ({ user }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editItem, setEditItem] = useState(null); 
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [deletingItemId, setDeletingItemId] = useState(null);
   const [activeVideoItem, setActiveVideoItem] = useState(null);
   const [previewVideoUrl, setPreviewVideoUrl] = useState(null);
   const [previewImageUrl, setPreviewImageUrl] = useState(null);
@@ -181,6 +185,8 @@ const MenuManager = ({ user }) => {
   const [videoFiles, setVideoFiles] = useState([]);
   const [existingReels, setExistingReels] = useState([]);
   const [deletedReelIds, setDeletedReelIds] = useState([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStage, setUploadStage] = useState('');
 
   const fetchMenu = async () => {
     setLoading(true);
@@ -188,7 +194,7 @@ const MenuManager = ({ user }) => {
       // Fetch menu items along with reels and linked addons
       let { data, error } = await supabase
         .from('menu_items')
-        .select('*, reels(video_url), menu_item_addons(id, addon_id, dish_addons(*))')
+        .select('*, reels(id, video_url, video_provider, provider_video_id, thumbnail_url), menu_item_addons(id, addon_id, dish_addons(*))')
         .eq('partner_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -196,7 +202,7 @@ const MenuManager = ({ user }) => {
         // Graceful fallback if junction table is still being initialized
         const fallback = await supabase
           .from('menu_items')
-          .select('*, reels(video_url)')
+          .select('*, reels(id, video_url, video_provider, provider_video_id, thumbnail_url)')
           .eq('partner_id', user.id)
           .order('created_at', { ascending: false });
         data = fallback.data;
@@ -331,7 +337,7 @@ const MenuManager = ({ user }) => {
       // Fetch linked addons and saved reels in parallel
       const [addonsRes, reelsRes] = await Promise.all([
         supabase.from('menu_item_addons').select('addon_id').eq('menu_item_id', item.id),
-        supabase.from('reels').select('id, video_url').eq('menu_item_id', item.id)
+        supabase.from('reels').select('id, video_url, video_provider, provider_video_id, thumbnail_url').eq('menu_item_id', item.id)
       ]);
 
       if (addonsRes.data && addonsRes.data.length > 0) {
@@ -423,8 +429,17 @@ const MenuManager = ({ user }) => {
 
   // Delete dish + its reel
   const handleDelete = async (itemId) => {
+    if (deletingItemId) return;
+    setDeletingItemId(itemId);
     try {
-      // Delete linked reel first
+      const { data: reelsToDelete, error: reelsError } = await supabase
+        .from('reels')
+        .select('video_provider, provider_video_id')
+        .eq('menu_item_id', itemId);
+      if (reelsError) throw reelsError;
+      await Promise.all((reelsToDelete || [])
+        .filter(reel => reel.video_provider === 'bunny' && reel.provider_video_id)
+        .map(reel => deleteBunnyVideo(reel.provider_video_id)));
       await supabase.from('reels').delete().eq('menu_item_id', itemId);
       // Delete menu item
       const { error } = await supabase.from('menu_items').delete().eq('id', itemId);
@@ -433,6 +448,8 @@ const MenuManager = ({ user }) => {
       setDeleteConfirmId(null);
     } catch (err) {
       console.error("Delete error:", err);
+    } finally {
+      setDeletingItemId(null);
     }
   };
 
@@ -447,26 +464,40 @@ const MenuManager = ({ user }) => {
     if (isAddMode && videoFiles.length === 0) { setErrorMsg("At least one dish reel is required."); return; }
 
     setIsSubmitting(true);
+    setUploadProgress(0);
+    setUploadStage('');
     setErrorMsg('');
     setSuccessMsg('');
+    let uploadedVideos = [];
+    let videosPersisted = false;
 
     try {
       const selectedCategory = categories.find(c => c.name === formData.category_name);
       const categoryId = selectedCategory ? selectedCategory.id : null;
 
-      // Start image and video uploads to Cloudinary in parallel
+      // Images remain on Cloudinary; new reels use Bunny Stream.
       const imageUploadPromise = imageFile
         ? uploadToCloudinary(imageFile, 'image')
         : Promise.resolve(editItem?.image_url || null);
 
-      const videosUploadPromise = Promise.all(
-        videoFiles.map(f => uploadToCloudinary(f, 'video'))
-      );
+      const newVideos = [];
+      for (let index = 0; index < videoFiles.length; index += 1) {
+        const updateProgress = (stage, progress) => {
+          const stageOffset = stage === 'compressing' ? 0 : stage === 'uploading' ? 35 : 80;
+          const stageWeight = stage === 'compressing' ? 35 : stage === 'uploading' ? 45 : 20;
+          const currentVideoProgress = stageOffset + ((Math.min(100, progress) / 100) * stageWeight);
+          setUploadProgress(Math.min(99, Math.round(((index + (currentVideoProgress / 100)) / videoFiles.length) * 100)));
+          setUploadStage(stage);
+        };
+        newVideos.push(await uploadVideoToBunny(videoFiles[index], {
+          onCompressionProgress: progress => updateProgress('compressing', progress),
+          onUploadProgress: progress => updateProgress('uploading', progress),
+          onProcessingProgress: progress => updateProgress('processing', progress),
+        }));
+      }
 
-      const [imageUrl, newVideoUrls] = await Promise.all([
-        imageUploadPromise,
-        videosUploadPromise
-      ]);
+      const imageUrl = await imageUploadPromise;
+      uploadedVideos = newVideos;
 
       if (isAddMode) {
         // INSERT
@@ -503,11 +534,16 @@ const MenuManager = ({ user }) => {
 
         // Insert all reels — dish data lives on menu_items now,
         // so reels only store the link + video.
-        await supabase.from('reels').insert(newVideoUrls.map(videoUrl => ({
+        const { error: reelsInsertError } = await supabase.from('reels').insert(newVideos.map(video => ({
           partner_id: user.id,
           menu_item_id: menuItem.id,
-          video_url: videoUrl,
+          video_url: video.url,
+          video_provider: video.provider,
+          provider_video_id: video.providerVideoId,
+          thumbnail_url: video.thumbnailUrl,
         })));
+        if (reelsInsertError) throw reelsInsertError;
+        videosPersisted = true;
 
         // Link selected accompaniments
         if (selectedAddonIds.length > 0) {
@@ -555,19 +591,32 @@ const MenuManager = ({ user }) => {
 
         // Delete removed reels
         if (deletedReelIds.length > 0) {
+          const { data: removedReels, error: removedReelsError } = await supabase
+            .from('reels')
+            .select('video_provider, provider_video_id')
+            .in('id', deletedReelIds);
+          if (removedReelsError) throw removedReelsError;
+          await Promise.all(removedReels
+            .filter(reel => reel.video_provider === 'bunny' && reel.provider_video_id)
+            .map(reel => deleteBunnyVideo(reel.provider_video_id)));
           await supabase.from('reels').delete().in('id', deletedReelIds);
         }
         // Dish metadata (name, price, description, category) lives on menu_items —
         // already updated above. Reels carry no dish data, so nothing to update here.
 
         // Insert new reels
-        if (newVideoUrls.length > 0) {
-          await supabase.from('reels').insert(newVideoUrls.map(videoUrl => ({
+        if (newVideos.length > 0) {
+          const { error: reelsInsertError } = await supabase.from('reels').insert(newVideos.map(video => ({
             partner_id: user.id,
             menu_item_id: editItem.id,
-            video_url: videoUrl,
+            video_url: video.url,
+            video_provider: video.provider,
+            provider_video_id: video.providerVideoId,
+            thumbnail_url: video.thumbnailUrl,
           })));
+          if (reelsInsertError) throw reelsInsertError;
         }
+        videosPersisted = true;
 
         // Sync linked accompaniments
         try {
@@ -586,6 +635,8 @@ const MenuManager = ({ user }) => {
       }
 
       fetchMenu();
+      setUploadProgress(100);
+      setUploadStage('saving');
 
       if (isAddMore) {
         // Keep modal open, clear name/desc/price/files, keep category & veg
@@ -605,9 +656,13 @@ const MenuManager = ({ user }) => {
 
     } catch (err) {
       console.error("Error saving dish:", err);
+      if (!videosPersisted && uploadedVideos.length > 0) {
+        await Promise.all(uploadedVideos.map(video => deleteBunnyVideo(video.providerVideoId, video.uploadToken).catch(() => {})));
+      }
       setErrorMsg(err.message || "Failed to save dish.");
     } finally {
       setIsSubmitting(false);
+      setUploadStage('');
     }
   };
 
@@ -720,7 +775,7 @@ const MenuManager = ({ user }) => {
               >
                 {/* Background Image or Video */}
                 {hasReel ? (
-                  <video 
+                  <AdaptiveVideo
                     src={item.reels[0].video_url} 
                     poster={item.image_url || undefined}
                     className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
@@ -822,14 +877,16 @@ const MenuManager = ({ user }) => {
                           <button 
                             type="button"
                             onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }} 
-                            className="flex-1 py-1.5 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-[11px] sm:text-xs font-bold rounded-lg transition-colors shadow"
+                            disabled={deletingItemId === item.id}
+                            className="flex-1 py-1.5 bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:bg-red-500/70 disabled:cursor-wait text-white text-[11px] sm:text-xs font-bold rounded-lg transition-colors shadow flex items-center justify-center gap-1"
                           >
-                            Yes
+                            {deletingItemId === item.id ? <><LoaderCircle size={13} className="animate-spin" /> Deleting…</> : 'Yes'}
                           </button>
                           <button 
                             type="button"
                             onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(null); }} 
-                            className="flex-1 py-1.5 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white text-[11px] sm:text-xs font-bold rounded-lg transition-colors"
+                            disabled={deletingItemId === item.id}
+                            className="flex-1 py-1.5 bg-white/20 hover:bg-white/30 active:bg-white/40 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[11px] sm:text-xs font-bold rounded-lg transition-colors"
                           >
                             No
                           </button>
@@ -888,7 +945,8 @@ const MenuManager = ({ user }) => {
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(item.id); }}
-                          className="py-1.5 px-2 rounded-xl bg-rose-600/85 hover:bg-rose-600 active:bg-rose-700 backdrop-blur-md text-white border border-rose-400/20 transition-colors flex items-center justify-center gap-1 sm:flex-col sm:gap-0.5 sm:py-2"
+                          disabled={Boolean(deletingItemId)}
+                          className="py-1.5 px-2 rounded-xl bg-rose-600/85 hover:bg-rose-600 active:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-md text-white border border-rose-400/20 transition-colors flex items-center justify-center gap-1 sm:flex-col sm:gap-0.5 sm:py-2"
                           title="Delete Dish"
                         >
                           <Trash2 size={13} className="sm:w-4 sm:h-4 shrink-0" />
@@ -1266,7 +1324,7 @@ const MenuManager = ({ user }) => {
                         {/* Saved reels */}
                         {existingReels.map((reel) => (
                           <div key={reel.id} className="relative w-14 h-14 overflow-hidden border-2 border-green-400 bg-black flex-shrink-0 cursor-pointer" style={{borderRadius: '10px'}} onClick={() => setPreviewVideoUrl(reel.video_url)}>
-                            <video src={reel.video_url} className="absolute inset-0 w-full h-full object-cover opacity-80" muted playsInline />
+                            <AdaptiveVideo src={reel.video_url} className="absolute inset-0 w-full h-full object-cover opacity-80" muted playsInline />
                             <button
                               type="button"
                               onClick={(e) => {
@@ -1324,7 +1382,7 @@ const MenuManager = ({ user }) => {
                   className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-orange-500 hover:bg-orange-600 transition-colors disabled:opacity-70 flex items-center justify-center gap-2 whitespace-nowrap text-sm shadow-lg shadow-orange-500/20"
                 >
                   {isSubmitting ? (
-                    <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>Saving...</>
+                    <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>{uploadStage === 'compressing' ? `Optimizing video ${uploadProgress}%` : uploadStage === 'uploading' ? `Uploading video ${uploadProgress}%` : uploadStage === 'processing' ? `Preparing video ${uploadProgress}%` : 'Saving...'}</>
                   ) : editItem ? 'Save Changes' : 'Save Dish'}
                 </button>
               </div>
@@ -1358,7 +1416,7 @@ const MenuManager = ({ user }) => {
           <button className="absolute top-6 right-6 text-white/60 hover:text-white bg-white/10 p-2 rounded-full hover:bg-white/20 transition-colors">
             <X size={24} />
           </button>
-          <video
+          <AdaptiveVideo
             src={previewVideoUrl}
             className="max-h-[80vh] max-w-full rounded-2xl"
             controls
