@@ -22,20 +22,28 @@ const readJson = async (response) => {
   return body;
 };
 
-const waitForPlayable = async (videoId, uploadToken, onProgress, attempts = 60) => {
+const waitForPlayable = async (videoId, uploadToken, onProgress, attempts = 10) => {
   for (let attempt = 0; attempt < attempts; attempt += 1) {
-    const params = new URLSearchParams({ videoId, uploadToken });
-    const response = await authenticatedFetch(`/api/bunny-video?${params}`);
-    const status = await readJson(response);
-    onProgress?.(status.encodeProgress || 0);
-    if (status.playable) return status;
-    if (status.failed) {
-      const details = status.transcodingMessages?.join(' ') || 'Try a different video file.';
-      throw new Error(`Bunny could not process this video. ${details}`);
+    try {
+      const params = new URLSearchParams({ videoId, uploadToken });
+      const response = await authenticatedFetch(`/api/bunny-video?${params}`);
+      const status = await readJson(response);
+      onProgress?.(status.encodeProgress || 0);
+      if (status.playable) return status;
+      if (status.failed) {
+        const details = status.transcodingMessages?.join(' ') || 'Try a different video file.';
+        throw new Error(`Bunny could not process this video. ${details}`);
+      }
+    } catch (error) {
+      // Polling is safe to retry. A slow edge/API response must not discard a
+      // successfully uploaded video while Bunny is still encoding it.
+      if (attempt === attempts - 1 || /could not process/i.test(error.message)) throw error;
     }
     await new Promise(resolve => setTimeout(resolve, 2000));
   }
-  throw new Error('The video uploaded but is still processing. Please try saving again shortly.');
+  // Upload has succeeded. Bunny may need longer for an encoding queue, but the
+  // reel can safely be saved now and will start playing once it finishes.
+  return { playable: false, pending: true };
 };
 
 export const uploadVideoToBunny = async (file, { onCompressionProgress, onUploadProgress, onProcessingProgress } = {}) => {

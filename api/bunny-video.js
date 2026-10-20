@@ -55,15 +55,28 @@ const isValidUploadToken = (token, userId, videoId, apiKey) => {
 
 const bunnyRequest = async (path, options = {}) => {
   const { apiKey } = getConfig();
-  const response = await fetch(`${BUNNY_API_BASE}${path}`, {
-    ...options,
-    headers: {
-      AccessKey: apiKey,
-      Accept: 'application/json',
-      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-      ...options.headers,
-    },
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 7_000);
+  let response;
+  try {
+    response = await fetch(`${BUNNY_API_BASE}${path}`, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        AccessKey: apiKey,
+        Accept: 'application/json',
+        ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+        ...options.headers,
+      },
+    });
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('Bunny Stream status request timed out.');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!response.ok) {
     const detail = await response.text();
