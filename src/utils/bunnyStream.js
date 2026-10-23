@@ -1,6 +1,5 @@
 import * as tus from 'tus-js-client';
 import { supabase } from '../supabaseClient';
-import { compressVideoForBunny } from './videoCompression';
 
 const authenticatedFetch = async (url, options = {}) => {
   const { data: { session } } = await supabase.auth.getSession();
@@ -46,17 +45,20 @@ const waitForPlayable = async (videoId, uploadToken, onProgress, attempts = 10) 
   return { playable: false, pending: true };
 };
 
-export const uploadVideoToBunny = async (file, { onCompressionProgress, onUploadProgress, onProcessingProgress } = {}) => {
-  const optimizedFile = await compressVideoForBunny(file, onCompressionProgress);
+export const uploadVideoToBunny = async (file, { onUploadProgress, onProcessingProgress } = {}) => {
+  if (!file?.type?.startsWith('video/')) {
+    throw new Error('Please select a valid video file.');
+  }
+
   const createResponse = await authenticatedFetch('/api/bunny-video', {
     method: 'POST',
-    body: JSON.stringify({ title: optimizedFile.name }),
+    body: JSON.stringify({ title: file.name }),
   });
   const authorization = await readJson(createResponse);
 
   try {
     await new Promise((resolve, reject) => {
-      const upload = new tus.Upload(optimizedFile, {
+      const upload = new tus.Upload(file, {
         endpoint: authorization.uploadEndpoint,
         retryDelays: [0, 1000, 3000, 5000, 10000],
         headers: {
@@ -66,9 +68,9 @@ export const uploadVideoToBunny = async (file, { onCompressionProgress, onUpload
           LibraryId: authorization.libraryId,
         },
         metadata: {
-          filename: optimizedFile.name,
-          filetype: optimizedFile.type || 'video/mp4',
-          title: optimizedFile.name,
+          filename: file.name,
+          filetype: file.type || 'video/mp4',
+          title: file.name,
         },
         onError: reject,
         onProgress: (uploaded, total) => onUploadProgress?.(total ? Math.round((uploaded / total) * 100) : 0),

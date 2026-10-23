@@ -483,14 +483,13 @@ const MenuManager = ({ user }) => {
       const newVideos = [];
       for (let index = 0; index < videoFiles.length; index += 1) {
         const updateProgress = (stage, progress) => {
-          const stageOffset = stage === 'compressing' ? 0 : stage === 'uploading' ? 35 : 80;
-          const stageWeight = stage === 'compressing' ? 35 : stage === 'uploading' ? 45 : 20;
+          const stageOffset = stage === 'uploading' ? 0 : 80;
+          const stageWeight = stage === 'uploading' ? 80 : 20;
           const currentVideoProgress = stageOffset + ((Math.min(100, progress) / 100) * stageWeight);
           setUploadProgress(Math.min(99, Math.round(((index + (currentVideoProgress / 100)) / videoFiles.length) * 100)));
           setUploadStage(stage);
         };
         newVideos.push(await uploadVideoToBunny(videoFiles[index], {
-          onCompressionProgress: progress => updateProgress('compressing', progress),
           onUploadProgress: progress => updateProgress('uploading', progress),
           onProcessingProgress: progress => updateProgress('processing', progress),
         }));
@@ -1382,7 +1381,7 @@ const MenuManager = ({ user }) => {
                   className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-orange-500 hover:bg-orange-600 transition-colors disabled:opacity-70 flex items-center justify-center gap-2 whitespace-nowrap text-sm shadow-lg shadow-orange-500/20"
                 >
                   {isSubmitting ? (
-                    <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>{uploadStage === 'compressing' ? `Optimizing video ${uploadProgress}%` : uploadStage === 'uploading' ? `Uploading video ${uploadProgress}%` : uploadStage === 'processing' ? `Preparing video ${uploadProgress}%` : 'Saving...'}</>
+                    <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>{uploadStage === 'uploading' ? `Uploading video ${uploadProgress}%` : uploadStage === 'processing' ? `Preparing video ${uploadProgress}%` : 'Saving...'}</>
                   ) : editItem ? 'Save Changes' : 'Save Dish'}
                 </button>
               </div>
