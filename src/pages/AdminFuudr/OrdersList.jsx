@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import { Eye, Search, Filter, Package, Clock, Bike, CheckCircle, RefreshCw, GraduationCap, Trash2, X, Loader2, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, Search, Package, Clock, Bike, CheckCircle, RefreshCw, GraduationCap, Sparkles, Trash2, X, Loader2, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const STATUS_CONFIG = {
   all:        { label: 'All Orders',  color: 'text-slate-700',   bg: 'bg-slate-100',  dot: 'bg-slate-400' },
@@ -18,12 +18,44 @@ const TODAY = new Intl.DateTimeFormat('en-CA', {
   day: '2-digit',
 }).format(new Date());
 
+const getCustomerKey = (order) => {
+  const customerId = order.customer_id ?? order.user_id ?? order.profile_id;
+  if (customerId) return `id:${customerId}`;
+
+  const mobileNumber = String(order.mobile_no ?? '').replace(/\D/g, '');
+  return mobileNumber ? `mobile:${mobileNumber.slice(-10)}` : null;
+};
+
+const markFirstOrders = (orders) => {
+  const firstOrderByCustomer = new Map();
+
+  [...orders]
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+    .forEach(order => {
+      const customerKey = getCustomerKey(order);
+      if (customerKey && !firstOrderByCustomer.has(customerKey)) {
+        firstOrderByCustomer.set(customerKey, order.id);
+      }
+    });
+
+  return orders.map(order => {
+    const customerKey = getCustomerKey(order);
+    return {
+      ...order,
+      is_first_order: customerKey
+        ? firstOrderByCustomer.get(customerKey) === order.id
+        : false,
+    };
+  });
+};
+
 export default function OrdersList() {
   const [orders, setOrders]       = useState([]);
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [campusFilter, setCampusFilter] = useState('all'); // 'all', 'poornima_only'
+  const [firstOrderOnly, setFirstOrderOnly] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -129,7 +161,7 @@ export default function OrdersList() {
     }
 
     if (ordersData) {
-      setOrders(ordersData);
+      setOrders(markFirstOrders(ordersData));
     }
     setLoading(false);
   };
@@ -164,6 +196,10 @@ export default function OrdersList() {
     return orders.filter(o => o.is_poornima).length;
   }, [orders]);
 
+  const firstOrderCount = useMemo(() => {
+    return orders.filter(o => o.is_first_order).length;
+  }, [orders]);
+
   // Filtered list
   const filtered = useMemo(() => {
     return orders.filter(o => {
@@ -171,6 +207,7 @@ export default function OrdersList() {
       
       // Campus filter
       if (campusFilter === 'poornima_only' && !o.is_poornima) return false;
+      if (firstOrderOnly && !o.is_first_order) return false;
 
       const q = search.toLowerCase();
       const matchSearch = !q ||
@@ -187,7 +224,7 @@ export default function OrdersList() {
 
       return matchTab && matchSearch && matchDate;
     });
-  }, [orders, activeTab, campusFilter, search, dateFilter]);
+  }, [orders, activeTab, campusFilter, firstOrderOnly, search, dateFilter]);
 
   return (
     <div className="font-outfit space-y-6">
@@ -366,6 +403,27 @@ export default function OrdersList() {
               </span>
             )}
           </button>
+
+          {/* First Order Filter Toggle */}
+          <button
+            onClick={() => setFirstOrderOnly(current => !current)}
+            className={`flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-bold transition-all ${
+              firstOrderOnly
+                ? 'border-emerald-600 bg-emerald-100 text-emerald-700'
+                : 'border-slate-200 bg-white text-emerald-700 hover:bg-emerald-50'
+            }`}
+            title="Filter only customers placing their first order"
+          >
+            <Sparkles size={16} />
+            <span>1st Order</span>
+            {firstOrderCount > 0 && (
+              <span className={`rounded-full px-1.5 py-0.5 text-xs font-extrabold ${
+                firstOrderOnly ? 'bg-emerald-600 text-white' : 'bg-emerald-100 text-emerald-800'
+              }`}>
+                {firstOrderCount}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
@@ -430,7 +488,14 @@ export default function OrdersList() {
                         </span>
                       </td>
                       <td className="px-5 py-4">
-                        <div className="font-bold text-slate-900 text-sm">{order.delivery_name || 'N/A'}</div>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="font-bold text-slate-900 text-sm">{order.delivery_name || 'N/A'}</span>
+                          {order.is_first_order && (
+                            <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-emerald-700">
+                              1st Order
+                            </span>
+                          )}
+                        </div>
                         <div className="text-xs text-slate-400 mt-0.5 truncate max-w-[180px]">{order.delivery_address || '—'}</div>
                       </td>
                       <td className="px-5 py-4">
