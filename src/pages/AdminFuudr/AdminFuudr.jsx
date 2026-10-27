@@ -4,6 +4,7 @@ import { ArrowRight, ChevronDown, ShoppingBag, CheckCircle, Clock, Bike, Package
 import { supabase } from '../../supabaseClient';
 import { PlatformStatusToggle } from './components/PlatformStatusToggle';
 import { OrdersAnalyticsChart } from './components/OrdersAnalyticsChart';
+import { FinancialKpis } from './components/FinancialKpis';
 
 const STATUS_CONFIG = {
   placed:     { label: 'Placed',      color: 'text-slate-700',   bg: 'bg-slate-100',   dot: 'bg-slate-500',   icon: Package },
@@ -142,7 +143,7 @@ export default function AdminFuudr() {
     { label: 'Total Orders',   value: stats.total,          icon: ShoppingBag,  accent: 'orange' },
     { label: 'Active Now',     value: activeCount,          icon: Zap,          accent: 'blue',   pulse: activeCount > 0 },
     { label: 'Delivered',      value: stats.delivered,      icon: CheckCircle,  accent: 'emerald' },
-    { label: 'Total Sales',    value: `₹${stats.revenue.toLocaleString('en-IN')}`, icon: TrendingUp, accent: 'violet' },
+    { label: 'Order Value',    value: `₹${stats.revenue.toLocaleString('en-IN')}`, icon: TrendingUp, accent: 'violet' },
   ];
 
   const accentMap = {
@@ -195,6 +196,8 @@ export default function AdminFuudr() {
           );
         })}
       </div>
+
+      <FinancialKpis orders={allOrders} loading={loading} />
 
       {/* ── Orders & Sales Analytics Graph ── */}
       <OrdersAnalyticsChart orders={allOrders} loading={loading} />
