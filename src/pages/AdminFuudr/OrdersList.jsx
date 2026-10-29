@@ -213,6 +213,12 @@ export default function OrdersList() {
     return () => window.removeEventListener('click', closeCalendar);
   }, []);
 
+  useEffect(() => {
+    const closeDeliveryDropdown = () => setOpenDeliveryDropdownId(null);
+    window.addEventListener('click', closeDeliveryDropdown);
+    return () => window.removeEventListener('click', closeDeliveryDropdown);
+  }, []);
+
   // Tab counts
   const counts = useMemo(() => {
     const c = { all: orders.length, placed: 0, preparing: 0, on_the_way: 0, delivered: 0, cancelled: 0 };
@@ -555,27 +561,28 @@ export default function OrdersList() {
                       </td>
                       <td className="px-5 py-4 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <div className="relative">
+                          <div className="relative" onClick={event => event.stopPropagation()}>
                             <button type="button" aria-label={`Assign delivery staff for order ${displayId}`}
                               aria-expanded={openDeliveryDropdownId === order.id}
                               disabled={savingDeliveryOrderId === order.id || !deliveryStaff.length}
                               onClick={() => setOpenDeliveryDropdownId(current => current === order.id ? null : order.id)}
-                              className="inline-flex max-w-36 items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-xs font-bold text-blue-700 hover:bg-blue-100 disabled:opacity-50">
+                              className={`inline-flex max-w-36 items-center gap-1 rounded-md px-2 py-1 text-xs font-bold disabled:opacity-50 ${(order.delivery_assignees || []).length ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
                               <span className="truncate">{(order.delivery_assignees || []).length ? order.delivery_assignees.join(', ') : 'Assign'}</span>
                               <ChevronRight size={12} className="shrink-0 rotate-90" />
                             </button>
                             {openDeliveryDropdownId === order.id && (
                               <div className="absolute right-0 top-full z-50 mt-1 max-h-48 w-48 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
                                 {deliveryStaff.map(name => (
-                                  <label key={name} className={`flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold ${(order.delivery_assignees || []).includes(name) ? 'bg-emerald-50 text-emerald-700' : 'text-slate-700 hover:bg-slate-50'}`}>
-                                    <input type="checkbox" checked={(order.delivery_assignees || []).includes(name)} disabled={savingDeliveryOrderId === order.id}
-                                      onChange={event => {
-                                        const current = order.delivery_assignees || [];
-                                        const next = event.target.checked ? [...current, name] : current.filter(person => person !== name);
-                                        saveDeliveryAssignees(order, next);
-                                      }} />
+                                  <button key={name} type="button" disabled={savingDeliveryOrderId === order.id}
+                                    onClick={() => {
+                                      const current = order.delivery_assignees || [];
+                                      const next = current.includes(name) ? current.filter(person => person !== name) : [...current, name];
+                                      saveDeliveryAssignees(order, next);
+                                      setOpenDeliveryDropdownId(null);
+                                    }}
+                                    className={`block w-full rounded-md px-2 py-2 text-left text-xs font-bold transition-colors disabled:opacity-50 ${(order.delivery_assignees || []).includes(name) ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50'}`}>
                                     {name}
-                                  </label>
+                                  </button>
                                 ))}
                               </div>
                             )}

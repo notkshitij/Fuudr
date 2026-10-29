@@ -94,7 +94,6 @@ export default function ManageOrder() {
   const [newStaffName, setNewStaffName] = useState('');
   const [commissionDraft, setCommissionDraft] = useState('');
   const [editingCommission, setEditingCommission] = useState(false);
-  const [deliveryDropdownOpen, setDeliveryDropdownOpen] = useState(false);
   const [addingDeliveryStaff, setAddingDeliveryStaff] = useState(false);
   const [savingOrderFields, setSavingOrderFields] = useState(false);
   const [orderFieldsError, setOrderFieldsError] = useState('');
@@ -334,6 +333,7 @@ export default function ManageOrder() {
       .single();
     if (!error && data) {
       setCommissionDraft(data.commission_amount ?? '');
+      setEditingCommission(data.commission_amount == null);
       setOrder({
         ...data,
         bill: parseBill(data.bill),
@@ -583,44 +583,35 @@ export default function ManageOrder() {
               <>
                 <span className="text-lg font-bold text-slate-900">{order.commission_amount == null ? '—' : `₹${Number(order.commission_amount).toFixed(2)}`}</span>
                 <button type="button" aria-label="Edit commission" title="Edit commission" onClick={() => { setCommissionDraft(order.commission_amount ?? ''); setEditingCommission(true); }} className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:border-orange-300 hover:text-orange-600"><Pencil size={15} /></button>
-                {order.commission_amount != null && <button type="button" aria-label="Delete commission" title="Delete commission" disabled={savingOrderFields} onClick={() => { setCommissionDraft(''); saveOrderFields({ commission_amount: null }); }} className="rounded-lg border border-rose-100 p-2 text-rose-500 hover:bg-rose-50 disabled:opacity-50"><Trash2 size={15} /></button>}
+                {order.commission_amount != null && <button type="button" aria-label="Delete commission" title="Delete commission" disabled={savingOrderFields} onClick={async () => { const removed = await saveOrderFields({ commission_amount: null }); if (removed) { setCommissionDraft(''); setEditingCommission(true); } }} className="rounded-lg border border-rose-100 p-2 text-rose-500 hover:bg-rose-50 disabled:opacity-50"><Trash2 size={15} /></button>}
               </>
             ) : (
               <>
                 <input type="number" min="0" step="0.01" value={commissionDraft} onChange={event => setCommissionDraft(event.target.value)} placeholder="Amount in ₹" aria-label="Order commission amount" className="min-w-0 flex-1 basis-32 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold outline-none focus:border-orange-400" />
-                <button type="button" disabled={savingOrderFields} onClick={async () => { const saved = await saveOrderFields({ commission_amount: commissionDraft === '' ? null : Number(commissionDraft) }); if (saved) setEditingCommission(false); }} className="shrink-0 rounded-xl bg-slate-900 px-3 sm:px-4 py-2.5 text-sm font-bold text-white hover:bg-orange-500 disabled:opacity-50">{savingOrderFields ? 'Saving…' : 'Save'}</button>
-                <button type="button" disabled={savingOrderFields} onClick={() => { setCommissionDraft(order.commission_amount ?? ''); setEditingCommission(false); }} className="shrink-0 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-600 disabled:opacity-50">Cancel</button>
+                <button type="button" disabled={savingOrderFields || commissionDraft === ''} onClick={async () => { const saved = await saveOrderFields({ commission_amount: Number(commissionDraft) }); if (saved) setEditingCommission(false); }} className="shrink-0 rounded-xl bg-slate-900 px-3 sm:px-4 py-2.5 text-sm font-bold text-white hover:bg-orange-500 disabled:opacity-50">{savingOrderFields ? 'Saving…' : 'Save'}</button>
+                {order.commission_amount != null && <button type="button" disabled={savingOrderFields} onClick={() => { setCommissionDraft(order.commission_amount); setEditingCommission(false); }} className="shrink-0 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-600 disabled:opacity-50">Cancel</button>}
               </>
             )}
           </div>
         </div>
         <div>
           <h3 className="font-bold text-slate-900">Assign delivery</h3>
-          <div className="mt-3 flex items-start gap-2">
-            <div className="relative min-w-0 flex-1">
-              <button type="button" aria-expanded={deliveryDropdownOpen} onClick={() => setDeliveryDropdownOpen(open => !open)} disabled={!deliveryStaff.length}
-                className="w-full truncate rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left text-sm font-semibold text-slate-700 hover:border-orange-300 disabled:opacity-50">
-                {(order.delivery_assignees || []).length ? order.delivery_assignees.join(', ') : 'Select delivery staff'}
-              </button>
-              {deliveryDropdownOpen && deliveryStaff.length > 0 && (
-                <div className="absolute left-0 top-full z-40 mt-1 max-h-44 w-full min-w-48 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
-                  {deliveryStaff.map(name => (
-                    <label key={name} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm font-semibold text-slate-700 hover:bg-orange-50">
-                      <input type="checkbox" checked={(order.delivery_assignees || []).includes(name)} disabled={savingOrderFields}
-                        onChange={event => {
-                          const assigned = order.delivery_assignees || [];
-                          const next = event.target.checked ? [...assigned, name] : assigned.filter(person => person !== name);
-                          saveOrderFields({ delivery_assignees: next });
-                        }} />
-                      {name}
-                    </label>
-                  ))}
-                </div>
-              )}
-              {!deliveryStaff.length && <p className="mt-1 text-[11px] text-slate-400">No staff yet. Add a name.</p>}
-            </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {deliveryStaff.map(name => {
+              const selected = (order.delivery_assignees || []).includes(name);
+              return <button key={name} type="button" disabled={savingOrderFields}
+                onClick={() => {
+                  const assigned = order.delivery_assignees || [];
+                  const next = selected ? assigned.filter(person => person !== name) : [...assigned, name];
+                  saveOrderFields({ delivery_assignees: next });
+                }}
+                className={`rounded-xl border px-3 py-2 text-xs font-bold transition-colors disabled:opacity-50 ${selected ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-200 hover:bg-emerald-50/50'}`}>
+                {name}
+              </button>;
+            })}
+            {!deliveryStaff.length && <span className="text-xs text-slate-400">No delivery staff yet.</span>}
             <button type="button" aria-label="Add delivery staff name" title="Add delivery staff name" onClick={() => setAddingDeliveryStaff(open => !open)}
-              className="shrink-0 rounded-xl border border-slate-200 p-2.5 text-slate-500 hover:border-orange-300 hover:text-orange-600"><UserPlus size={16} /></button>
+              className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 hover:border-orange-300 hover:text-orange-600"><UserPlus size={15} /></button>
           </div>
           {addingDeliveryStaff && <div className="mt-2 flex gap-2">
             <input value={newStaffName} onChange={event => setNewStaffName(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') addDeliveryStaff(); }} placeholder="Enter a name" aria-label="New delivery person name" className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-orange-400" />
