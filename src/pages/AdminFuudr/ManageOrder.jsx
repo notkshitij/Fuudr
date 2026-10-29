@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import { ArrowLeft, MapPin, CreditCard, Clock, Package, Flame, Bike, CheckCircle, ChevronRight, IndianRupee, UtensilsCrossed, Printer, Navigation, Phone, GraduationCap, Trash2, X, Loader2, UserPlus } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Clock, Package, Flame, Bike, CheckCircle, ChevronRight, IndianRupee, UtensilsCrossed, Printer, Navigation, Phone, GraduationCap, Trash2, X, Loader2, UserPlus, Pencil } from 'lucide-react';
 import AdaptiveVideo from '../../components/AdaptiveVideo';
 
 const STEPS = [
@@ -93,6 +93,9 @@ export default function ManageOrder() {
   const [deliveryStaff, setDeliveryStaff] = useState([]);
   const [newStaffName, setNewStaffName] = useState('');
   const [commissionDraft, setCommissionDraft] = useState('');
+  const [editingCommission, setEditingCommission] = useState(false);
+  const [deliveryDropdownOpen, setDeliveryDropdownOpen] = useState(false);
+  const [addingDeliveryStaff, setAddingDeliveryStaff] = useState(false);
   const [savingOrderFields, setSavingOrderFields] = useState(false);
   const [orderFieldsError, setOrderFieldsError] = useState('');
 
@@ -144,6 +147,7 @@ export default function ManageOrder() {
     if (error) setOrderFieldsError(`Could not save: ${error.message}`);
     else setOrder(previous => ({ ...previous, ...updates }));
     setSavingOrderFields(false);
+    return !error;
   };
 
   const addDeliveryStaff = async () => {
@@ -571,36 +575,57 @@ export default function ManageOrder() {
       </div>
 
       {/* Commission and delivery assignment */}
-      <div className="grid grid-cols-1 gap-5 rounded-2xl border border-slate-200 bg-white p-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 rounded-2xl border border-slate-200 bg-white p-4 sm:gap-5 sm:p-6 md:grid-cols-2">
         <div>
           <h3 className="font-bold text-slate-900">Commission</h3>
-          <p className="mt-1 text-xs text-slate-500">Set the commission amount for this order.</p>
-          <div className="mt-3 flex gap-2">
-            <input type="number" min="0" step="0.01" value={commissionDraft} onChange={event => setCommissionDraft(event.target.value)} placeholder="Amount in ₹" aria-label="Order commission amount" className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold outline-none focus:border-orange-400" />
-            <button type="button" disabled={savingOrderFields} onClick={() => saveOrderFields({ commission_amount: commissionDraft === '' ? null : Number(commissionDraft) })} className="shrink-0 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white hover:bg-orange-500 disabled:opacity-50">{savingOrderFields ? 'Saving…' : 'Save'}</button>
+          <div className="mt-3 flex min-w-0 flex-wrap items-center gap-2">
+            {!editingCommission ? (
+              <>
+                <span className="text-lg font-bold text-slate-900">{order.commission_amount == null ? '—' : `₹${Number(order.commission_amount).toFixed(2)}`}</span>
+                <button type="button" aria-label="Edit commission" title="Edit commission" onClick={() => { setCommissionDraft(order.commission_amount ?? ''); setEditingCommission(true); }} className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:border-orange-300 hover:text-orange-600"><Pencil size={15} /></button>
+                {order.commission_amount != null && <button type="button" aria-label="Delete commission" title="Delete commission" disabled={savingOrderFields} onClick={() => { setCommissionDraft(''); saveOrderFields({ commission_amount: null }); }} className="rounded-lg border border-rose-100 p-2 text-rose-500 hover:bg-rose-50 disabled:opacity-50"><Trash2 size={15} /></button>}
+              </>
+            ) : (
+              <>
+                <input type="number" min="0" step="0.01" value={commissionDraft} onChange={event => setCommissionDraft(event.target.value)} placeholder="Amount in ₹" aria-label="Order commission amount" className="min-w-0 flex-1 basis-32 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold outline-none focus:border-orange-400" />
+                <button type="button" disabled={savingOrderFields} onClick={async () => { const saved = await saveOrderFields({ commission_amount: commissionDraft === '' ? null : Number(commissionDraft) }); if (saved) setEditingCommission(false); }} className="shrink-0 rounded-xl bg-slate-900 px-3 sm:px-4 py-2.5 text-sm font-bold text-white hover:bg-orange-500 disabled:opacity-50">{savingOrderFields ? 'Saving…' : 'Save'}</button>
+                <button type="button" disabled={savingOrderFields} onClick={() => { setCommissionDraft(order.commission_amount ?? ''); setEditingCommission(false); }} className="shrink-0 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-600 disabled:opacity-50">Cancel</button>
+              </>
+            )}
           </div>
         </div>
         <div>
           <h3 className="font-bold text-slate-900">Assign delivery</h3>
-          <p className="mt-1 text-xs text-slate-500">Select one or more delivery people.</p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {deliveryStaff.map(name => {
-              const selected = (order.delivery_assignees || []).includes(name);
-              return <label key={name} className={`inline-flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold ${selected ? 'border-orange-300 bg-orange-50 text-orange-700' : 'border-slate-200 text-slate-600'}`}>
-                <input type="checkbox" checked={selected} disabled={savingOrderFields} onChange={event => {
-                  const assigned = order.delivery_assignees || [];
-                  const next = event.target.checked ? [...assigned, name] : assigned.filter(person => person !== name);
-                  saveOrderFields({ delivery_assignees: next });
-                }} />
-                {name}
-              </label>;
-            })}
-            {!deliveryStaff.length && <span className="text-xs text-slate-400">No delivery staff yet. Add a name below.</span>}
+          <div className="mt-3 flex items-start gap-2">
+            <div className="relative min-w-0 flex-1">
+              <button type="button" aria-expanded={deliveryDropdownOpen} onClick={() => setDeliveryDropdownOpen(open => !open)} disabled={!deliveryStaff.length}
+                className="w-full truncate rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left text-sm font-semibold text-slate-700 hover:border-orange-300 disabled:opacity-50">
+                {(order.delivery_assignees || []).length ? order.delivery_assignees.join(', ') : 'Select delivery staff'}
+              </button>
+              {deliveryDropdownOpen && deliveryStaff.length > 0 && (
+                <div className="absolute left-0 top-full z-40 mt-1 max-h-44 w-full min-w-48 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
+                  {deliveryStaff.map(name => (
+                    <label key={name} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-sm font-semibold text-slate-700 hover:bg-orange-50">
+                      <input type="checkbox" checked={(order.delivery_assignees || []).includes(name)} disabled={savingOrderFields}
+                        onChange={event => {
+                          const assigned = order.delivery_assignees || [];
+                          const next = event.target.checked ? [...assigned, name] : assigned.filter(person => person !== name);
+                          saveOrderFields({ delivery_assignees: next });
+                        }} />
+                      {name}
+                    </label>
+                  ))}
+                </div>
+              )}
+              {!deliveryStaff.length && <p className="mt-1 text-[11px] text-slate-400">No staff yet. Add a name.</p>}
+            </div>
+            <button type="button" aria-label="Add delivery staff name" title="Add delivery staff name" onClick={() => setAddingDeliveryStaff(open => !open)}
+              className="shrink-0 rounded-xl border border-slate-200 p-2.5 text-slate-500 hover:border-orange-300 hover:text-orange-600"><UserPlus size={16} /></button>
           </div>
-          <div className="mt-3 flex gap-2">
+          {addingDeliveryStaff && <div className="mt-2 flex gap-2">
             <input value={newStaffName} onChange={event => setNewStaffName(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') addDeliveryStaff(); }} placeholder="Enter a name" aria-label="New delivery person name" className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-orange-400" />
-            <button type="button" onClick={addDeliveryStaff} disabled={!newStaffName.trim()} className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:border-orange-300 hover:text-orange-600 disabled:opacity-50"><UserPlus size={14} /> Add name</button>
-          </div>
+            <button type="button" onClick={addDeliveryStaff} disabled={!newStaffName.trim()} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:border-orange-300 hover:text-orange-600 disabled:opacity-50">Add</button>
+          </div>}
           {orderFieldsError && <p role="alert" className="mt-2 text-xs font-semibold text-rose-600">{orderFieldsError}</p>}
         </div>
       </div>
