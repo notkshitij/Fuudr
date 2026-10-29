@@ -60,6 +60,10 @@ export default function OrdersList() {
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+  const [deliveryStaff, setDeliveryStaff] = useState([]);
+  const [openDeliveryDropdownId, setOpenDeliveryDropdownId] = useState(null);
+  const [savingDeliveryOrderId, setSavingDeliveryOrderId] = useState(null);
+  const [deliveryStaffError, setDeliveryStaffError] = useState('');
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(() => new Date());
   const navigate = useNavigate();
@@ -165,6 +169,30 @@ export default function OrdersList() {
     }
     setLoading(false);
   };
+
+  const fetchDeliveryStaff = async () => {
+    const { data, error } = await supabase.from('delivery_staff').select('name').eq('active', true).order('name');
+    if (error) {
+      console.error('Could not load delivery staff:', error);
+      setDeliveryStaffError('Delivery staff unavailable. Run the Supabase setup SQL and refresh.');
+      return;
+    }
+    setDeliveryStaffError('');
+    setDeliveryStaff((data || []).map(person => person.name));
+  };
+
+  const saveDeliveryAssignees = async (order, assignees) => {
+    setSavingDeliveryOrderId(order.id);
+    const { error } = await supabase.from('orders').update({ delivery_assignees: assignees }).eq('id', order.id);
+    if (error) {
+      setDeliveryStaffError(`Could not save delivery assignment: ${error.message}`);
+    } else {
+      setOrders(previous => previous.map(item => item.id === order.id ? { ...item, delivery_assignees: assignees } : item));
+    }
+    setSavingDeliveryOrderId(null);
+  };
+
+  useEffect(() => { fetchDeliveryStaff(); }, []);
 
   useEffect(() => {
     fetchOrders();
@@ -449,6 +477,7 @@ export default function OrdersList() {
                   <th className="px-5 py-3.5 text-[11px] font-black text-slate-400 uppercase tracking-wider">Restaurant</th>
                   <th className="px-5 py-3.5 text-[11px] font-black text-slate-400 uppercase tracking-wider">Items</th>
                   <th className="px-5 py-3.5 text-[11px] font-black text-slate-400 uppercase tracking-wider">Total</th>
+                  <th className="px-5 py-3.5 text-[11px] font-black text-slate-400 uppercase tracking-wider">Delivery assignment</th>
                   <th className="px-5 py-3.5 text-[11px] font-black text-slate-400 uppercase tracking-wider">Time</th>
                   <th className="px-5 py-3.5 text-[11px] font-black text-slate-400 uppercase tracking-wider text-center">Status</th>
                   <th className="px-5 py-3.5 text-[11px] font-black text-slate-400 uppercase tracking-wider text-right">Action</th>
@@ -515,6 +544,33 @@ export default function OrdersList() {
                       <td className="px-5 py-4 whitespace-nowrap">
                         <span className="font-black text-slate-900">₹{totalPrice}</span>
                       </td>
+                      <td className="px-5 py-4 min-w-48">
+                        <div className="relative w-44">
+                          <button type="button" aria-label={`Assign delivery staff for order ${displayId}`}
+                            aria-expanded={openDeliveryDropdownId === order.id}
+                            disabled={savingDeliveryOrderId === order.id || !deliveryStaff.length}
+                            onClick={() => setOpenDeliveryDropdownId(current => current === order.id ? null : order.id)}
+                            className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-left text-xs font-semibold text-slate-700 outline-none hover:border-orange-400 disabled:opacity-50">
+                            {(order.delivery_assignees || []).length ? order.delivery_assignees.join(', ') : 'Assign delivery'}
+                          </button>
+                          {openDeliveryDropdownId === order.id && (
+                            <div className="absolute left-0 top-full z-40 mt-1 max-h-44 w-48 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
+                              {deliveryStaff.map(name => (
+                                <label key={name} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-xs font-semibold text-slate-700 hover:bg-orange-50">
+                                  <input type="checkbox" checked={(order.delivery_assignees || []).includes(name)} disabled={savingDeliveryOrderId === order.id}
+                                    onChange={event => {
+                                      const current = order.delivery_assignees || [];
+                                      const next = event.target.checked ? [...current, name] : current.filter(person => person !== name);
+                                      saveDeliveryAssignees(order, next);
+                                    }} />
+                                  {name}
+                                </label>
+                              ))}
+                            </div>
+                          )}
+                          {!deliveryStaff.length && <span className="block text-[10px] text-slate-400">Run Supabase setup SQL</span>}
+                        </div>
+                      </td>
                       <td className="px-5 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-slate-700">{new Date(order.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</div>
                         <div className="text-xs text-slate-400 mt-0.5">{new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
@@ -554,6 +610,7 @@ export default function OrdersList() {
           <div className="px-5 py-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-400">Showing {filtered.length} of {orders.length} orders</span>
           </div>
+          {deliveryStaffError && <p role="alert" className="px-5 py-2 text-xs font-semibold text-rose-600">{deliveryStaffError}</p>}
         </div>
       )}
 

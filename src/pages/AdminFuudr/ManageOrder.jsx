@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import { ArrowLeft, MapPin, CreditCard, Clock, Package, Flame, Bike, CheckCircle, ChevronRight, IndianRupee, UtensilsCrossed, Printer, Navigation, Phone, GraduationCap, Trash2, X, Loader2 } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Clock, Package, Flame, Bike, CheckCircle, ChevronRight, IndianRupee, UtensilsCrossed, Printer, Navigation, Phone, GraduationCap, Trash2, X, Loader2, UserPlus } from 'lucide-react';
 import AdaptiveVideo from '../../components/AdaptiveVideo';
 
 const STEPS = [
@@ -90,6 +90,11 @@ export default function ManageOrder() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+  const [deliveryStaff, setDeliveryStaff] = useState([]);
+  const [newStaffName, setNewStaffName] = useState('');
+  const [commissionDraft, setCommissionDraft] = useState('');
+  const [savingOrderFields, setSavingOrderFields] = useState(false);
+  const [orderFieldsError, setOrderFieldsError] = useState('');
 
   const handleDeleteOrder = async () => {
     setIsDeleting(true);
@@ -117,6 +122,42 @@ export default function ManageOrder() {
   };
 
   useEffect(() => { fetchOrderDetails(); }, [id]);
+
+  useEffect(() => {
+    fetchDeliveryStaff();
+  }, []);
+
+  const fetchDeliveryStaff = async () => {
+    const { data, error } = await supabase.from('delivery_staff').select('name').eq('active', true).order('name');
+    if (error) {
+      console.error('Could not load delivery staff:', error);
+      setOrderFieldsError('Delivery staff list is unavailable. Run the Supabase setup SQL, then refresh this page.');
+      return;
+    }
+    setDeliveryStaff((data || []).map(person => person.name));
+  };
+
+  const saveOrderFields = async (updates) => {
+    setSavingOrderFields(true);
+    setOrderFieldsError('');
+    const { error } = await supabase.from('orders').update(updates).eq('id', id);
+    if (error) setOrderFieldsError(`Could not save: ${error.message}`);
+    else setOrder(previous => ({ ...previous, ...updates }));
+    setSavingOrderFields(false);
+  };
+
+  const addDeliveryStaff = async () => {
+    const name = newStaffName.trim();
+    if (!name) return;
+    setOrderFieldsError('');
+    const { error } = await supabase.from('delivery_staff').insert({ name });
+    if (error) {
+      setOrderFieldsError(error.code === '23505' ? 'This delivery person is already in the list.' : `Could not add name: ${error.message}`);
+      return;
+    }
+    setNewStaffName('');
+    await fetchDeliveryStaff();
+  };
 
   useEffect(() => {
     if (order) {
@@ -288,6 +329,7 @@ export default function ManageOrder() {
       .eq('id', id)
       .single();
     if (!error && data) {
+      setCommissionDraft(data.commission_amount ?? '');
       setOrder({
         ...data,
         bill: parseBill(data.bill),
@@ -528,7 +570,42 @@ export default function ManageOrder() {
         )}
       </div>
 
-      {/* ── Delivery Partner Mobile Number ── */}
+      {/* Commission and delivery assignment */}
+      <div className="grid grid-cols-1 gap-5 rounded-2xl border border-slate-200 bg-white p-6 md:grid-cols-2">
+        <div>
+          <h3 className="font-bold text-slate-900">Commission</h3>
+          <p className="mt-1 text-xs text-slate-500">Set the commission amount for this order.</p>
+          <div className="mt-3 flex gap-2">
+            <input type="number" min="0" step="0.01" value={commissionDraft} onChange={event => setCommissionDraft(event.target.value)} placeholder="Amount in ₹" aria-label="Order commission amount" className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold outline-none focus:border-orange-400" />
+            <button type="button" disabled={savingOrderFields} onClick={() => saveOrderFields({ commission_amount: commissionDraft === '' ? null : Number(commissionDraft) })} className="shrink-0 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white hover:bg-orange-500 disabled:opacity-50">{savingOrderFields ? 'Saving…' : 'Save'}</button>
+          </div>
+        </div>
+        <div>
+          <h3 className="font-bold text-slate-900">Assign delivery</h3>
+          <p className="mt-1 text-xs text-slate-500">Select one or more delivery people.</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {deliveryStaff.map(name => {
+              const selected = (order.delivery_assignees || []).includes(name);
+              return <label key={name} className={`inline-flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm font-semibold ${selected ? 'border-orange-300 bg-orange-50 text-orange-700' : 'border-slate-200 text-slate-600'}`}>
+                <input type="checkbox" checked={selected} disabled={savingOrderFields} onChange={event => {
+                  const assigned = order.delivery_assignees || [];
+                  const next = event.target.checked ? [...assigned, name] : assigned.filter(person => person !== name);
+                  saveOrderFields({ delivery_assignees: next });
+                }} />
+                {name}
+              </label>;
+            })}
+            {!deliveryStaff.length && <span className="text-xs text-slate-400">No delivery staff yet. Add a name below.</span>}
+          </div>
+          <div className="mt-3 flex gap-2">
+            <input value={newStaffName} onChange={event => setNewStaffName(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') addDeliveryStaff(); }} placeholder="Enter a name" aria-label="New delivery person name" className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-orange-400" />
+            <button type="button" onClick={addDeliveryStaff} disabled={!newStaffName.trim()} className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:border-orange-300 hover:text-orange-600 disabled:opacity-50"><UserPlus size={14} /> Add name</button>
+          </div>
+          {orderFieldsError && <p role="alert" className="mt-2 text-xs font-semibold text-rose-600">{orderFieldsError}</p>}
+        </div>
+      </div>
+
+      {/* Delivery partner mobile number */}
       {order.status !== 'cancelled' && currentStep >= STEP_INDEX.preparing && (
         <div className="bg-white rounded-2xl border border-slate-200 p-6">
           <div className="flex items-center gap-3 mb-4">
