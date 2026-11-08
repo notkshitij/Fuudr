@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import { ArrowLeft, MapPin, CreditCard, Clock, Package, Flame, Bike, CheckCircle, ChevronRight, IndianRupee, UtensilsCrossed, Printer, Navigation, Phone, GraduationCap, Trash2, X, Loader2 } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Clock, Package, Flame, Bike, CheckCircle, ChevronRight, IndianRupee, UtensilsCrossed, Printer, Navigation, Phone, GraduationCap, Trash2, X, Loader2, UserPlus, Pencil } from 'lucide-react';
 import AdaptiveVideo from '../../components/AdaptiveVideo';
 
 const STEPS = [
@@ -90,6 +90,13 @@ export default function ManageOrder() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+  const [deliveryStaff, setDeliveryStaff] = useState([]);
+  const [newStaffName, setNewStaffName] = useState('');
+  const [commissionDraft, setCommissionDraft] = useState('');
+  const [editingCommission, setEditingCommission] = useState(false);
+  const [addingDeliveryStaff, setAddingDeliveryStaff] = useState(false);
+  const [savingOrderFields, setSavingOrderFields] = useState(false);
+  const [orderFieldsError, setOrderFieldsError] = useState('');
 
   const handleDeleteOrder = async () => {
     setIsDeleting(true);
@@ -117,6 +124,43 @@ export default function ManageOrder() {
   };
 
   useEffect(() => { fetchOrderDetails(); }, [id]);
+
+  useEffect(() => {
+    fetchDeliveryStaff();
+  }, []);
+
+  const fetchDeliveryStaff = async () => {
+    const { data, error } = await supabase.from('delivery_staff').select('name').eq('active', true).order('name');
+    if (error) {
+      console.error('Could not load delivery staff:', error);
+      setOrderFieldsError('Delivery staff list is unavailable. Run the Supabase setup SQL, then refresh this page.');
+      return;
+    }
+    setDeliveryStaff((data || []).map(person => person.name));
+  };
+
+  const saveOrderFields = async (updates) => {
+    setSavingOrderFields(true);
+    setOrderFieldsError('');
+    const { error } = await supabase.from('orders').update(updates).eq('id', id);
+    if (error) setOrderFieldsError(`Could not save: ${error.message}`);
+    else setOrder(previous => ({ ...previous, ...updates }));
+    setSavingOrderFields(false);
+    return !error;
+  };
+
+  const addDeliveryStaff = async () => {
+    const name = newStaffName.trim();
+    if (!name) return;
+    setOrderFieldsError('');
+    const { error } = await supabase.from('delivery_staff').insert({ name });
+    if (error) {
+      setOrderFieldsError(error.code === '23505' ? 'This delivery person is already in the list.' : `Could not add name: ${error.message}`);
+      return;
+    }
+    setNewStaffName('');
+    await fetchDeliveryStaff();
+  };
 
   useEffect(() => {
     if (order) {
@@ -288,6 +332,8 @@ export default function ManageOrder() {
       .eq('id', id)
       .single();
     if (!error && data) {
+      setCommissionDraft(data.commission_amount ?? '');
+      setEditingCommission(data.commission_amount == null);
       setOrder({
         ...data,
         bill: parseBill(data.bill),
@@ -528,7 +574,54 @@ export default function ManageOrder() {
         )}
       </div>
 
-      {/* ── Delivery Partner Mobile Number ── */}
+      {/* Commission and delivery assignment */}
+      <div className="grid grid-cols-1 gap-4 rounded-2xl border border-slate-200 bg-white p-4 sm:gap-5 sm:p-6 md:grid-cols-2">
+        <div>
+          <h3 className="font-bold text-slate-900">Commission</h3>
+          <div className="mt-3 flex min-w-0 flex-wrap items-center gap-2">
+            {!editingCommission ? (
+              <>
+                <span className="text-lg font-bold text-slate-900">{order.commission_amount == null ? '—' : `₹${Number(order.commission_amount).toFixed(2)}`}</span>
+                <button type="button" aria-label="Edit commission" title="Edit commission" onClick={() => { setCommissionDraft(order.commission_amount ?? ''); setEditingCommission(true); }} className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:border-orange-300 hover:text-orange-600"><Pencil size={15} /></button>
+                {order.commission_amount != null && <button type="button" aria-label="Delete commission" title="Delete commission" disabled={savingOrderFields} onClick={async () => { const removed = await saveOrderFields({ commission_amount: null }); if (removed) { setCommissionDraft(''); setEditingCommission(true); } }} className="rounded-lg border border-rose-100 p-2 text-rose-500 hover:bg-rose-50 disabled:opacity-50"><Trash2 size={15} /></button>}
+              </>
+            ) : (
+              <>
+                <input type="number" min="0" step="0.01" value={commissionDraft} onChange={event => setCommissionDraft(event.target.value)} placeholder="Amount in ₹" aria-label="Order commission amount" className="min-w-0 flex-1 basis-32 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold outline-none focus:border-orange-400" />
+                <button type="button" disabled={savingOrderFields || commissionDraft === ''} onClick={async () => { const saved = await saveOrderFields({ commission_amount: Number(commissionDraft) }); if (saved) setEditingCommission(false); }} className="shrink-0 rounded-xl bg-slate-900 px-3 sm:px-4 py-2.5 text-sm font-bold text-white hover:bg-orange-500 disabled:opacity-50">{savingOrderFields ? 'Saving…' : 'Save'}</button>
+                {order.commission_amount != null && <button type="button" disabled={savingOrderFields} onClick={() => { setCommissionDraft(order.commission_amount); setEditingCommission(false); }} className="shrink-0 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-600 disabled:opacity-50">Cancel</button>}
+              </>
+            )}
+          </div>
+        </div>
+        <div>
+          <h3 className="font-bold text-slate-900">Assign delivery</h3>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {deliveryStaff.map(name => {
+              const selected = (order.delivery_assignees || []).includes(name);
+              return <button key={name} type="button" disabled={savingOrderFields}
+                onClick={() => {
+                  const assigned = order.delivery_assignees || [];
+                  const next = selected ? assigned.filter(person => person !== name) : [...assigned, name];
+                  saveOrderFields({ delivery_assignees: next });
+                }}
+                className={`rounded-xl border px-3 py-2 text-xs font-bold transition-colors disabled:opacity-50 ${selected ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-200 hover:bg-emerald-50/50'}`}>
+                {name}
+              </button>;
+            })}
+            {!deliveryStaff.length && <span className="text-xs text-slate-400">No delivery staff yet.</span>}
+            <button type="button" aria-label="Add delivery staff name" title="Add delivery staff name" onClick={() => setAddingDeliveryStaff(open => !open)}
+              className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 hover:border-orange-300 hover:text-orange-600"><UserPlus size={15} /></button>
+          </div>
+          {addingDeliveryStaff && <div className="mt-2 flex gap-2">
+            <input value={newStaffName} onChange={event => setNewStaffName(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') addDeliveryStaff(); }} placeholder="Enter a name" aria-label="New delivery person name" className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-orange-400" />
+            <button type="button" onClick={addDeliveryStaff} disabled={!newStaffName.trim()} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:border-orange-300 hover:text-orange-600 disabled:opacity-50">Add</button>
+          </div>}
+          {orderFieldsError && <p role="alert" className="mt-2 text-xs font-semibold text-rose-600">{orderFieldsError}</p>}
+        </div>
+      </div>
+
+      {/* Delivery partner mobile number */}
       {order.status !== 'cancelled' && currentStep >= STEP_INDEX.preparing && (
         <div className="bg-white rounded-2xl border border-slate-200 p-6">
           <div className="flex items-center gap-3 mb-4">

@@ -60,6 +60,10 @@ export default function OrdersList() {
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+  const [deliveryStaff, setDeliveryStaff] = useState([]);
+  const [openDeliveryDropdownId, setOpenDeliveryDropdownId] = useState(null);
+  const [savingDeliveryOrderId, setSavingDeliveryOrderId] = useState(null);
+  const [deliveryStaffError, setDeliveryStaffError] = useState('');
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(() => new Date());
   const navigate = useNavigate();
@@ -166,6 +170,30 @@ export default function OrdersList() {
     setLoading(false);
   };
 
+  const fetchDeliveryStaff = async () => {
+    const { data, error } = await supabase.from('delivery_staff').select('name').eq('active', true).order('name');
+    if (error) {
+      console.error('Could not load delivery staff:', error);
+      setDeliveryStaffError('Delivery staff unavailable. Run the Supabase setup SQL and refresh.');
+      return;
+    }
+    setDeliveryStaffError('');
+    setDeliveryStaff((data || []).map(person => person.name));
+  };
+
+  const saveDeliveryAssignees = async (order, assignees) => {
+    setSavingDeliveryOrderId(order.id);
+    const { error } = await supabase.from('orders').update({ delivery_assignees: assignees }).eq('id', order.id);
+    if (error) {
+      setDeliveryStaffError(`Could not save delivery assignment: ${error.message}`);
+    } else {
+      setOrders(previous => previous.map(item => item.id === order.id ? { ...item, delivery_assignees: assignees } : item));
+    }
+    setSavingDeliveryOrderId(null);
+  };
+
+  useEffect(() => { fetchDeliveryStaff(); }, []);
+
   useEffect(() => {
     fetchOrders();
     const refreshInterval = window.setInterval(fetchOrders, 5000);
@@ -183,6 +211,12 @@ export default function OrdersList() {
     const closeCalendar = () => setCalendarOpen(false);
     window.addEventListener('click', closeCalendar);
     return () => window.removeEventListener('click', closeCalendar);
+  }, []);
+
+  useEffect(() => {
+    const closeDeliveryDropdown = () => setOpenDeliveryDropdownId(null);
+    window.addEventListener('click', closeDeliveryDropdown);
+    return () => window.removeEventListener('click', closeDeliveryDropdown);
   }, []);
 
   // Tab counts
@@ -527,6 +561,32 @@ export default function OrdersList() {
                       </td>
                       <td className="px-5 py-4 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <div className="relative" onClick={event => event.stopPropagation()}>
+                            <button type="button" aria-label={`Assign delivery staff for order ${displayId}`}
+                              aria-expanded={openDeliveryDropdownId === order.id}
+                              disabled={savingDeliveryOrderId === order.id || !deliveryStaff.length}
+                              onClick={() => setOpenDeliveryDropdownId(current => current === order.id ? null : order.id)}
+                              className={`inline-flex max-w-36 items-center gap-1 rounded-md px-2 py-1 text-xs font-bold disabled:opacity-50 ${(order.delivery_assignees || []).length ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                              <span className="truncate">{(order.delivery_assignees || []).length ? order.delivery_assignees.join(', ') : 'Assign'}</span>
+                              <ChevronRight size={12} className="shrink-0 rotate-90" />
+                            </button>
+                            {openDeliveryDropdownId === order.id && (
+                              <div className="absolute right-0 top-full z-50 mt-1 max-h-48 w-48 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
+                                {deliveryStaff.map(name => (
+                                  <button key={name} type="button" disabled={savingDeliveryOrderId === order.id}
+                                    onClick={() => {
+                                      const current = order.delivery_assignees || [];
+                                      const next = current.includes(name) ? current.filter(person => person !== name) : [...current, name];
+                                      saveDeliveryAssignees(order, next);
+                                      setOpenDeliveryDropdownId(null);
+                                    }}
+                                    className={`block w-full rounded-md px-2 py-2 text-left text-xs font-bold transition-colors disabled:opacity-50 ${(order.delivery_assignees || []).includes(name) ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50'}`}>
+                                    {name}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                           <button
                             onClick={() => navigate(`/adminfuudr/orders/${order.id}`)}
                             className="inline-flex items-center gap-1.5 bg-slate-900 text-white px-3.5 py-2 rounded-xl font-bold text-xs hover:bg-orange-500 transition-all shadow-sm"
@@ -554,6 +614,7 @@ export default function OrdersList() {
           <div className="px-5 py-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-400">Showing {filtered.length} of {orders.length} orders</span>
           </div>
+          {deliveryStaffError && <p role="alert" className="px-5 py-2 text-xs font-semibold text-rose-600">{deliveryStaffError}</p>}
         </div>
       )}
 
