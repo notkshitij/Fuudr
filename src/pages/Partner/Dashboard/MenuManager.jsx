@@ -22,8 +22,18 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../../supabaseClient';
 import { uploadToCloudinary } from '../../../utils/cloudinary';
-import { deleteBunnyVideo, uploadVideoToBunny } from '../../../utils/bunnyStream';
+import { deleteBunnyVideo } from '../../../utils/bunnyStream';
+import { deleteMuxVideo, discardMuxUpload, uploadVideoToMux } from '../../../utils/muxVideo';
 import AdaptiveVideo from '../../../components/AdaptiveVideo';
+
+async function cleanUpReelVideos(reels, provider, deleteVideo) {
+  const deletions = await Promise.allSettled((reels || [])
+    .filter(reel => reel.video_provider === provider && reel.provider_video_id)
+    .map(reel => deleteVideo(reel.provider_video_id)));
+  for (const deletion of deletions) {
+    if (deletion.status === 'rejected') console.warn(`Could not clean up a ${provider} video:`, deletion.reason);
+  }
+}
 
 const ReelPlayer = ({ item, onClose }) => {
   const reels = (item.reels || []).filter(r => r.video_url);
@@ -437,10 +447,12 @@ const MenuManager = ({ user }) => {
         .select('video_provider, provider_video_id')
         .eq('menu_item_id', itemId);
       if (reelsError) throw reelsError;
-      await Promise.all((reelsToDelete || [])
-        .filter(reel => reel.video_provider === 'bunny' && reel.provider_video_id)
-        .map(reel => deleteBunnyVideo(reel.provider_video_id)));
-      await supabase.from('reels').delete().eq('menu_item_id', itemId);
+      // Bunny cleanup needs the reel row for authorization. A provider failure
+      // must still allow the reel to be removed from the menu.
+      await cleanUpReelVideos(reelsToDelete, 'bunny', deleteBunnyVideo);
+      const { error: deleteReelsError } = await supabase.from('reels').delete().eq('menu_item_id', itemId);
+      if (deleteReelsError) throw deleteReelsError;
+      await cleanUpReelVideos(reelsToDelete, 'mux', deleteMuxVideo);
       // Delete menu item
       const { error } = await supabase.from('menu_items').delete().eq('id', itemId);
       if (error) throw error;
@@ -468,19 +480,16 @@ const MenuManager = ({ user }) => {
     setUploadStage('');
     setErrorMsg('');
     setSuccessMsg('');
-    let uploadedVideos = [];
+    const newVideos = [];
     let videosPersisted = false;
 
     try {
       const selectedCategory = categories.find(c => c.name === formData.category_name);
       const categoryId = selectedCategory ? selectedCategory.id : null;
 
-      // Images remain on Cloudinary; new reels use Bunny Stream.
-      const imageUploadPromise = imageFile
-        ? uploadToCloudinary(imageFile, 'image')
-        : Promise.resolve(editItem?.image_url || null);
-
-      const newVideos = [];
+      const imageUrl = imageFile
+        ? await uploadToCloudinary(imageFile, 'image')
+        : editItem?.image_url || null;
       for (let index = 0; index < videoFiles.length; index += 1) {
         const updateProgress = (stage, progress) => {
           const stageOffset = stage === 'uploading' ? 0 : 80;
@@ -489,15 +498,13 @@ const MenuManager = ({ user }) => {
           setUploadProgress(Math.min(99, Math.round(((index + (currentVideoProgress / 100)) / videoFiles.length) * 100)));
           setUploadStage(stage);
         };
-        newVideos.push(await uploadVideoToBunny(videoFiles[index], {
+        newVideos.push(await uploadVideoToMux(videoFiles[index], {
           onUploadProgress: progress => updateProgress('uploading', progress),
-          onProcessingProgress: progress => updateProgress('processing', progress),
+          onProcessingProgress: () => updateProgress('processing', 0),
         }));
       }
 
-      const imageUrl = await imageUploadPromise;
-      uploadedVideos = newVideos;
-
+      setUploadStage('saving');
       if (isAddMode) {
         // INSERT
         const insertPayload = {
@@ -595,10 +602,10 @@ const MenuManager = ({ user }) => {
             .select('video_provider, provider_video_id')
             .in('id', deletedReelIds);
           if (removedReelsError) throw removedReelsError;
-          await Promise.all(removedReels
-            .filter(reel => reel.video_provider === 'bunny' && reel.provider_video_id)
-            .map(reel => deleteBunnyVideo(reel.provider_video_id)));
-          await supabase.from('reels').delete().in('id', deletedReelIds);
+          await cleanUpReelVideos(removedReels, 'bunny', deleteBunnyVideo);
+          const { error: deleteReelsError } = await supabase.from('reels').delete().in('id', deletedReelIds);
+          if (deleteReelsError) throw deleteReelsError;
+          await cleanUpReelVideos(removedReels, 'mux', deleteMuxVideo);
         }
         // Dish metadata (name, price, description, category) lives on menu_items —
         // already updated above. Reels carry no dish data, so nothing to update here.
@@ -655,8 +662,8 @@ const MenuManager = ({ user }) => {
 
     } catch (err) {
       console.error("Error saving dish:", err);
-      if (!videosPersisted && uploadedVideos.length > 0) {
-        await Promise.all(uploadedVideos.map(video => deleteBunnyVideo(video.providerVideoId, video.uploadToken).catch(() => {})));
+      if (!videosPersisted) {
+        await Promise.allSettled(newVideos.map(video => discardMuxUpload(video.uploadId)));
       }
       setErrorMsg(err.message || "Failed to save dish.");
     } finally {
@@ -1381,7 +1388,7 @@ const MenuManager = ({ user }) => {
                   className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-orange-500 hover:bg-orange-600 transition-colors disabled:opacity-70 flex items-center justify-center gap-2 whitespace-nowrap text-sm shadow-lg shadow-orange-500/20"
                 >
                   {isSubmitting ? (
-                    <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>{uploadStage === 'uploading' ? `Uploading video ${uploadProgress}%` : uploadStage === 'processing' ? `Preparing video ${uploadProgress}%` : 'Saving...'}</>
+                    <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>{uploadStage === 'uploading' ? `Uploading video ${uploadProgress}%` : uploadStage === 'processing' ? 'Preparing video…' : 'Saving...'}</>
                   ) : editItem ? 'Save Changes' : 'Save Dish'}
                 </button>
               </div>

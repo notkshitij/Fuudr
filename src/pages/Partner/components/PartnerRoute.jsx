@@ -652,17 +652,28 @@ export function PartnerRoute({ children }) {
 
     checkSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    let profileTimer;
+    let authRevision = 0;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
-        const { data: profile } = await supabase
-          .rpc('get_my_partner')
-          .maybeSingle();
-
-        if (profile) {
-          localStorage.setItem('partnerUser', JSON.stringify(profile));
-          setPartnerUser(profile);
-        }
+        clearTimeout(profileTimer);
+        const revision = ++authRevision;
+        // Start the RPC after the auth callback releases Supabase's session lock.
+        profileTimer = setTimeout(async () => {
+          try {
+            const { data: profile, error } = await supabase.rpc('get_my_partner').maybeSingle();
+            if (error) throw error;
+            if (profile && isSubscribed && authRevision === revision) {
+              localStorage.setItem('partnerUser', JSON.stringify(profile));
+              setPartnerUser(profile);
+            }
+          } catch (error) {
+            console.warn('Error refreshing partner profile:', error);
+          }
+        }, 0);
       } else if (event === 'SIGNED_OUT') {
+        clearTimeout(profileTimer);
+        authRevision += 1;
         localStorage.removeItem('partnerUser');
         setPartnerUser(null);
       }
@@ -670,6 +681,7 @@ export function PartnerRoute({ children }) {
 
     return () => {
       isSubscribed = false;
+      clearTimeout(profileTimer);
       subscription?.unsubscribe();
     };
   }, []);

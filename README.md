@@ -45,3 +45,12 @@ This project is configured for Vercel deployment. The included `vercel.json` fil
 
 - **Build Command:** `npm run build`
 - **Output Directory:** `dist`
+
+### Mux partner uploads
+
+1. Apply the `202611070001_add_mux_reel_uploads.sql` migration to the Supabase project shared with Fuudr App.
+2. Set `MUX_TOKEN_ID` and `MUX_TOKEN_SECRET` for a Mux Video read/write token, and `SUPABASE_SERVICE_ROLE_KEY` for the shared Supabase project in Vercel. Set `MUX_UPLOAD_ORIGINS` to a comma-separated list of Directory origins if using a preview or local deployment.
+3. In the same Mux environment as the token, register `https://fuudr.com/api/mux-webhook` as a webhook endpoint and set its signing secret as `MUX_WEBHOOK_SECRET` in Vercel. The upload flow handles `video.asset.ready` and `video.asset.errored`.
+4. Deploy Directory, then upload a reel through the partner menu and confirm it plays in Fuudr App. Directory saves the reel when Mux has prepared its public HLS stream. If a webhook is delayed or unavailable, Directory checks Mux directly during the upload.
+
+Keep the Bunny Stream credentials in Vercel to support deletion of existing Bunny reels.
