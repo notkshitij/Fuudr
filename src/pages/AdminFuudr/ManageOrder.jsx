@@ -88,6 +88,7 @@ export default function ManageOrder() {
   const [editingPartnerMobile, setEditingPartnerMobile] = useState(false);
   const [savingPartnerMobile, setSavingPartnerMobile] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showRestoreConfirm, setShowRestoreConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
   const [deliveryStaff, setDeliveryStaff] = useState([]);
@@ -527,9 +528,20 @@ export default function ManageOrder() {
         {order.status === 'cancelled' ? (
           <div className="flex flex-col gap-2 w-full md:w-auto">
             <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Order Status</p>
-            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black bg-rose-50 text-rose-600 border border-rose-200 shadow-sm">
-              Cancelled
-            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black bg-rose-50 text-rose-600 border border-rose-200 shadow-sm">
+                Cancelled
+              </span>
+              <button
+                type="button"
+                disabled={updating}
+                onClick={() => setShowRestoreConfirm(true)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-orange-500 text-white border border-orange-500 hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Package size={13} />
+                {updating ? 'Updating...' : 'Move to Placed'}
+              </button>
+            </div>
           </div>
         ) : (
           <div className="flex flex-col gap-2 w-full md:w-auto">
@@ -1077,6 +1089,47 @@ export default function ManageOrder() {
                     <span>Delete</span>
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showRestoreConfirm && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="restore-order-title"
+            className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-100"
+          >
+            <div className="w-11 h-11 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center mb-3.5">
+              <Package size={22} />
+            </div>
+            <h3 id="restore-order-title" className="text-base font-bold text-slate-900 mb-1.5">
+              Move order back to Placed?
+            </h3>
+            <p className="text-slate-500 text-xs mb-5 leading-relaxed">
+              This will reopen the cancelled order and set its status to Placed.
+            </p>
+            <div className="flex gap-2.5">
+              <button
+                type="button"
+                onClick={() => setShowRestoreConfirm(false)}
+                className="flex-1 py-2.5 px-3 rounded-xl font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors text-xs"
+              >
+                Keep Cancelled
+              </button>
+              <button
+                type="button"
+                disabled={updating}
+                onClick={() => {
+                  setShowRestoreConfirm(false);
+                  handleStatusChange('placed');
+                }}
+                className="flex-1 py-2.5 px-3 rounded-xl font-bold text-white bg-orange-500 hover:bg-orange-600 transition-colors text-xs disabled:opacity-50"
+              >
+                Confirm
               </button>
             </div>
           </div>
