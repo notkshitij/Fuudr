@@ -30,14 +30,29 @@ export async function POST(request) {
 
   const asset = event?.data;
   const type = event?.type;
-  if (!isUploadId(asset?.passthrough) || !isMuxId(asset?.id) ||
+  const passthrough = typeof asset?.passthrough === 'string' ? asset.passthrough : '';
+  const dishSubmission = passthrough.startsWith('dish:');
+  const submissionId = dishSubmission ? passthrough.slice(5) : passthrough;
+  if (!isUploadId(submissionId) || !isMuxId(asset?.id) ||
       !['video.asset.ready', 'video.asset.errored'].includes(type)) {
     return new Response(null, { status: 204 });
   }
 
   try {
     const status = type === 'video.asset.ready' ? 'ready' : 'errored';
-    await recordMuxResult(getMuxAdmin(), asset.passthrough, asset, status);
+    const admin = getMuxAdmin();
+    if (dishSubmission) {
+      const playbackId = asset.playback_ids?.find(playback => playback.policy === 'signed')?.id;
+      const ready = status === 'ready' && isMuxId(playbackId);
+      const { error } = await admin.from('dish_video_submissions').update({
+        mux_asset_id: asset.id,
+        mux_playback_id: ready ? playbackId : null,
+        video_status: ready ? 'ready' : 'errored',
+      }).eq('id', submissionId).eq('video_status', 'awaiting_upload');
+      if (error) throw error;
+    } else {
+      await recordMuxResult(admin, submissionId, asset, status);
+    }
     return new Response(null, { status: 204 });
   } catch (error) {
     console.error('Mux webhook update failed:', error);

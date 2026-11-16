@@ -1,4 +1,5 @@
 import { defineConfig, loadEnv } from 'vite'
+import { Buffer } from 'node:buffer'
 import process from 'node:process'
 import react from '@vitejs/plugin-react'
 
@@ -9,12 +10,12 @@ const localApi = () => ({
       try {
         const url = new URL(req.url || '/', 'http://localhost')
         const endpoint = url.pathname.replace(/^\//, '')
-        if (!['mux-video', 'mux-webhook', 'bunny-video', 'cloudinary-signature', 'notify-order'].includes(endpoint)) {
+        if (!['dish-video', 'mux-video', 'mux-webhook', 'bunny-video', 'cloudinary-signature', 'notify-order'].includes(endpoint)) {
           next()
           return
         }
 
-        const { default: handler } = await import(`./api/${endpoint}.js`)
+        const { default: handler, POST } = await import(`./api/${endpoint}.js`)
         const chunks = []
         for await (const chunk of req) chunks.push(chunk)
         const rawBody = Buffer.concat(chunks)
@@ -24,15 +25,17 @@ const localApi = () => ({
           if (value !== undefined) headers.set(key, Array.isArray(value) ? value.join(', ') : value)
         }
 
-        if (typeof handler?.fetch === 'function') {
+        if (typeof handler?.fetch === 'function' || typeof POST === 'function') {
           const request = new Request(new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`), {
             method: req.method,
             headers,
             ...(body && req.method !== 'GET' && req.method !== 'HEAD'
-              ? { body, duplex: 'half' }
+              ? { body: rawBody, duplex: 'half' }
               : {}),
           })
-          const response = await handler.fetch(request)
+          const response = typeof handler?.fetch === 'function'
+            ? await handler.fetch(request)
+            : req.method === 'POST' ? await POST(request) : new Response(null, { status: 405 })
           res.statusCode = response.status
           response.headers.forEach((value, key) => res.setHeader(key, value))
           res.end(Buffer.from(await response.arrayBuffer()))
