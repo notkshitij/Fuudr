@@ -5,8 +5,14 @@ import { getMuxAdmin, getPartner, isMuxId, isUploadId, muxRequest, recordMuxResu
 const noContent = () => new Response(null, { status: 204 });
 
 async function createUpload(request, admin, partnerId) {
-  const allowedOrigins = (process.env.MUX_UPLOAD_ORIGINS || 'https://fuudr.com,https://www.fuudr.com')
-    .split(',').map(origin => origin.trim());
+  const isProduction = process.env.NODE_ENV === 'production';
+  const defaultOrigins = 'https://fuudr.com,https://www.fuudr.com';
+  const devOrigins = isProduction ? [] : ['http://localhost:3000', 'http://127.0.0.1:3000',
+    'http://localhost:5173', 'http://127.0.0.1:5173'];
+  const allowedOrigins = [...new Set([
+    ...(process.env.MUX_UPLOAD_ORIGINS || defaultOrigins).split(',').map(origin => origin.trim()),
+    ...devOrigins,
+  ])];
   const origin = request.headers.get('origin');
   if (!allowedOrigins.includes(origin)) {
     return Response.json({ error: 'This site is not allowed to upload videos.' }, { status: 403 });
@@ -162,7 +168,13 @@ export default {
       }, { headers: { 'Cache-Control': 'no-store' } });
     } catch (error) {
       console.error('Mux video request failed:', error);
-      return Response.json({ error: 'Could not complete the Mux video request. Please try again.' }, { status: 500 });
+      const message = /free plan is limited to 10 assets/i.test(error.message || '')
+        ? 'Mux’s free plan allows up to 10 video assets. Delete unused Mux videos or upgrade the Mux plan before uploading more.'
+        : process.env.NODE_ENV === 'production'
+          ? 'Could not complete the Mux video request. Please try again.'
+          : error.message || 'Could not complete the Mux video request.';
+      const status = /free plan is limited to 10 assets/i.test(error.message || '') ? 409 : 500;
+      return Response.json({ error: message }, { status });
     }
   },
 };

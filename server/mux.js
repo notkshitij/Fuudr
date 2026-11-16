@@ -42,7 +42,20 @@ export const muxRequest = async (path, { method = 'GET', body } = {}) => {
     body: body && JSON.stringify(body),
   });
   if (!response.ok) {
-    const error = new Error(`Mux ${method} ${path.split('/')[1]} request failed (${response.status}).`);
+    const responseText = await response.text().catch(() => '');
+    let detail = responseText;
+    try {
+      const payload = JSON.parse(responseText);
+      detail = payload?.error?.messages?.join(' ') || payload?.error?.message ||
+        payload?.error || payload?.message || responseText;
+      if (typeof detail !== 'string') detail = JSON.stringify(detail);
+    } catch {
+      // Preserve plain-text error responses as returned by the upstream API.
+    }
+    const error = new Error(
+      `Mux ${method} ${path.split('/')[1]} request failed (${response.status})` +
+      `${detail ? `: ${detail}` : '.'}`,
+    );
     error.status = response.status;
     throw error;
   }
