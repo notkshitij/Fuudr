@@ -42,7 +42,8 @@ export async function POST(request) {
     const status = type === 'video.asset.ready' ? 'ready' : 'errored';
     const admin = getMuxAdmin();
     if (dishSubmission) {
-      const playbackId = asset.playback_ids?.find(playback => playback.policy === 'signed')?.id;
+      const playbackId = asset.playback_ids?.find(playback => playback.policy === 'public')?.id
+        ?? asset.playback_ids?.find(playback => playback.policy === 'signed')?.id;
       const ready = status === 'ready' && isMuxId(playbackId);
       const { error } = await admin.from('dish_video_submissions').update({
         mux_asset_id: asset.id,

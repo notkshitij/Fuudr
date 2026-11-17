@@ -100,6 +100,7 @@ export default function DishVideoSubmission() {
   const [uploading, setUploading] = useState(false);
   const submittingRef = useRef(false);
   const fileRef = useRef(null);
+  const successDialogRef = useRef(null);
   const activeSampleRef = useRef(null);
 
   function startSample(video) {
@@ -168,7 +169,8 @@ export default function DishVideoSubmission() {
         removeVideo(item.id);
         uploaded += 1;
       }
-      showNotice('Thanks for submitting! We’ll reach out at the mobile number you provided once we’ve checked your submission.', 'success');
+      showNotice('');
+      successDialogRef.current?.showModal();
     } catch (error) {
       const message = error instanceof TypeError ? 'Connection interrupted. Please try again.' : error.message;
       showNotice(uploaded ? `${uploaded} uploaded. ${message}` : message);
@@ -243,6 +245,34 @@ export default function DishVideoSubmission() {
       </section>
       <section className="dish-faq-section dish-container"><div><span className="dish-eyebrow">NEED HELP?</span><h2>Common questions</h2></div><div className="dish-faq-list">{faqs.map(([question, answer]) => <details key={question}><summary>{question}<ChevronDown size={18} /></summary><p>{answer}</p></details>)}</div></section>
       <footer className="dish-footer dish-container"><a href="/" className="dish-brand">fuudr<span>.</span></a><p>Made for food worth sharing.</p><div><a href="/terms">Terms</a><a href="/privacy">Privacy</a></div></footer>
+      <dialog
+        ref={successDialogRef}
+        className="dish-success-dialog"
+        aria-labelledby="dish-success-title"
+        aria-describedby="dish-success-message"
+      >
+        <button
+          type="button"
+          className="dish-success-close"
+          aria-label="Close confirmation"
+          onClick={() => successDialogRef.current.close()}
+        >
+          <X size={20} aria-hidden="true" />
+        </button>
+        <span className="dish-success-icon"><Check size={24} aria-hidden="true" /></span>
+        <h2 id="dish-success-title">Thanks for submitting!</h2>
+        <p id="dish-success-message">We’ll reach out at the mobile number you provided once we’ve checked your submission.</p>
+        <button
+          className="dish-primary dish-success-upload"
+          type="button"
+          onClick={() => {
+            successDialogRef.current.close();
+            fileRef.current?.click();
+          }}
+        >
+          <Upload size={18} aria-hidden="true" /> Upload more
+        </button>
+      </dialog>
     </main>
   </>;
 }

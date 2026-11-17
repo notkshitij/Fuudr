@@ -61,7 +61,7 @@ export default {
             cors_origin: origin,
             timeout: 900,
             new_asset_settings: {
-              playback_policies: ['signed'],
+              playback_policies: ['public'],
               video_quality: 'basic',
               passthrough: 'dish:' + id,
             },
