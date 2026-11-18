@@ -7,6 +7,7 @@ const STATUS_CONFIG = {
   all:        { label: 'All Orders',  color: 'text-slate-700',   bg: 'bg-slate-100',  dot: 'bg-slate-400' },
   placed:     { label: 'Placed',      color: 'text-slate-700',   bg: 'bg-slate-100',  dot: 'bg-slate-500',   icon: Package },
   preparing:  { label: 'Preparing',   color: 'text-amber-700',   bg: 'bg-amber-50',    dot: 'bg-amber-500',   icon: Clock },
+  prepared:   { label: 'Prepared',    color: 'text-violet-700',  bg: 'bg-violet-50',   dot: 'bg-violet-500',  icon: CheckCircle },
   on_the_way: { label: 'On the Way',  color: 'text-blue-700',    bg: 'bg-blue-50',     dot: 'bg-blue-500',    icon: Bike },
   delivered:  { label: 'Delivered',   color: 'text-emerald-700', bg: 'bg-emerald-50',  dot: 'bg-emerald-500', icon: CheckCircle },
   cancelled:  { label: 'Cancelled',   color: 'text-rose-700',    bg: 'bg-rose-50',     dot: 'bg-rose-500',    icon: CheckCircle },
@@ -249,7 +250,7 @@ export default function OrdersList() {
 
   // Tab counts
   const counts = useMemo(() => {
-    const c = { all: orders.length, placed: 0, preparing: 0, on_the_way: 0, delivered: 0, cancelled: 0 };
+    const c = { all: orders.length, placed: 0, preparing: 0, prepared: 0, on_the_way: 0, delivered: 0, cancelled: 0 };
     orders.forEach(o => { if (c[o.status] !== undefined) c[o.status]++; });
     return c;
   }, [orders]);

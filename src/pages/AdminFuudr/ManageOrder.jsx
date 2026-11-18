@@ -7,11 +7,12 @@ import AdaptiveVideo from '../../components/AdaptiveVideo';
 const STEPS = [
   { key: 'placed',     label: 'Placed',     icon: Package, desc: 'Order placed' },
   { key: 'preparing',  label: 'Preparing',  icon: Flame,   desc: 'Restaurant is cooking' },
+  { key: 'prepared',   label: 'Prepared',   icon: UtensilsCrossed, desc: 'Food is ready for pickup' },
   { key: 'on_the_way', label: 'On the Way', icon: Bike,    desc: 'Out for delivery' },
   { key: 'delivered',  label: 'Delivered',  icon: CheckCircle, desc: 'Order delivered' },
 ];
 
-const STEP_INDEX = { placed: 0, preparing: 1, on_the_way: 2, delivered: 3 };
+const STEP_INDEX = { placed: 0, preparing: 1, prepared: 2, on_the_way: 3, delivered: 4 };
 
 const parseBill = (bill) => {
   if (!bill) return {};
