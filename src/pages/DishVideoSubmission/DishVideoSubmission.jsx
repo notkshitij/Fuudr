@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { ArrowDown, ArrowUpRight, Check, ChevronDown, Clock3, Pause, Play, Search, Sparkles, Upload, Utensils, Wallet, X } from 'lucide-react';
+import { ArrowDown, ArrowUpRight, Check, ChevronDown, Clock3, Search, Sparkles, Upload, Utensils, Wallet, X } from 'lucide-react';
 import { MAX_DISH_VIDEO_BYTES } from '../../../shared/dishVideoLimits';
 import { supabase } from '../../supabaseClient';
 import './DishVideoSubmission.css';
@@ -13,56 +13,49 @@ const sampleVideos = [
 const faqs = [
   ['Do I need to edit my video?', 'No. A great clip straight from your camera is enough. Edited videos are welcome too—just keep the dish as the main focus.'],
   ['What should my video look like?', 'Show one dish per submission. You can upload multiple clips of that dish. Aim for 15–30 seconds. Shoot close, use good light, and show the food in motion: sizzling, pouring, breaking or stretching. Portrait is great for a phone screen, but landscape is welcome too.'],
-  ['How much will I earn?', 'The reward is ₹30 per video. We’ll reach out after checking your submission and share the next steps for payment to your UPI ID.'],
+  ['How much will I earn?', 'If we approve your video, you’ll receive ₹30 via UPI within 24 hours of submitting it.'],
   ['Which restaurant can I film at?', 'Choose a restaurant from the list when adding your dish details. You can film a dine-in, takeaway or delivery order from that restaurant.'],
 ];
 
-function SampleVideo({ sample, onStart }) {
+function SampleVideo({ sample }) {
   const videoRef = useRef(null);
-  const [playing, setPlaying] = useState(false);
   const [error, setError] = useState(false);
 
-  async function togglePlayback() {
+  useEffect(() => {
     const video = videoRef.current;
-    if (!video.paused) {
+    const visibleThreshold = 0.25;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting || entry.intersectionRatio < visibleThreshold) {
+        video.pause();
+        return;
+      }
+      video.play().catch(error => {
+        if (error.name !== 'AbortError') setError(true);
+      });
+    }, { threshold: visibleThreshold });
+
+    observer.observe(video);
+    return () => {
+      observer.disconnect();
       video.pause();
-      return;
-    }
-    onStart(video);
-    setError(false);
-    try {
-      await video.play();
-    } catch (error) {
-      if (error.name !== 'AbortError') setError(true);
-    }
-  }
+    };
+  }, []);
 
   return (
     <article>
-      <div className="dish-sample-player">
-        <video
-          ref={videoRef}
-          src={sample.src}
-          poster={sample.poster}
-          playsInline
-          preload="none"
-          onPlaying={() => setPlaying(true)}
-          onPause={() => setPlaying(false)}
-          onEnded={() => setPlaying(false)}
-          onError={() => { setPlaying(false); setError(true); }}
-        />
-        <button
-          type="button"
-          className="dish-sample-play"
-          data-playing={playing}
-          aria-label={`${playing ? 'Pause' : 'Play'} ${sample.title}`}
-          onClick={togglePlayback}
-        >
-          <span>{playing ? <Pause aria-hidden="true" /> : <Play aria-hidden="true" />}</span>
-        </button>
-      </div>
+      <video
+        ref={videoRef}
+        src={sample.src}
+        poster={sample.poster}
+        muted
+        loop
+        playsInline
+        preload="none"
+        onPlaying={() => setError(false)}
+        onError={() => setError(true)}
+      />
       <h3>{sample.title}</h3>
-      {error && <p role="status">Couldn’t play this sample. Try again.</p>}
+      {error && <p role="status">This sample couldn’t play.</p>}
     </article>
   );
 }
@@ -101,12 +94,6 @@ export default function DishVideoSubmission() {
   const submittingRef = useRef(false);
   const fileRef = useRef(null);
   const successDialogRef = useRef(null);
-  const activeSampleRef = useRef(null);
-
-  function startSample(video) {
-    if (activeSampleRef.current !== video) activeSampleRef.current?.pause();
-    activeSampleRef.current = video;
-  }
   useEffect(() => {
     let active = true;
     supabase.from('partners').select('id, restaurant_name').order('restaurant_name').then(({ data, error }) => {
@@ -181,20 +168,20 @@ export default function DishVideoSubmission() {
   };
 
   return <>
-    <Helmet><title>Upload your dish video | Fuudr</title><meta name="description" content="Share a short video of your dish. Fuudr will contact you about the ₹30 reward after checking your submission." /><meta name="robots" content="noindex, follow" /></Helmet>
+    <Helmet><title>Upload your dish video | Fuudr</title><meta name="description" content="Film what you ordered and share it with Fuudr. Get ₹30 via UPI within 24 hours of submitting an approved video." /><meta name="robots" content="noindex, follow" /></Helmet>
     <main className="dish-page">
       <header className="dish-topbar"><a href="/" className="dish-brand" aria-label="Fuudr home"><img src="/favicon.png" alt="" />fuudr<span>.</span></a><span className="dish-topbar-label">FOR THE LOVE OF FOOD</span><a className="dish-topbar-link" href="#submit">Start creating <ArrowUpRight size={16} /></a></header>
       <section className="dish-hero dish-container">
         <div className="dish-hero-copy">
           <span className="dish-eyebrow"><span /> CREATE • UPLOAD • EARN</span>
-          <h1>Create &amp; upload a short video.<br /><em>Submit for a ₹30 reward.</em></h1>
+          <h1>Film what you ordered.<br /><em>Earn ₹30.</em></h1>
           <p>Film one dish per submission. Show the sizzle, cheese pull, steam or crunch. Upload it raw or edited.</p>
           <div className="dish-hero-actions"><a href="#submit" className="dish-primary">Upload your video <ArrowUpRight size={20} /></a><a href="#guidelines" className="dish-text-link">See sample videos <ArrowDown size={16} /></a></div>
-          <div className="dish-hero-note"><Check size={16} /> Paid straight to your UPI.</div>
+          <div className="dish-hero-note"><Check size={16} /> If approved, get ₹30 via UPI within 24 hours of submitting.</div>
         </div>
         <div className="dish-hero-visual">
           <div className="dish-food-frame"><img src="/images/fuudr-discovery-creamy-pasta-reel.webp" alt="A freshly baked pizza with melted cheese and herbs, a close-up shot idea for your dish video" fetchPriority="high" /><div className="dish-frame-top"><span><span /> SHOT INSPIRATION</span><Sparkles size={20} /></div><div className="dish-frame-caption"><span>SHOW THE DISH UP CLOSE</span><p>Show what makes<br />it delicious.</p><div><Clock3 size={15} /> Aim for 15–30 seconds</div></div></div>
-          <div className="dish-reward-sticker"><Wallet size={22} /><div><strong>₹30<span> / video</span></strong><small>We’ll contact you about your reward.</small></div></div>
+          <div className="dish-reward-sticker"><Wallet size={22} /><div><strong>₹30<span> / approved video</span></strong><small>Paid via UPI</small></div></div>
           
         </div>
       </section>
@@ -202,13 +189,19 @@ export default function DishVideoSubmission() {
       <section className="dish-inspiration dish-container" id="guidelines">
         <div className="dish-section-heading">
           <h2>Sample videos</h2>
-          <p>Tap play to see how to film your dish up close.</p>
+          <p>See how to film your dish up close.</p>
         </div>
         <div className="dish-sample-videos">
-          {sampleVideos.map(sample => <SampleVideo key={sample.src} sample={sample} onStart={startSample} />)}
+          {sampleVideos.map(sample => <SampleVideo key={sample.src} sample={sample} />)}
         </div>
       </section>
       <section className="dish-submit-section" id="submit">
+        <div className="dish-submit-collage" aria-hidden="true">
+          <img src="/images/fuudr-brand-pizza-base-collage.webp" alt="" loading="lazy" decoding="async" />
+          <img src="/images/fuudr-restaurant-kitchen-chef-counter.webp" alt="" loading="lazy" decoding="async" />
+          <img src="/images/fuudr-italian-spaghetti-cooking-collage.webp" alt="" loading="lazy" decoding="async" />
+          <img src="/images/fuudr-healthy-food-spread-collage.webp" alt="" loading="lazy" decoding="async" />
+        </div>
         <div className="dish-submit-layout dish-container">
           <form className="dish-form" onSubmit={handleSubmit}>
             <fieldset className="dish-form-fields" disabled={uploading}>

@@ -439,6 +439,26 @@ export function Home() {
         </div>
       </section>
 
+      <section className="home-dish-video" aria-labelledby="home-dish-video-title">
+        <div className="home-dish-video-card">
+          <div className="home-dish-video-photos home-dish-video-photos-left" aria-hidden="true">
+            <img src="/images/dosa-poster.jpg" alt="" loading="lazy" decoding="async" />
+          </div>
+          <div className="home-dish-video-copy">
+            <h2 className="xl" id="home-dish-video-title">Your next bite is worth filming.</h2>
+            <p>Ordered something good? Film a quick video of the dish at your table and share it with Fuudr.</p>
+            <p className="home-dish-video-reward">
+              <strong>₹30 via UPI</strong>
+              <span>If approved, get paid within 24 hours of submitting.</span>
+            </p>
+            <Link to="/dish-video" className="partner-link-btn primary">Create</Link>
+          </div>
+          <div className="home-dish-video-photos home-dish-video-photos-right" aria-hidden="true">
+            <img src="/images/cheezeburstpizza-poster.jpg" alt="" loading="lazy" decoding="async" />
+          </div>
+        </div>
+      </section>
+
       {/* PARTNER CTA SECTION */}
       <section className="slice-waitlist partner-cta-section" id="partner-cta">
         {/* BACKGROUND COLLAGE */}
