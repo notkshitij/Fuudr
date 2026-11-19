@@ -2,7 +2,7 @@ import { loadGoogleMapsScript } from './utils/loadGoogleMapsScript';
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import { ArrowLeft, MapPin, CreditCard, Clock, Package, Flame, Bike, CheckCircle, ChevronRight, IndianRupee, UtensilsCrossed, Printer, Navigation, Phone, GraduationCap, Trash2, X, Loader2, UserPlus, Pencil } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Clock, Package, Flame, Bike, CheckCircle, ChevronRight, IndianRupee, UtensilsCrossed, Printer, Navigation, Phone, GraduationCap, Trash2, X, Loader2, Pencil } from 'lucide-react';
 import AdaptiveVideo from '../../components/AdaptiveVideo';
 
 const STEPS = [
@@ -60,11 +60,11 @@ export default function ManageOrder() {
   const [showRestoreConfirm, setShowRestoreConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
-  const [deliveryStaff, setDeliveryStaff] = useState([]);
-  const [newStaffName, setNewStaffName] = useState('');
+  const [assignableRiders, setAssignableRiders] = useState(null);
+  const [assignmentError, setAssignmentError] = useState('');
+  const [assigning, setAssigning] = useState(false);
   const [commissionDraft, setCommissionDraft] = useState('');
   const [editingCommission, setEditingCommission] = useState(false);
-  const [addingDeliveryStaff, setAddingDeliveryStaff] = useState(false);
   const [savingOrderFields, setSavingOrderFields] = useState(false);
   const [orderFieldsError, setOrderFieldsError] = useState('');
 
@@ -96,18 +96,49 @@ export default function ManageOrder() {
   useEffect(() => { fetchOrderDetails(); }, [id]);
 
   useEffect(() => {
-    fetchDeliveryStaff();
+    let active = true;
+    async function loadRiders() {
+      const { data, error } = await supabase.rpc('admin_assignable_riders');
+      if (!active) return;
+      if (error) setAssignmentError(`Could not load riders: ${error.message}`);
+      else setAssignableRiders(data ?? []);
+    }
+    void loadRiders();
+    return () => { active = false; };
   }, []);
 
-  const fetchDeliveryStaff = async () => {
-    const { data, error } = await supabase.from('delivery_staff').select('name').eq('active', true).order('name');
-    if (error) {
-      console.error('Could not load delivery staff:', error);
-      setOrderFieldsError('Delivery staff list is unavailable. Run the Supabase setup SQL, then refresh this page.');
-      return;
+  const assignedRiderId = order?.assigned_rider_id;
+  useEffect(() => {
+    if (!assignedRiderId || assigning) return;
+    let active = true;
+    let timer;
+    async function refreshAssignment() {
+      const { data, error } = await supabase.from('orders')
+        .select('assigned_rider_id, rider_response').eq('id', id).single();
+      if (!active) return;
+      if (!error && data) setOrder(previous => previous?.id === id
+        ? { ...previous, ...data } : previous);
+      timer = setTimeout(refreshAssignment, 5000);
     }
-    setDeliveryStaff((data || []).map(person => person.name));
-  };
+    void refreshAssignment();
+    return () => { active = false; clearTimeout(timer); };
+  }, [id, assignedRiderId, assigning]);
+
+  async function assignRider(riderId) {
+    setAssigning(true);
+    setAssignmentError('');
+    try {
+      const { data, error } = await supabase.rpc('admin_assign_order_rider', {
+        p_order_id: id, p_rider_id: riderId,
+      });
+      if (error) throw error;
+      setOrder(previous => previous?.id === id ? { ...previous, assigned_rider_id: data, rider_response: 'pending' } : previous);
+    } catch (error) {
+      setAssignmentError(`Could not update assignment: ${error.message}`);
+    } finally {
+      setAssigning(false);
+    }
+  }
 
   const saveOrderFields = async (updates) => {
     setSavingOrderFields(true);
@@ -117,19 +148,6 @@ export default function ManageOrder() {
     else setOrder(previous => ({ ...previous, ...updates }));
     setSavingOrderFields(false);
     return !error;
-  };
-
-  const addDeliveryStaff = async () => {
-    const name = newStaffName.trim();
-    if (!name) return;
-    setOrderFieldsError('');
-    const { error } = await supabase.from('delivery_staff').insert({ name });
-    if (error) {
-      setOrderFieldsError(error.code === '23505' ? 'This delivery person is already in the list.' : `Could not add name: ${error.message}`);
-      return;
-    }
-    setNewStaffName('');
-    await fetchDeliveryStaff();
   };
 
   useEffect(() => {
@@ -578,26 +596,28 @@ export default function ManageOrder() {
         <div>
           <h3 className="font-bold text-slate-900">Assign delivery</h3>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            {deliveryStaff.map(name => {
-              const selected = (order.delivery_assignees || []).includes(name);
-              return <button key={name} type="button" disabled={savingOrderFields}
-                onClick={() => {
-                  const assigned = order.delivery_assignees || [];
-                  const next = selected ? assigned.filter(person => person !== name) : [...assigned, name];
-                  saveOrderFields({ delivery_assignees: next });
-                }}
-                className={`rounded-xl border px-3 py-2 text-xs font-bold transition-colors disabled:opacity-50 ${selected ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-200 hover:bg-emerald-50/50'}`}>
-                {name}
+            {assignableRiders?.map(rider => {
+              const selected = order.assigned_rider_id === rider.id;
+              return <button key={rider.id} type="button" disabled={assigning || selected}
+                aria-pressed={selected} onClick={() => void assignRider(rider.id)}
+                className={`rounded-xl border px-3 py-2 text-xs font-bold ${selected ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-200 disabled:opacity-50'}`}>
+                {rider.full_name || rider.id}
               </button>;
             })}
-            {!deliveryStaff.length && <span className="text-xs text-slate-400">No delivery staff yet.</span>}
-            <button type="button" aria-label="Add delivery staff name" title="Add delivery staff name" onClick={() => setAddingDeliveryStaff(open => !open)}
-              className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 hover:border-orange-300 hover:text-orange-600"><UserPlus size={15} /></button>
+            {assignableRiders === null && !assignmentError && <span role="status">Loading approved riders…</span>}
+            {assignableRiders?.length === 0 && <span className="text-xs text-slate-500">No approved riders.</span>}
+            {order.assigned_rider_id && <button type="button" disabled={assigning}
+              onClick={() => void assignRider(null)} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 disabled:opacity-50">
+              Unassign rider
+            </button>}
           </div>
-          {addingDeliveryStaff && <div className="mt-2 flex gap-2">
-            <input value={newStaffName} onChange={event => setNewStaffName(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') addDeliveryStaff(); }} placeholder="Enter a name" aria-label="New delivery person name" className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-orange-400" />
-            <button type="button" onClick={addDeliveryStaff} disabled={!newStaffName.trim()} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:border-orange-300 hover:text-orange-600 disabled:opacity-50">Add</button>
-          </div>}
+          {order.assigned_rider_id && <p role="status" className="mt-2 text-sm text-slate-600">
+            {order.rider_response === 'accepted' ? 'Rider accepted the delivery'
+              : order.rider_response === 'rejected' ? 'Rider rejected the delivery'
+              : 'Awaiting rider acceptance'}
+          </p>}
+          {assigning && <p role="status" className="mt-2 text-xs">Saving assignment…</p>}
+          {assignmentError && <p role="alert" className="mt-2 text-xs font-semibold text-rose-600">{assignmentError}</p>}
           {orderFieldsError && <p role="alert" className="mt-2 text-xs font-semibold text-rose-600">{orderFieldsError}</p>}
         </div>
       </div>
