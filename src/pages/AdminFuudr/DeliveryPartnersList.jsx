@@ -37,7 +37,7 @@ export default function DeliveryPartnersList() {
       .select('user_id, name, email, phone, city, vehicle_type, vehicle_number, avatar_url, payout_upi, kyc_docs, status, rejection_reason, is_online, last_seen, created_at, restaurant_id')
       .order('created_at', { ascending: false });
     if (error) {
-      setErrorMessage(`Could not load delivery partners: ${error.message}`);
+      setErrorMessage(`Could not load restaurant partners: ${error.message}`);
     } else {
       setPartners(data || []);
     }
@@ -93,8 +93,8 @@ export default function DeliveryPartnersList() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-500">Operations</p>
-          <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-900">Delivery Partners</h1>
-          <p className="mt-1 text-sm font-medium text-slate-500">Review applications and manage delivery partner access.</p>
+          <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-900">Restaurant Partners</h1>
+          <p className="mt-1 text-sm font-medium text-slate-500">Review applications and manage restaurant partner access.</p>
         </div>
         <button onClick={() => { setLoading(true); fetchPartners(); }} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 shadow-sm hover:bg-slate-50">
           <RefreshCw size={15} className={loading ? 'animate-spin' : ''} /> Refresh
@@ -117,7 +117,7 @@ export default function DeliveryPartnersList() {
         <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search name, phone, email, city or vehicle..." className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm font-medium outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100" />
       </div>
 
-      {loading ? <div className="rounded-2xl border border-slate-100 bg-white p-12 text-center text-sm font-semibold text-slate-400">Loading delivery partners…</div> :
+      {loading ? <div className="rounded-2xl border border-slate-100 bg-white p-12 text-center text-sm font-semibold text-slate-400">Loading restaurant partners…</div> :
         visiblePartners.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center"><UserRound className="mx-auto text-slate-300" size={30} /><p className="mt-3 font-bold text-slate-700">No partners found</p><p className="mt-1 text-sm text-slate-400">Try another filter or search term.</p></div> :
           <div className="grid gap-4 xl:grid-cols-2">
             {visiblePartners.map((partner) => {

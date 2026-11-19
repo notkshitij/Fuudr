@@ -17,6 +17,7 @@ import AdminFuudr from './pages/AdminFuudr/AdminFuudr';
 import OrdersList from './pages/AdminFuudr/OrdersList';
 import ManageOrder from './pages/AdminFuudr/ManageOrder';
 import RestaurantsList from './pages/AdminFuudr/RestaurantsList';
+import RiderLocations from './pages/AdminFuudr/RiderLocations';
 import DeliveryPartnersList from './pages/AdminFuudr/DeliveryPartnersList';
 import Privacy from './pages/Privacy/Privacy';
 import TermsOfService from './pages/TermsOfService/TermsOfService';
@@ -64,7 +65,8 @@ export default function App() {
             <Route path="orders" element={<OrdersList />} />
             <Route path="orders/:id" element={<ManageOrder />} />
             <Route path="restaurants" element={<RestaurantsList />} />
-            <Route path="delivery-partners" element={<DeliveryPartnersList />} />
+            <Route path="delivery-partners" element={<RiderLocations />} />
+            <Route path="restaurant-partners" element={<DeliveryPartnersList />} />
           </Route>
 
           {/* Partner Portal Routes */}

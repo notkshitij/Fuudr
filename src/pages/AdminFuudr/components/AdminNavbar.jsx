@@ -48,6 +48,7 @@ export function AdminNavbar() {
     { name: 'Dashboard',   path: '/adminfuudr',             icon: LayoutDashboard },
     { name: 'Orders',      path: '/adminfuudr/orders',       icon: ShoppingBag, badge: liveCount },
     { name: 'Restaurants', path: '/adminfuudr/restaurants',  icon: Store },
+    { name: 'Restaurant Partners', path: '/adminfuudr/restaurant-partners', icon: Store },
     { name: 'Delivery Partners', path: '/adminfuudr/delivery-partners', icon: Bike },
   ];
 
@@ -107,6 +108,8 @@ export function AdminNavbar() {
                 ? 'Restaurants'
                 : location.pathname.includes('delivery-partners')
                 ? 'Delivery Partners'
+                : location.pathname.includes('restaurant-partners')
+                ? 'Restaurant Partners'
                 : location.pathname.includes('orders')
                 ? 'Orders'
                 : 'Admin'}
