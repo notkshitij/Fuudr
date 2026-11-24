@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { 
   Store, 
@@ -18,6 +19,7 @@ import {
 } from 'lucide-react';
 
 export default function RestaurantsList() {
+  const navigate = useNavigate();
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -285,7 +287,18 @@ export default function RestaurantsList() {
                   const isUpdating = updatingId === partner.id;
                   const isOpen = partner.is_open !== false;
                   return (
-                    <tr key={partner.id} className="hover:bg-slate-50/70 transition-colors">
+                    <tr
+                      key={partner.id}
+                      className="cursor-pointer hover:bg-orange-50/40 transition-colors focus-within:bg-orange-50/40"
+                      onClick={() => navigate(`/restaurants/${partner.id}`)}
+                      onKeyDown={event => {
+                        if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+                          event.preventDefault();
+                          navigate(`/restaurants/${partner.id}`);
+                        }
+                      }}
+                      tabIndex={0}
+                    >
                       
                       {/* Restaurant Info */}
                       <td className="px-5 py-4">
@@ -331,12 +344,12 @@ export default function RestaurantsList() {
                         <div className="font-bold text-slate-900 text-sm">{partner.owner_name || '—'}</div>
                         <div className="flex flex-col gap-0.5 mt-1 text-xs text-slate-500">
                           {partner.mobile_number && (
-                            <a href={`tel:${partner.mobile_number}`} className="flex items-center gap-1.5 hover:text-orange-600 transition-colors">
+                            <a href={`tel:${partner.mobile_number}`} onClick={event => event.stopPropagation()} className="flex items-center gap-1.5 hover:text-orange-600 transition-colors">
                               <Phone size={12} className="text-slate-400" /> {partner.mobile_number}
                             </a>
                           )}
                           {partner.email && (
-                            <a href={`mailto:${partner.email}`} className="flex items-center gap-1.5 hover:text-orange-600 transition-colors truncate max-w-[170px]">
+                            <a href={`mailto:${partner.email}`} onClick={event => event.stopPropagation()} className="flex items-center gap-1.5 hover:text-orange-600 transition-colors truncate max-w-[170px]">
                               <Mail size={12} className="text-slate-400" /> {partner.email}
                             </a>
                           )}
@@ -351,6 +364,7 @@ export default function RestaurantsList() {
                         {partner.google_map_link && (
                           <a
                             href={partner.google_map_link}
+                            onClick={event => event.stopPropagation()}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 text-[11px] font-bold text-orange-600 hover:text-orange-700 mt-1"
@@ -382,7 +396,7 @@ export default function RestaurantsList() {
                         <button
                           type="button"
                           disabled={isUpdating}
-                          onClick={() => handleToggleOpen(partner)}
+                          onClick={event => { event.stopPropagation(); handleToggleOpen(partner); }}
                           className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                             isOpen 
                               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100' 

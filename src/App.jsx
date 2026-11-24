@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { Home } from './pages/Home/Home';
 import { SuperAdminRoute } from './pages/AdminFuudr/components/SuperAdminRoute';
 import ScrollToTop from './components/ScrollToTop';
@@ -17,6 +17,7 @@ import AdminFuudr from './pages/AdminFuudr/AdminFuudr';
 import OrdersList from './pages/AdminFuudr/OrdersList';
 import ManageOrder from './pages/AdminFuudr/ManageOrder';
 import RestaurantsList from './pages/AdminFuudr/RestaurantsList';
+import RestaurantDetails from './pages/AdminFuudr/RestaurantDetails';
 import Privacy from './pages/Privacy/Privacy';
 import TermsOfService from './pages/TermsOfService/TermsOfService';
 import DeleteAccount from './pages/DeleteAccount/DeleteAccount';
@@ -60,7 +61,16 @@ export default function App() {
             <Route index element={<AdminFuudr />} />
             <Route path="orders" element={<OrdersList />} />
             <Route path="orders/:id" element={<ManageOrder />} />
-            <Route path="restaurants" element={<RestaurantsList />} />
+            <Route path="restaurants" element={<Navigate to="/restaurants" replace />} />
+          </Route>
+
+          <Route path="/restaurants" element={
+            <SuperAdminRoute>
+              <AdminFuudrLayout />
+            </SuperAdminRoute>
+          }>
+            <Route index element={<RestaurantsList />} />
+            <Route path=":id" element={<RestaurantDetails />} />
           </Route>
 
           {/* Partner Portal Routes */}

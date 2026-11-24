@@ -47,7 +47,7 @@ export function AdminNavbar() {
   const navItems = [
     { name: 'Dashboard',   path: '/adminfuudr',             icon: LayoutDashboard },
     { name: 'Orders',      path: '/adminfuudr/orders',       icon: ShoppingBag, badge: liveCount },
-    { name: 'Restaurants', path: '/adminfuudr/restaurants',  icon: Store },
+    { name: 'Restaurants', path: '/restaurants',             icon: Store },
   ];
 
   return (
