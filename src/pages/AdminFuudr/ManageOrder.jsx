@@ -1,17 +1,19 @@
+import { loadGoogleMapsScript } from './utils/loadGoogleMapsScript';
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import { ArrowLeft, MapPin, CreditCard, Clock, Package, Flame, Bike, CheckCircle, ChevronRight, IndianRupee, UtensilsCrossed, Printer, Navigation, Phone, GraduationCap, Trash2, X, Loader2, UserPlus, Pencil } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Clock, Package, Flame, Bike, CheckCircle, ChevronRight, IndianRupee, UtensilsCrossed, Printer, Navigation, Phone, GraduationCap, Trash2, X, Loader2, Pencil } from 'lucide-react';
 import AdaptiveVideo from '../../components/AdaptiveVideo';
 
 const STEPS = [
   { key: 'placed',     label: 'Placed',     icon: Package, desc: 'Order placed' },
   { key: 'preparing',  label: 'Preparing',  icon: Flame,   desc: 'Restaurant is cooking' },
+  { key: 'prepared',   label: 'Prepared',   icon: UtensilsCrossed, desc: 'Food is ready for pickup' },
   { key: 'on_the_way', label: 'On the Way', icon: Bike,    desc: 'Out for delivery' },
   { key: 'delivered',  label: 'Delivered',  icon: CheckCircle, desc: 'Order delivered' },
 ];
 
-const STEP_INDEX = { placed: 0, preparing: 1, on_the_way: 2, delivered: 3 };
+const STEP_INDEX = { placed: 0, preparing: 1, prepared: 2, on_the_way: 3, delivered: 4 };
 
 const parseBill = (bill) => {
   if (!bill) return {};
@@ -41,39 +43,6 @@ function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-const loadGoogleMapsScript = (apiKey) => {
-  return new Promise((resolve, reject) => {
-    if (window.google && window.google.maps) {
-      resolve(window.google.maps);
-      return;
-    }
-    const scriptId = 'google-maps-script';
-    let script = document.getElementById(scriptId);
-    if (!script) {
-      script = document.createElement('script');
-      script.id = scriptId;
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
-      script.async = true;
-      script.defer = true;
-      document.head.appendChild(script);
-    }
-
-    function handleLoad() {
-      resolve(window.google.maps);
-      script.removeEventListener('load', handleLoad);
-      script.removeEventListener('error', handleError);
-    }
-    function handleError(err) {
-      reject(err);
-      script.removeEventListener('load', handleLoad);
-      script.removeEventListener('error', handleError);
-    }
-
-    script.addEventListener('load', handleLoad);
-    script.addEventListener('error', handleError);
-  });
-};
-
 export default function ManageOrder() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -88,13 +57,14 @@ export default function ManageOrder() {
   const [editingPartnerMobile, setEditingPartnerMobile] = useState(false);
   const [savingPartnerMobile, setSavingPartnerMobile] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showRestoreConfirm, setShowRestoreConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
-  const [deliveryStaff, setDeliveryStaff] = useState([]);
-  const [newStaffName, setNewStaffName] = useState('');
+  const [assignableRiders, setAssignableRiders] = useState(null);
+  const [assignmentError, setAssignmentError] = useState('');
+  const [assigning, setAssigning] = useState(false);
   const [commissionDraft, setCommissionDraft] = useState('');
   const [editingCommission, setEditingCommission] = useState(false);
-  const [addingDeliveryStaff, setAddingDeliveryStaff] = useState(false);
   const [savingOrderFields, setSavingOrderFields] = useState(false);
   const [orderFieldsError, setOrderFieldsError] = useState('');
 
@@ -126,18 +96,49 @@ export default function ManageOrder() {
   useEffect(() => { fetchOrderDetails(); }, [id]);
 
   useEffect(() => {
-    fetchDeliveryStaff();
+    let active = true;
+    async function loadRiders() {
+      const { data, error } = await supabase.rpc('admin_assignable_riders');
+      if (!active) return;
+      if (error) setAssignmentError(`Could not load riders: ${error.message}`);
+      else setAssignableRiders(data ?? []);
+    }
+    void loadRiders();
+    return () => { active = false; };
   }, []);
 
-  const fetchDeliveryStaff = async () => {
-    const { data, error } = await supabase.from('delivery_staff').select('name').eq('active', true).order('name');
-    if (error) {
-      console.error('Could not load delivery staff:', error);
-      setOrderFieldsError('Delivery staff list is unavailable. Run the Supabase setup SQL, then refresh this page.');
-      return;
+  const assignedRiderId = order?.assigned_rider_id;
+  useEffect(() => {
+    if (!assignedRiderId || assigning) return;
+    let active = true;
+    let timer;
+    async function refreshAssignment() {
+      const { data, error } = await supabase.from('orders')
+        .select('assigned_rider_id, rider_response').eq('id', id).single();
+      if (!active) return;
+      if (!error && data) setOrder(previous => previous?.id === id
+        ? { ...previous, ...data } : previous);
+      timer = setTimeout(refreshAssignment, 5000);
     }
-    setDeliveryStaff((data || []).map(person => person.name));
-  };
+    void refreshAssignment();
+    return () => { active = false; clearTimeout(timer); };
+  }, [id, assignedRiderId, assigning]);
+
+  async function assignRider(riderId) {
+    setAssigning(true);
+    setAssignmentError('');
+    try {
+      const { data, error } = await supabase.rpc('admin_assign_order_rider', {
+        p_order_id: id, p_rider_id: riderId,
+      });
+      if (error) throw error;
+      setOrder(previous => previous?.id === id ? { ...previous, assigned_rider_id: data, rider_response: 'pending' } : previous);
+    } catch (error) {
+      setAssignmentError(`Could not update assignment: ${error.message}`);
+    } finally {
+      setAssigning(false);
+    }
+  }
 
   const saveOrderFields = async (updates) => {
     setSavingOrderFields(true);
@@ -147,19 +148,6 @@ export default function ManageOrder() {
     else setOrder(previous => ({ ...previous, ...updates }));
     setSavingOrderFields(false);
     return !error;
-  };
-
-  const addDeliveryStaff = async () => {
-    const name = newStaffName.trim();
-    if (!name) return;
-    setOrderFieldsError('');
-    const { error } = await supabase.from('delivery_staff').insert({ name });
-    if (error) {
-      setOrderFieldsError(error.code === '23505' ? 'This delivery person is already in the list.' : `Could not add name: ${error.message}`);
-      return;
-    }
-    setNewStaffName('');
-    await fetchDeliveryStaff();
   };
 
   useEffect(() => {
@@ -527,9 +515,20 @@ export default function ManageOrder() {
         {order.status === 'cancelled' ? (
           <div className="flex flex-col gap-2 w-full md:w-auto">
             <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Order Status</p>
-            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black bg-rose-50 text-rose-600 border border-rose-200 shadow-sm">
-              Cancelled
-            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black bg-rose-50 text-rose-600 border border-rose-200 shadow-sm">
+                Cancelled
+              </span>
+              <button
+                type="button"
+                disabled={updating}
+                onClick={() => setShowRestoreConfirm(true)}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-orange-500 text-white border border-orange-500 hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Package size={13} />
+                {updating ? 'Updating...' : 'Move to Placed'}
+              </button>
+            </div>
           </div>
         ) : (
           <div className="flex flex-col gap-2 w-full md:w-auto">
@@ -597,26 +596,28 @@ export default function ManageOrder() {
         <div>
           <h3 className="font-bold text-slate-900">Assign delivery</h3>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            {deliveryStaff.map(name => {
-              const selected = (order.delivery_assignees || []).includes(name);
-              return <button key={name} type="button" disabled={savingOrderFields}
-                onClick={() => {
-                  const assigned = order.delivery_assignees || [];
-                  const next = selected ? assigned.filter(person => person !== name) : [...assigned, name];
-                  saveOrderFields({ delivery_assignees: next });
-                }}
-                className={`rounded-xl border px-3 py-2 text-xs font-bold transition-colors disabled:opacity-50 ${selected ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-200 hover:bg-emerald-50/50'}`}>
-                {name}
+            {assignableRiders?.map(rider => {
+              const selected = order.assigned_rider_id === rider.id;
+              return <button key={rider.id} type="button" disabled={assigning || selected}
+                aria-pressed={selected} onClick={() => void assignRider(rider.id)}
+                className={`rounded-xl border px-3 py-2 text-xs font-bold ${selected ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-200 disabled:opacity-50'}`}>
+                {rider.full_name || rider.id}
               </button>;
             })}
-            {!deliveryStaff.length && <span className="text-xs text-slate-400">No delivery staff yet.</span>}
-            <button type="button" aria-label="Add delivery staff name" title="Add delivery staff name" onClick={() => setAddingDeliveryStaff(open => !open)}
-              className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 hover:border-orange-300 hover:text-orange-600"><UserPlus size={15} /></button>
+            {assignableRiders === null && !assignmentError && <span role="status">Loading approved riders…</span>}
+            {assignableRiders?.length === 0 && <span className="text-xs text-slate-500">No approved riders.</span>}
+            {order.assigned_rider_id && <button type="button" disabled={assigning}
+              onClick={() => void assignRider(null)} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 disabled:opacity-50">
+              Unassign rider
+            </button>}
           </div>
-          {addingDeliveryStaff && <div className="mt-2 flex gap-2">
-            <input value={newStaffName} onChange={event => setNewStaffName(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') addDeliveryStaff(); }} placeholder="Enter a name" aria-label="New delivery person name" className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-orange-400" />
-            <button type="button" onClick={addDeliveryStaff} disabled={!newStaffName.trim()} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:border-orange-300 hover:text-orange-600 disabled:opacity-50">Add</button>
-          </div>}
+          {order.assigned_rider_id && <p role="status" className="mt-2 text-sm text-slate-600">
+            {order.rider_response === 'accepted' ? 'Rider accepted the delivery'
+              : order.rider_response === 'rejected' ? 'Rider rejected the delivery'
+              : 'Awaiting rider acceptance'}
+          </p>}
+          {assigning && <p role="status" className="mt-2 text-xs">Saving assignment…</p>}
+          {assignmentError && <p role="alert" className="mt-2 text-xs font-semibold text-rose-600">{assignmentError}</p>}
           {orderFieldsError && <p role="alert" className="mt-2 text-xs font-semibold text-rose-600">{orderFieldsError}</p>}
         </div>
       </div>
@@ -1077,6 +1078,47 @@ export default function ManageOrder() {
                     <span>Delete</span>
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showRestoreConfirm && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="restore-order-title"
+            className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-100"
+          >
+            <div className="w-11 h-11 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center mb-3.5">
+              <Package size={22} />
+            </div>
+            <h3 id="restore-order-title" className="text-base font-bold text-slate-900 mb-1.5">
+              Move order back to Placed?
+            </h3>
+            <p className="text-slate-500 text-xs mb-5 leading-relaxed">
+              This will reopen the cancelled order and set its status to Placed.
+            </p>
+            <div className="flex gap-2.5">
+              <button
+                type="button"
+                onClick={() => setShowRestoreConfirm(false)}
+                className="flex-1 py-2.5 px-3 rounded-xl font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors text-xs"
+              >
+                Keep Cancelled
+              </button>
+              <button
+                type="button"
+                disabled={updating}
+                onClick={() => {
+                  setShowRestoreConfirm(false);
+                  handleStatusChange('placed');
+                }}
+                className="flex-1 py-2.5 px-3 rounded-xl font-bold text-white bg-orange-500 hover:bg-orange-600 transition-colors text-xs disabled:opacity-50"
+              >
+                Confirm
               </button>
             </div>
           </div>

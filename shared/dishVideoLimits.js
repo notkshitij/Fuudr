@@ -1,0 +1,1 @@
+export const MAX_DISH_VIDEO_BYTES = 100_000_000;

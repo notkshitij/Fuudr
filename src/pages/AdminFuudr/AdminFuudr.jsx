@@ -9,6 +9,7 @@ import { FinancialKpis } from './components/FinancialKpis';
 const STATUS_CONFIG = {
   placed:     { label: 'Placed',      color: 'text-slate-700',   bg: 'bg-slate-100',   dot: 'bg-slate-500',   icon: Package },
   preparing:  { label: 'Preparing',   color: 'text-amber-700',   bg: 'bg-amber-50',    dot: 'bg-amber-500',   icon: Clock },
+  prepared:   { label: 'Prepared',    color: 'text-violet-700',  bg: 'bg-violet-50',   dot: 'bg-violet-500',  icon: CheckCircle },
   on_the_way: { label: 'On the Way',  color: 'text-blue-700',    bg: 'bg-blue-50',     dot: 'bg-blue-500',    icon: Bike },
   delivered:  { label: 'Delivered',   color: 'text-emerald-700', bg: 'bg-emerald-50',  dot: 'bg-emerald-500', icon: CheckCircle },
   cancelled:  { label: 'Cancelled',   color: 'text-rose-700',    bg: 'bg-rose-50',     dot: 'bg-rose-500',    icon: CheckCircle },
@@ -16,7 +17,7 @@ const STATUS_CONFIG = {
 
 export default function AdminFuudr() {
   const navigate = useNavigate();
-  const [stats, setStats] = useState({ total: 0, placed: 0, preparing: 0, on_the_way: 0, delivered: 0, cancelled: 0, revenue: 0 });
+  const [stats, setStats] = useState({ total: 0, placed: 0, preparing: 0, prepared: 0, on_the_way: 0, delivered: 0, cancelled: 0, revenue: 0 });
   const [partnerStats, setPartnerStats] = useState({ total: 0, poornima: 0 });
   const [allOrders, setAllOrders] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
@@ -72,7 +73,7 @@ export default function AdminFuudr() {
       if (ordersData) {
         const data = ordersData;
         setAllOrders(data);
-        const s = { total: data.length, placed: 0, preparing: 0, on_the_way: 0, delivered: 0, cancelled: 0, revenue: 0 };
+        const s = { total: data.length, placed: 0, preparing: 0, prepared: 0, on_the_way: 0, delivered: 0, cancelled: 0, revenue: 0 };
         data.forEach(o => {
           if (s[o.status] !== undefined) s[o.status]++;
           if (o.status !== 'cancelled') {
@@ -137,7 +138,7 @@ export default function AdminFuudr() {
     setUpdatingOrderId(null);
   };
 
-  const activeCount = stats.placed + stats.preparing + stats.on_the_way;
+  const activeCount = stats.placed + stats.preparing + stats.prepared + stats.on_the_way;
 
   const statCards = [
     { label: 'Total Orders',   value: stats.total,          icon: ShoppingBag,  accent: 'orange' },

@@ -483,6 +483,115 @@
   background: #3b2207;
 }
 
+.home-dish-video {
+  padding: clamp(20px, 3vw, 40px) 20px;
+  background: var(--bg-light);
+}
+
+.home-dish-video-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr);
+  max-width: 1080px;
+  margin: 0 auto;
+  overflow: hidden;
+  border: 3px solid #000;
+  border-radius: 16px;
+  background: #fff8eb;
+  box-shadow: 6px 6px 0 #000;
+}
+
+.home-dish-video-copy {
+  position: relative;
+  z-index: 1;
+  align-self: center;
+  padding: 22px 12px;
+  color: #3b2207;
+  text-align: center;
+}
+
+.home-dish-video-copy h2 {
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.05;
+}
+
+.home-dish-video-copy p {
+  max-width: 34ch;
+  margin: 10px auto 12px;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.home-dish-video-copy .home-dish-video-reward {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+
+.home-dish-video-reward strong {
+  padding: 4px 12px;
+  border-radius: 6px;
+  background: #ffe0aa;
+  color: #8a330b;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.home-dish-video-copy a {
+  min-width: 144px;
+  padding: 10px 20px;
+}
+
+.home-dish-video-copy a:focus-visible {
+  outline: 3px solid #3b2207;
+  outline-offset: 5px;
+}
+
+.home-dish-video-photos {
+  position: relative;
+  margin: 12px;
+}
+
+.home-dish-video-photos img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: cover;
+  border: 5px solid #3b2207;
+  border-radius: 8px;
+  box-shadow: 4px 4px 0 #3b2207;
+  transform: rotate(-3deg);
+}
+
+.home-dish-video-photos-right img {
+  transform: rotate(3deg);
+}
+
+@media (max-width: 720px) {
+  .home-dish-video-card {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-dish-video-copy {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    padding-bottom: 8px;
+  }
+
+  .home-dish-video-photos {
+    height: clamp(72px, 20vw, 120px);
+    margin: 8px 12px 12px;
+  }
+
+  .home-dish-video-photos img {
+    border-width: 3px;
+  }
+}
+
 .partner-cta-section {
   position: relative;
   padding: 120px 20px;

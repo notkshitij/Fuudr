@@ -7,9 +7,38 @@ const STATUS_CONFIG = {
   all:        { label: 'All Orders',  color: 'text-slate-700',   bg: 'bg-slate-100',  dot: 'bg-slate-400' },
   placed:     { label: 'Placed',      color: 'text-slate-700',   bg: 'bg-slate-100',  dot: 'bg-slate-500',   icon: Package },
   preparing:  { label: 'Preparing',   color: 'text-amber-700',   bg: 'bg-amber-50',    dot: 'bg-amber-500',   icon: Clock },
+  prepared:   { label: 'Prepared',    color: 'text-violet-700',  bg: 'bg-violet-50',   dot: 'bg-violet-500',  icon: CheckCircle },
   on_the_way: { label: 'On the Way',  color: 'text-blue-700',    bg: 'bg-blue-50',     dot: 'bg-blue-500',    icon: Bike },
   delivered:  { label: 'Delivered',   color: 'text-emerald-700', bg: 'bg-emerald-50',  dot: 'bg-emerald-500', icon: CheckCircle },
   cancelled:  { label: 'Cancelled',   color: 'text-rose-700',    bg: 'bg-rose-50',     dot: 'bg-rose-500',    icon: CheckCircle },
+};
+
+const ORDER_TYPE_CONFIG = {
+  delivery: {
+    label: 'Delivery',
+    row: 'bg-sky-50 hover:bg-sky-100',
+    badge: 'bg-sky-100 text-sky-800',
+  },
+  pickup: {
+    label: 'Pickup',
+    row: 'bg-amber-50 hover:bg-amber-100',
+    badge: 'bg-amber-100 text-amber-900',
+  },
+};
+
+const getOrderType = (order) => {
+  if (order.order_type === 'pickup' || order.order_type === 'delivery') return order.order_type;
+
+  // Older orders may only store the type in the bill.
+  let bill = order.bill;
+  if (typeof bill === 'string') {
+    try {
+      bill = JSON.parse(bill);
+    } catch {
+      return 'delivery';
+    }
+  }
+  return bill?.fulfillment_mode === 'pickup' ? 'pickup' : 'delivery';
 };
 
 const TODAY = new Intl.DateTimeFormat('en-CA', {
@@ -221,7 +250,7 @@ export default function OrdersList() {
 
   // Tab counts
   const counts = useMemo(() => {
-    const c = { all: orders.length, placed: 0, preparing: 0, on_the_way: 0, delivered: 0, cancelled: 0 };
+    const c = { all: orders.length, placed: 0, preparing: 0, prepared: 0, on_the_way: 0, delivered: 0, cancelled: 0 };
     orders.forEach(o => { if (c[o.status] !== undefined) c[o.status]++; });
     return c;
   }, [orders]);
@@ -491,6 +520,7 @@ export default function OrdersList() {
               <tbody className="divide-y divide-slate-50">
                 {filtered.map((order) => {
                   const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.placed;
+                  const orderType = ORDER_TYPE_CONFIG[getOrderType(order)];
                   const parts = order.id.split('-');
                   const displayId = parts[parts.length - 1].toUpperCase();
 
@@ -515,11 +545,16 @@ export default function OrdersList() {
                   const extra = items.length > 2 ? ` +${items.length - 2}` : '';
                   const totalPrice = order.bill?.customer_total ?? order.bill?.total ?? order.total_price ?? 0;
                   return (
-                    <tr key={order.id} className="hover:bg-slate-50/70 transition-colors">
+                    <tr key={order.id} className={`transition-colors ${orderType.row}`}>
                       <td className="px-5 py-4 whitespace-nowrap">
-                        <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
-                          #{displayId}
-                        </span>
+                        <div className="flex flex-col items-start gap-1">
+                          <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
+                            #{displayId}
+                          </span>
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${orderType.badge}`}>
+                            {orderType.label}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex flex-wrap items-center gap-1.5">

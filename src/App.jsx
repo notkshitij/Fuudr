@@ -18,10 +18,13 @@ import OrdersList from './pages/AdminFuudr/OrdersList';
 import ManageOrder from './pages/AdminFuudr/ManageOrder';
 import RestaurantsList from './pages/AdminFuudr/RestaurantsList';
 import RestaurantDetails from './pages/AdminFuudr/RestaurantDetails';
+import RiderLocations from './pages/AdminFuudr/RiderLocations';
+import DeliveryPartnersList from './pages/AdminFuudr/DeliveryPartnersList';
 import Privacy from './pages/Privacy/Privacy';
 import TermsOfService from './pages/TermsOfService/TermsOfService';
 import DeleteAccount from './pages/DeleteAccount/DeleteAccount';
 import Share from './pages/Share/Share';
+import DishVideoSubmission from './pages/DishVideoSubmission/DishVideoSubmission';
 import { NotFound } from './pages/NotFound/NotFound';
 
 // A premium Brutalist-styled fallback loader that matches the application's design language
@@ -50,6 +53,7 @@ export default function App() {
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/delete-account" element={<DeleteAccount />} />
           <Route path="/share/*" element={<Share />} />
+          <Route path="/dish-video" element={<DishVideoSubmission />} />
 
 
           {/* Super Admin — password protected */}
@@ -62,6 +66,8 @@ export default function App() {
             <Route path="orders" element={<OrdersList />} />
             <Route path="orders/:id" element={<ManageOrder />} />
             <Route path="restaurants" element={<Navigate to="/restaurants" replace />} />
+            <Route path="delivery-partners" element={<RiderLocations />} />
+            <Route path="restaurant-partners" element={<DeliveryPartnersList />} />
           </Route>
 
           <Route path="/restaurants" element={
