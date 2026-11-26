@@ -448,6 +448,24 @@ export default function ManageOrder() {
     printWindow.document.close();
   };
 
+  useEffect(() => {
+    const onPrint = () => {
+      if (order) handlePrint();
+    };
+    const onDelete = () => {
+      if (order) {
+        setDeleteError(null);
+        setShowDeleteModal(true);
+      }
+    };
+    window.addEventListener('admin:print-receipt', onPrint);
+    window.addEventListener('admin:delete-order', onDelete);
+    return () => {
+      window.removeEventListener('admin:print-receipt', onPrint);
+      window.removeEventListener('admin:delete-order', onDelete);
+    };
+  }, [order]);
+
   if (loading) return (
     <div className="space-y-4">
       {[1,2,3].map(i => <div key={i} className="h-32 bg-white rounded-2xl border border-slate-100 animate-pulse" />)}
@@ -468,40 +486,6 @@ export default function ManageOrder() {
 
   return (
     <div className="max-w-5xl mx-auto font-outfit pb-12 space-y-6">
-
-      {/* ── Back + Header ── */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate('/adminfuudr/orders')}
-            className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-all"
-          >
-            <ArrowLeft size={16} />
-          </button>
-          <div className="flex items-center gap-2 text-sm text-slate-400 font-medium">
-            <button onClick={() => navigate('/adminfuudr/orders')} className="hover:text-slate-700">Orders</button>
-            <ChevronRight size={14} />
-            <span className="text-slate-700 font-bold">#{displayId}</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handlePrint}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl font-semibold text-sm hover:bg-slate-50 transition-all shadow-sm"
-          >
-            <Printer size={15} /> Print Receipt
-          </button>
-          <button
-            onClick={() => {
-              setDeleteError(null);
-              setShowDeleteModal(true);
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-rose-50 border border-rose-200 text-rose-600 rounded-xl font-semibold text-sm hover:bg-rose-600 hover:text-white transition-all shadow-sm"
-          >
-            <Trash2 size={15} /> Delete Order
-          </button>
-        </div>
-      </div>
 
       {/* ── Order Title + Quick Status ── */}
       <div className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
