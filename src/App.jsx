@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Home } from './pages/Home/Home';
 import { SuperAdminRoute } from './pages/AdminFuudr/components/SuperAdminRoute';
 import ScrollToTop from './components/ScrollToTop';
@@ -32,6 +32,11 @@ import DeleteAccount from './pages/DeleteAccount/DeleteAccount';
 import Share from './pages/Share/Share';
 import DishVideoSubmission from './pages/DishVideoSubmission/DishVideoSubmission';
 import { NotFound } from './pages/NotFound/NotFound';
+
+function LegacyRestaurantRedirect() {
+  const { id } = useParams();
+  return <Navigate to={id ? `/adminfuudr/restaurants/${id}` : '/adminfuudr/restaurants'} replace />;
+}
 
 // A premium Brutalist-styled fallback loader that matches the application's design language
 function PageLoader() {
@@ -73,20 +78,12 @@ export default function App() {
             <Route path="settings" element={<AdminSettings />} />
             <Route path="orders" element={<OrdersList />} />
             <Route path="orders/:id" element={<ManageOrder />} />
-            <Route path="restaurants" element={<Navigate to="/restaurants" replace />} />
+            <Route path="restaurants" element={<RestaurantsList />} />
             <Route path="delivery-partners" element={<RiderLocations />} />
             <Route path="restaurant-partners" element={<DeliveryPartnersList />} />
           </Route>
 
-          <Route path="/restaurants" element={
-            <SuperAdminRoute>
-              <AdminFuudrLayout />
-            </SuperAdminRoute>
-          }>
-            <Route index element={<RestaurantsList />} />
-          </Route>
-
-          <Route path="/restaurants/:id" element={
+          <Route path="/adminfuudr/restaurants/:id" element={
             <SuperAdminRoute>
               <RestaurantLayout />
             </SuperAdminRoute>
@@ -96,6 +93,11 @@ export default function App() {
             <Route path="menu" element={<RestaurantMenuItems />} />
             <Route path="settings" element={<RestaurantAdminSettings />} />
           </Route>
+
+          {/* Legacy redirects */}
+          <Route path="/restaurants" element={<Navigate to="/adminfuudr/restaurants" replace />} />
+          <Route path="/restaurants/:id" element={<LegacyRestaurantRedirect />} />
+          <Route path="/restaurants/:id/*" element={<LegacyRestaurantRedirect />} />
 
           {/* Partner Portal Routes */}
           <Route path="/partner" element={<SignIn />} />

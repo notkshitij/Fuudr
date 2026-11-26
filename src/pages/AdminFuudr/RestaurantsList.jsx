@@ -1,17 +1,17 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import { 
-  Store, 
-  Search, 
-  RefreshCw, 
-  Phone, 
-  Mail, 
-  MapPin, 
-  Clock, 
-  GraduationCap, 
-  Star, 
-  CheckCircle2, 
+import {
+  Store,
+  Search,
+  RefreshCw,
+  Phone,
+  Mail,
+  MapPin,
+  Clock,
+  GraduationCap,
+  Star,
+  CheckCircle2,
   ExternalLink,
   UtensilsCrossed,
   SlidersHorizontal,
@@ -182,36 +182,32 @@ export default function RestaurantsList() {
         <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl p-1 overflow-x-auto">
           <button
             onClick={() => setFilterType('all')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
-              filterType === 'all' ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'
-            }`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${filterType === 'all' ? 'bg-orange-500 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'
+              }`}
           >
             All Outlets ({counts.total})
           </button>
           <button
             onClick={() => setFilterType('poornima')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
-              filterType === 'poornima' 
-                ? 'bg-purple-600 text-white shadow-sm' 
-                : 'text-purple-700 bg-purple-50 hover:bg-purple-100/70'
-            }`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${filterType === 'poornima'
+              ? 'bg-purple-600 text-white shadow-sm'
+              : 'text-purple-700 bg-purple-50 hover:bg-purple-100/70'
+              }`}
           >
             <GraduationCap size={14} />
             Inside Poornima ({counts.poornima})
           </button>
           <button
             onClick={() => setFilterType('regular')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
-              filterType === 'regular' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'
-            }`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${filterType === 'regular' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'
+              }`}
           >
             Off-Campus ({counts.regular})
           </button>
           <button
             onClick={() => setFilterType('open')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
-              filterType === 'open' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'
-            }`}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${filterType === 'open' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-50'
+              }`}
           >
             Open Now ({counts.open})
           </button>
@@ -252,16 +248,16 @@ export default function RestaurantsList() {
                     <tr
                       key={partner.id}
                       className="cursor-pointer hover:bg-orange-50/40 transition-colors focus-within:bg-orange-50/40"
-                      onClick={() => navigate(`/restaurants/${partner.id}`)}
+                      onClick={() => navigate(`/adminfuudr/restaurants/${partner.id}`)}
                       onKeyDown={event => {
                         if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
                           event.preventDefault();
-                          navigate(`/restaurants/${partner.id}`);
+                          navigate(`/adminfuudr/restaurants/${partner.id}`);
                         }
                       }}
                       tabIndex={0}
                     >
-                      
+
                       {/* Restaurant Info */}
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
@@ -359,11 +355,10 @@ export default function RestaurantsList() {
                           type="button"
                           disabled={isUpdating}
                           onClick={event => { event.stopPropagation(); handleToggleOpen(partner); }}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                            isOpen 
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100' 
-                              : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
-                          } ${isUpdating ? 'opacity-50' : ''}`}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${isOpen
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                            : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                            } ${isUpdating ? 'opacity-50' : ''}`}
                           title="Click to toggle restaurant open/closed status"
                         >
                           <span className={`w-2 h-2 rounded-full ${isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />

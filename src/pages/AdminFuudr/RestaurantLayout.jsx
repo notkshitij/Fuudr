@@ -33,7 +33,7 @@ export default function RestaurantLayout() {
     return () => { active = false; };
   }, [id]);
 
-  const base = `/restaurants/${id}`;
+  const base = `/adminfuudr/restaurants/${id}`;
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 lg:grid lg:grid-cols-[12.5rem_minmax(0,1fr)] lg:grid-rows-[auto_1fr]">
@@ -53,7 +53,7 @@ export default function RestaurantLayout() {
 
           {/* Back link */}
           <button
-            onClick={() => navigate('/restaurants')}
+            onClick={() => navigate('/adminfuudr/restaurants')}
             className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-orange-500 transition-colors"
           >
             <ArrowLeft size={16} />

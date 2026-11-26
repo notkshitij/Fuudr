@@ -43,7 +43,7 @@ export function AdminNavigation() {
     { name: 'Dashboard',   path: '/adminfuudr',             icon: LayoutDashboard },
     { name: 'Orders',      path: '/adminfuudr/orders',       icon: ShoppingBag, badge: liveCount },
     { name: 'Statistics', path: '/adminfuudr/statistics', icon: BarChart3 },
-    { name: 'Restaurants', path: '/restaurants',             icon: Store },
+    { name: 'Restaurants', path: '/adminfuudr/restaurants', icon: Store },
     { name: 'Restaurant Partners', path: '/adminfuudr/restaurant-partners', icon: Store },
     { name: 'Delivery Partners', path: '/adminfuudr/delivery-partners', icon: Bike },
     { name: 'Settings', path: '/adminfuudr/settings', icon: Settings },
