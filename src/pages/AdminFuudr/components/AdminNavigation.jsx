@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, matchPath, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, Store, ChevronRight, LogOut, Bike, Menu, X, BarChart3, Settings } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Store, ChevronRight, LogOut, Menu, X, BarChart3, Settings } from 'lucide-react';
 import { supabase } from '../../../supabaseClient';
 
 const SESSION_KEY = 'fuudr_super_admin_auth';
@@ -45,7 +45,6 @@ export function AdminNavigation() {
     { name: 'Statistics', path: '/adminfuudr/statistics', icon: BarChart3 },
     { name: 'Restaurants', path: '/adminfuudr/restaurants', icon: Store },
     { name: 'Restaurant Partners', path: '/adminfuudr/restaurant-partners', icon: Store },
-    { name: 'Delivery Partners', path: '/adminfuudr/delivery-partners', icon: Bike },
     { name: 'Settings', path: '/adminfuudr/settings', icon: Settings },
   ];
 
