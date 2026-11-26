@@ -541,7 +541,7 @@ export default function OrdersList() {
                   <th className="px-5 py-3.5 text-[11px] font-black text-slate-400 uppercase tracking-wider">Total</th>
                   <th className="px-5 py-3.5 text-[11px] font-black text-slate-400 uppercase tracking-wider">Time</th>
                   <th className="px-5 py-3.5 text-[11px] font-black text-slate-400 uppercase tracking-wider text-center">Status</th>
-                  <th className="px-5 py-3.5 text-[11px] font-black text-slate-400 uppercase tracking-wider text-right">Action</th>
+                  <th className="px-5 py-3.5 text-[11px] font-black text-slate-400 uppercase tracking-wider text-right">Delete</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -572,7 +572,7 @@ export default function OrdersList() {
                   const extra = items.length > 2 ? ` +${items.length - 2}` : '';
                   const totalPrice = order.bill?.customer_total ?? order.bill?.total ?? order.total_price ?? 0;
                   return (
-                    <tr key={order.id} className={`transition-colors ${orderType.row}`}>
+                    <tr key={order.id} onClick={() => navigate(`/adminfuudr/orders/${order.id}`)} className={`cursor-pointer transition-colors ${orderType.row}`}>
                       <td className="px-5 py-4 whitespace-nowrap">
                         <div className="flex flex-col items-start gap-1">
                           <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">
@@ -623,40 +623,9 @@ export default function OrdersList() {
                       </td>
                       <td className="px-5 py-4 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <div className="relative" onClick={event => event.stopPropagation()}>
-                            <button type="button" aria-label={`Assign delivery staff for order ${displayId}`}
-                              aria-expanded={openDeliveryDropdownId === order.id}
-                              disabled={savingDeliveryOrderId === order.id || !deliveryStaff.length}
-                              onClick={() => setOpenDeliveryDropdownId(current => current === order.id ? null : order.id)}
-                              className={`inline-flex max-w-36 items-center gap-1 rounded-md px-2 py-1 text-xs font-bold disabled:opacity-50 ${(order.delivery_assignees || []).length ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
-                              <span className="truncate">{(order.delivery_assignees || []).length ? order.delivery_assignees.join(', ') : 'Assign'}</span>
-                              <ChevronRight size={12} className="shrink-0 rotate-90" />
-                            </button>
-                            {openDeliveryDropdownId === order.id && (
-                              <div className="absolute right-0 top-full z-50 mt-1 max-h-48 w-48 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
-                                {deliveryStaff.map(name => (
-                                  <button key={name} type="button" disabled={savingDeliveryOrderId === order.id}
-                                    onClick={() => {
-                                      const current = order.delivery_assignees || [];
-                                      const next = current.includes(name) ? current.filter(person => person !== name) : [...current, name];
-                                      saveDeliveryAssignees(order, next);
-                                      setOpenDeliveryDropdownId(null);
-                                    }}
-                                    className={`block w-full rounded-md px-2 py-2 text-left text-xs font-bold transition-colors disabled:opacity-50 ${(order.delivery_assignees || []).includes(name) ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50'}`}>
-                                    {name}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
                           <button
-                            onClick={() => navigate(`/adminfuudr/orders/${order.id}`)}
-                            className="inline-flex items-center gap-1.5 bg-slate-900 text-white px-3.5 py-2 rounded-xl font-bold text-xs hover:bg-orange-500 transition-all shadow-sm"
-                          >
-                            <Eye size={13} /> Manage
-                          </button>
-                          <button
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               setDeleteError(null);
                               setOrderToDelete(order);
                             }}
