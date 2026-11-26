@@ -15,15 +15,7 @@ import {
 import { supabase } from '../../supabaseClient';
 import { ACTIVE_ORDER_STATUSES, getOrderType, orderDateKey } from './utils/orderOverview';
 import { calculateFinancialKpis } from './utils/financialKpis';
-
-const STATUS_BADGES = {
-  placed: { label: 'Placed', className: 'bg-slate-100 text-slate-700' },
-  preparing: { label: 'Preparing', className: 'bg-amber-50 text-amber-700' },
-  prepared: { label: 'Prepared', className: 'bg-violet-50 text-violet-700' },
-  on_the_way: { label: 'On the Way', className: 'bg-blue-50 text-blue-700' },
-  delivered: { label: 'Delivered', className: 'bg-emerald-50 text-emerald-700' },
-  cancelled: { label: 'Cancelled', className: 'bg-rose-50 text-rose-700' },
-};
+import OrdersTableView, { markFirstOrders } from './components/OrdersTableView';
 
 const formatCurrency = (amount) =>
   `₹${Math.round(Number(amount) || 0).toLocaleString('en-IN')}`;
@@ -54,7 +46,7 @@ export default function RestaurantDetails() {
           supabase.rpc('admin_list_partners').eq('id', id).maybeSingle(),
           supabase
             .from('orders')
-            .select('id, status, created_at, delivery_name, order_type, bill')
+            .select('*')
             .eq('partner_id', id)
             .order('created_at', { ascending: false }),
           supabase
@@ -74,7 +66,7 @@ export default function RestaurantDetails() {
 
         if (!active) return;
         setRestaurant(partnerData || null);
-        setOrders(ordersData || []);
+        setOrders(markFirstOrders(ordersData || []));
         setMenuItems(menuData || []);
         setAddonCount(addonsRes?.count || 0);
       } catch (fetchError) {
@@ -287,67 +279,12 @@ export default function RestaurantDetails() {
           )}
         </div>
 
-        {orders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <ShoppingBag size={32} className="mb-2 text-slate-300" />
-            <p className="text-sm font-bold text-slate-600">No orders yet</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-slate-100 bg-slate-50">
-                  <th className="px-5 py-3 text-[11px] font-black uppercase tracking-wider text-slate-400">Order</th>
-                  <th className="px-5 py-3 text-[11px] font-black uppercase tracking-wider text-slate-400">Customer</th>
-                  <th className="px-5 py-3 text-[11px] font-black uppercase tracking-wider text-slate-400">Type</th>
-                  <th className="px-5 py-3 text-[11px] font-black uppercase tracking-wider text-slate-400">Total</th>
-                  <th className="px-5 py-3 text-[11px] font-black uppercase tracking-wider text-slate-400">Time</th>
-                  <th className="px-5 py-3 text-right text-[11px] font-black uppercase tracking-wider text-slate-400">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {orders.slice(0, 5).map((order) => {
-                  const statusCfg = STATUS_BADGES[order.status] || STATUS_BADGES.placed;
-                  const displayId = String(order.id).split('-').pop().toUpperCase();
-                  const total = order.bill?.customer_total ?? order.bill?.total ?? 0;
-                  const type = getOrderType(order);
-
-                  return (
-                    <tr
-                      key={order.id}
-                      onClick={() => navigate(`/adminfuudr/orders/${order.id}`)}
-                      className="cursor-pointer transition-colors hover:bg-slate-50"
-                    >
-                      <td className="whitespace-nowrap px-5 py-3.5 font-mono text-xs font-bold text-slate-600">
-                        #{displayId}
-                      </td>
-                      <td className="px-5 py-3.5 text-sm font-bold text-slate-900">
-                        {order.delivery_name || 'N/A'}
-                      </td>
-                      <td className="whitespace-nowrap px-5 py-3.5">
-                        <span className={`rounded-full px-2 py-0.5 text-xs font-bold capitalize ${type === 'pickup' ? 'bg-amber-50 text-amber-800' : 'bg-sky-50 text-sky-800'}`}>
-                          {type}
-                        </span>
-                      </td>
-                      <td className="whitespace-nowrap px-5 py-3.5 text-sm font-black text-slate-900">
-                        {formatCurrency(total)}
-                      </td>
-                      <td className="whitespace-nowrap px-5 py-3.5 text-xs font-medium text-slate-500">
-                        {new Date(order.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}{' '}
-                        {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </td>
-                      <td className="whitespace-nowrap px-5 py-3.5 text-right">
-                        <span className={`inline-flex rounded-lg px-2.5 py-1 text-xs font-bold ${statusCfg.className}`}>
-                          {statusCfg.label}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <OrdersTableView
+          orders={orders.slice(0, 5)}
+          emptyMessage="No orders yet"
+          showRestaurant={false}
+          basePath="/adminfuudr/orders"
+        />
       </section>
     </div>
   );
