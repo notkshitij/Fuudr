@@ -131,24 +131,10 @@ export default function RestaurantsList() {
   return (
     <div className="font-outfit space-y-6">
 
-      {/* ── Page Header ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Restaurant Partners</h1>
-          <p className="text-slate-500 mt-1 font-medium">Manage onboarding, on-campus status, and operational details of all partner outlets.</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => { setLoading(true); fetchRestaurants(); }}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl font-semibold text-sm hover:bg-slate-50 transition-all shadow-sm"
-          >
-            <RefreshCw size={15} className={loading ? 'animate-spin' : ''} /> Refresh
-          </button>
-        </div>
-      </div>
+
 
       {/* ── Stat Cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <div className="bg-white rounded-2xl border border-slate-100 p-5 flex flex-col gap-3 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
@@ -162,18 +148,6 @@ export default function RestaurantsList() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-purple-100 p-5 flex flex-col gap-3 shadow-sm ring-1 ring-purple-100/50">
-          <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-              <GraduationCap size={22} />
-            </div>
-            <span className="text-xs font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">On Campus</span>
-          </div>
-          <div>
-            <p className="text-2xl font-black text-purple-700">{loading ? '—' : counts.poornima}</p>
-            <p className="text-xs font-semibold text-slate-500 mt-0.5">Inside Poornima Cafes</p>
-          </div>
-        </div>
 
         <div className="bg-white rounded-2xl border border-emerald-100 p-5 flex flex-col gap-3 shadow-sm">
           <div className="flex items-center justify-between">
@@ -188,18 +162,6 @@ export default function RestaurantsList() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-blue-100 p-5 flex flex-col gap-3 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Building2 size={20} />
-            </div>
-            <span className="text-xs font-bold text-slate-400">Off-Campus</span>
-          </div>
-          <div>
-            <p className="text-2xl font-black text-blue-600">{loading ? '—' : counts.regular}</p>
-            <p className="text-xs font-semibold text-slate-500 mt-0.5">Standard City Outlets</p>
-          </div>
-        </div>
       </div>
 
       {/* ── Filters & Search ── */}

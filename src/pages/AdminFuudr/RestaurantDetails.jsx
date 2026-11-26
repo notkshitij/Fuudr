@@ -100,49 +100,54 @@ export default function RestaurantDetails() {
 
   return (
     <div className="space-y-6 font-outfit">
-      <Link to="/restaurants" className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 transition-colors hover:text-orange-600"><ArrowLeft size={16} /> All Restaurants</Link>
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="flex flex-col gap-5 bg-gradient-to-r from-orange-50 to-white p-6 sm:flex-row sm:items-center">
-          {restaurant.logo_url ? <img src={restaurant.logo_url} alt={restaurant.restaurant_name || 'Restaurant'} className="h-20 w-20 rounded-2xl border border-slate-100 bg-white object-cover shadow-sm" /> : <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-orange-100 text-orange-600"><Store size={32} /></div>}
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-black tracking-tight text-slate-900">{restaurant.restaurant_name || 'Restaurant'}</h1>
-              {restaurant.is_poornima && <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2.5 py-1 text-xs font-bold text-purple-700"><GraduationCap size={14} /> Inside Poornima</span>}
-            </div>
-            <p className="mt-1 capitalize text-sm font-medium text-slate-500">{restaurant.restaurant_type || 'Restaurant'}{restaurant.avg_rating > 0 ? ` · ★ ${restaurant.avg_rating}` : ''}</p>
+      {/* Header */}
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+        {restaurant.logo_url ? <img src={restaurant.logo_url} alt={restaurant.restaurant_name || 'Restaurant'} className="h-20 w-20 rounded-2xl border border-slate-100 bg-white object-cover shadow-sm" /> : <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-orange-100 text-orange-600"><Store size={32} /></div>}
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-black tracking-tight text-slate-900">{restaurant.restaurant_name || 'Restaurant'}</h1>
+            {restaurant.is_poornima && <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2.5 py-1 text-xs font-bold text-purple-700"><GraduationCap size={14} /> Inside Poornima</span>}
           </div>
-          <span className={`rounded-full px-3 py-1.5 text-xs font-bold ${restaurant.is_open === false ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'}`}>{restaurant.is_open === false ? 'Closed' : 'Open'}</span>
+          <p className="mt-1 capitalize text-sm font-medium text-slate-500">{restaurant.restaurant_type || 'Restaurant'}{restaurant.avg_rating > 0 ? ` · ★ ${restaurant.avg_rating}` : ''}</p>
         </div>
-        <div className="p-6">
-          <h2 className="mb-4 text-sm font-black uppercase tracking-wider text-slate-400">Restaurant information</h2>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <Detail label="Owner" value={restaurant.owner_name} icon={Building2} />
-            <Detail label="Phone" value={restaurant.mobile_number} icon={Phone} />
-            <Detail label="Email" value={restaurant.email} icon={Mail} />
-            <Detail label="Address" value={restaurant.address} icon={MapPin} />
-            <Detail label="Operating hours" value={restaurant.opening_time && restaurant.closing_time ? `${restaurant.opening_time} – ${restaurant.closing_time}` : null} icon={Clock} />
-            <Detail label="Operating days" value={restaurant.operating_days} icon={Clock} />
-            <Detail label="Campus partner" value={restaurant.is_poornima} icon={GraduationCap} />
-            <Detail label="Average rating" value={restaurant.avg_rating} icon={Star} />
-            {restaurant.google_map_link && <div className="rounded-xl border border-slate-100 bg-white p-4"><div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-400"><MapPin size={14} />Map</div><a href={restaurant.google_map_link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm font-bold text-orange-600 hover:text-orange-700">View on Google Maps <ExternalLink size={13} /></a></div>}
-          </div>
-          {extraDetails.length > 0 && <>
-            <h2 className="mb-4 mt-8 text-sm font-black uppercase tracking-wider text-slate-400">Additional details</h2>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{extraDetails.map(([key, value]) => <Detail key={key} label={key.replace(/_/g, ' ')} value={value} />)}</div>
-          </>}
-          <div className="mt-6 flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs font-bold text-slate-700">Temporary feed suspension</p>
-              <p className="mt-0.5 text-[11px] text-slate-500">{restaurant.is_temporarily_suspended ? 'This restaurant is suspended from discovery.' : 'This restaurant is visible in discovery.'} Search results can remain available.</p>
-              {suspendError && <p role="alert" className="mt-1 text-xs font-semibold text-rose-600">{suspendError}</p>}
-            </div>
-            <button type="button" onClick={() => setConfirmationAction(restaurant.is_temporarily_suspended ? 'restore' : 'suspend')} className={`inline-flex shrink-0 items-center justify-center gap-1.5 self-start rounded-lg px-3 py-1.5 text-xs font-bold text-white transition sm:self-auto ${restaurant.is_temporarily_suspended ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'}`}>
-              {restaurant.is_temporarily_suspended ? <RotateCcw size={13} /> : <Ban size={13} />}
-              {suspendSaving ? 'Saving…' : restaurant.is_temporarily_suspended ? 'Restore' : 'Suspend'}
-            </button>
-          </div>
+        <span className={`rounded-full px-3 py-1.5 text-xs font-bold ${restaurant.is_open === false ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'}`}>{restaurant.is_open === false ? 'Closed' : 'Open'}</span>
+      </div>
+
+      {/* Restaurant Info */}
+      <div>
+        <h2 className="mb-4 text-sm font-black uppercase tracking-wider text-slate-400">Restaurant information</h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <Detail label="Owner" value={restaurant.owner_name} icon={Building2} />
+          <Detail label="Phone" value={restaurant.mobile_number} icon={Phone} />
+          <Detail label="Email" value={restaurant.email} icon={Mail} />
+          <Detail label="Address" value={restaurant.address} icon={MapPin} />
+          <Detail label="Operating hours" value={restaurant.opening_time && restaurant.closing_time ? `${restaurant.opening_time} – ${restaurant.closing_time}` : null} icon={Clock} />
+          <Detail label="Operating days" value={restaurant.operating_days} icon={Clock} />
+          <Detail label="Campus partner" value={restaurant.is_poornima} icon={GraduationCap} />
+          <Detail label="Average rating" value={restaurant.avg_rating} icon={Star} />
+          {restaurant.google_map_link && <div className="rounded-xl border border-slate-100 bg-white p-4"><div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-400"><MapPin size={14} />Map</div><a href={restaurant.google_map_link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm font-bold text-orange-600 hover:text-orange-700">View on Google Maps <ExternalLink size={13} /></a></div>}
         </div>
-      </section>
+      </div>
+
+      {/* Additional Details */}
+      {extraDetails.length > 0 && <>
+        <h2 className="mb-4 text-sm font-black uppercase tracking-wider text-slate-400">Additional details</h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{extraDetails.map(([key, value]) => <Detail key={key} label={key.replace(/_/g, ' ')} value={value} />)}</div>
+      </>}
+
+      {/* Suspension */}
+      <div className="flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-bold text-slate-700">Temporary feed suspension</p>
+          <p className="mt-0.5 text-[11px] text-slate-500">{restaurant.is_temporarily_suspended ? 'This restaurant is suspended from discovery.' : 'This restaurant is visible in discovery.'} Search results can remain available.</p>
+          {suspendError && <p role="alert" className="mt-1 text-xs font-semibold text-rose-600">{suspendError}</p>}
+        </div>
+        <button type="button" onClick={() => setConfirmationAction(restaurant.is_temporarily_suspended ? 'restore' : 'suspend')} className={`inline-flex shrink-0 items-center justify-center gap-1.5 self-start rounded-lg px-3 py-1.5 text-xs font-bold text-white transition sm:self-auto ${restaurant.is_temporarily_suspended ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'}`}>
+          {restaurant.is_temporarily_suspended ? <RotateCcw size={13} /> : <Ban size={13} />}
+          {suspendSaving ? 'Saving…' : restaurant.is_temporarily_suspended ? 'Restore' : 'Suspend'}
+        </button>
+      </div>
+
       {confirmationAction && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 p-4" onMouseDown={event => { if (event.target === event.currentTarget && !suspendSaving) setConfirmationAction(null); }}>
           <section role="dialog" aria-modal="true" aria-labelledby="suspension-confirm-title" className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">

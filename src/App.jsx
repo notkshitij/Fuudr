@@ -20,6 +20,10 @@ import OrdersList from './pages/AdminFuudr/OrdersList';
 import ManageOrder from './pages/AdminFuudr/ManageOrder';
 import RestaurantsList from './pages/AdminFuudr/RestaurantsList';
 import RestaurantDetails from './pages/AdminFuudr/RestaurantDetails';
+import RestaurantLayout from './pages/AdminFuudr/RestaurantLayout';
+import RestaurantOrders from './pages/AdminFuudr/RestaurantOrders';
+import RestaurantMenuItems from './pages/AdminFuudr/RestaurantMenuItems';
+import RestaurantAdminSettings from './pages/AdminFuudr/RestaurantAdminSettingsPage';
 import RiderLocations from './pages/AdminFuudr/RiderLocations';
 import DeliveryPartnersList from './pages/AdminFuudr/DeliveryPartnersList';
 import Privacy from './pages/Privacy/Privacy';
@@ -80,7 +84,17 @@ export default function App() {
             </SuperAdminRoute>
           }>
             <Route index element={<RestaurantsList />} />
-            <Route path=":id" element={<RestaurantDetails />} />
+          </Route>
+
+          <Route path="/restaurants/:id" element={
+            <SuperAdminRoute>
+              <RestaurantLayout />
+            </SuperAdminRoute>
+          }>
+            <Route index element={<RestaurantDetails />} />
+            <Route path="orders" element={<RestaurantOrders />} />
+            <Route path="menu" element={<RestaurantMenuItems />} />
+            <Route path="settings" element={<RestaurantAdminSettings />} />
           </Route>
 
           {/* Partner Portal Routes */}
