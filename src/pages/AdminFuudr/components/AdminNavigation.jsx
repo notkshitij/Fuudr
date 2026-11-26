@@ -44,7 +44,6 @@ export function AdminNavigation() {
     { name: 'Orders',      path: '/adminfuudr/orders',       icon: ShoppingBag, badge: liveCount },
     { name: 'Statistics', path: '/adminfuudr/statistics', icon: BarChart3 },
     { name: 'Restaurants', path: '/adminfuudr/restaurants', icon: Store },
-    { name: 'Restaurant Partners', path: '/adminfuudr/restaurant-partners', icon: Store },
     { name: 'Settings', path: '/adminfuudr/settings', icon: Settings },
   ];
 

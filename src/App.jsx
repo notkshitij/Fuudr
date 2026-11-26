@@ -23,8 +23,8 @@ import RestaurantDetails from './pages/AdminFuudr/RestaurantDetails';
 import RestaurantLayout from './pages/AdminFuudr/RestaurantLayout';
 import RestaurantOrders from './pages/AdminFuudr/RestaurantOrders';
 import RestaurantMenuItems from './pages/AdminFuudr/RestaurantMenuItems';
+import RestaurantTeam from './pages/AdminFuudr/RestaurantTeam';
 import RestaurantAdminSettings from './pages/AdminFuudr/RestaurantAdminSettingsPage';
-import DeliveryPartnersList from './pages/AdminFuudr/DeliveryPartnersList';
 import Privacy from './pages/Privacy/Privacy';
 import TermsOfService from './pages/TermsOfService/TermsOfService';
 import DeleteAccount from './pages/DeleteAccount/DeleteAccount';
@@ -78,7 +78,6 @@ export default function App() {
             <Route path="orders" element={<OrdersList />} />
             <Route path="orders/:id" element={<ManageOrder />} />
             <Route path="restaurants" element={<RestaurantsList />} />
-            <Route path="restaurant-partners" element={<DeliveryPartnersList />} />
           </Route>
 
           <Route path="/adminfuudr/restaurants/:id" element={
@@ -89,6 +88,7 @@ export default function App() {
             <Route index element={<RestaurantDetails />} />
             <Route path="orders" element={<RestaurantOrders />} />
             <Route path="menu" element={<RestaurantMenuItems />} />
+            <Route path="team" element={<RestaurantTeam />} />
             <Route path="settings" element={<RestaurantAdminSettings />} />
           </Route>
 

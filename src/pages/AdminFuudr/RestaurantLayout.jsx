@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useParams, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, UtensilsCrossed, Settings, ArrowLeft, Menu, X } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, UtensilsCrossed, Settings, ArrowLeft, Menu, X, Users } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
 
 const navItems = [
   { name: 'Home',       icon: LayoutDashboard, path: '' },
   { name: 'Orders',     icon: ShoppingBag,     path: 'orders' },
   { name: 'Menu Items', icon: UtensilsCrossed,  path: 'menu' },
+  { name: 'Team',       icon: Users,           path: 'team' },
   { name: 'Settings',   icon: Settings,         path: 'settings' },
 ];
 
