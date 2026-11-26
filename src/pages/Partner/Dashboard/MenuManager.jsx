@@ -767,7 +767,7 @@ const MenuManager = ({ user }) => {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-3.5">
           {filteredMenuItems.map(item => {
             const isInStock = item.is_in_stock !== false;
             const isAvailable = item.is_available;
@@ -776,7 +776,7 @@ const MenuManager = ({ user }) => {
             return (
               <div 
                 key={item.id} 
-                className={`relative group aspect-[9/16] bg-slate-900 rounded-[2rem] overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer ${!isAvailable ? 'opacity-60 grayscale-[50%]' : ''}`}
+                className={`relative group aspect-[4/5] bg-slate-900 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer ${!isAvailable ? 'opacity-60 grayscale-[50%]' : ''}`}
                 onClick={() => setActiveVideoItem(item)}
               >
                 {/* Background Image or Video */}
@@ -784,7 +784,7 @@ const MenuManager = ({ user }) => {
                   <AdaptiveVideo
                     src={item.reels[0].video_url} 
                     poster={item.image_url || undefined}
-                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
+                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
                     loop
                     muted
                     playsInline
@@ -800,15 +800,15 @@ const MenuManager = ({ user }) => {
                     }}
                   />
                 ) : item.image_url ? (
-                  <img src={item.image_url} alt={item.name} className="w-full h-full object-cover opacity-80 group-hover:scale-110 transition-transform duration-700" />
+                  <img src={item.image_url} alt={item.name} className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-slate-800 text-slate-500">
-                    <ImageIcon size={48} />
+                    <ImageIcon size={32} />
                   </div>
                 )}
                 
                 {/* Top Badges Bar: Stock Quick-Toggle & Food Type / Status */}
-                <div className="absolute top-3 left-3 right-3 sm:top-4 sm:left-4 sm:right-4 flex items-start justify-between gap-2 z-10 pointer-events-none">
+                <div className="absolute top-2.5 left-2.5 right-2.5 flex items-start justify-between gap-1.5 z-10 pointer-events-none">
                   {/* Top Left: Interactive Stock Badge / Toggle Button */}
                   <button
                     type="button"
@@ -816,57 +816,57 @@ const MenuManager = ({ user }) => {
                       e.stopPropagation();
                       handleToggleStock(item);
                     }}
-                    className={`pointer-events-auto flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full text-[11px] sm:text-xs font-bold shadow-lg backdrop-blur-md transition-all cursor-pointer border active:scale-95 ${
+                    className={`pointer-events-auto flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shadow-md backdrop-blur-md transition-all cursor-pointer border active:scale-95 ${
                       isInStock
                         ? 'bg-emerald-500/90 hover:bg-emerald-600 text-white border-emerald-400/30'
-                        : 'bg-rose-600/95 hover:bg-rose-700 text-white border-rose-400/40 shadow-rose-900/40 ring-2 ring-rose-500/40'
+                        : 'bg-rose-600/95 hover:bg-rose-700 text-white border-rose-400/40 shadow-rose-900/40 ring-1 ring-rose-500/40'
                     }`}
                     title={isInStock ? "In Stock — Click to mark Out of Stock" : "Out of Stock — Click to mark In Stock"}
                   >
-                    <span className={`w-2 h-2 rounded-full ${isInStock ? 'bg-white' : 'bg-rose-200 animate-pulse'}`} />
-                    <span>{isInStock ? 'In Stock' : 'Out of Stock'}</span>
+                    <span className={`w-1.5 h-1.5 rounded-full ${isInStock ? 'bg-white' : 'bg-rose-200 animate-pulse'}`} />
+                    <span>{isInStock ? 'In Stock' : 'Out'}</span>
                   </button>
 
                   {/* Top Right: Veg indicator, Reel badge & Feed Visibility badge */}
-                  <div className="flex flex-col gap-1.5 items-end">
-                    <div className="bg-white/90 backdrop-blur-md p-1.5 sm:p-2 rounded-full shadow-lg">
-                      <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ${item.is_veg ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <div className="flex flex-col gap-1 items-end">
+                    <div className="bg-white/90 backdrop-blur-md p-1 rounded-full shadow-md">
+                      <div className={`w-2 h-2 rounded-full ${item.is_veg ? 'bg-green-500' : 'bg-red-500'}`}></div>
                     </div>
                     {hasReel && (
                       <div 
-                        className="bg-black/60 backdrop-blur-md p-1 sm:p-1.5 rounded-full shadow-lg flex items-center justify-center text-white"
+                        className="bg-black/60 backdrop-blur-md p-1 rounded-full shadow-md flex items-center justify-center text-white"
                         title="Reel video available - tap to play"
                       >
-                        <Video size={13} className="sm:w-3.5 sm:h-3.5" />
+                        <Video size={11} />
                       </div>
                     )}
                     {!isAvailable && (
                       <div 
-                        className="bg-white/90 backdrop-blur-md p-1 sm:p-1.5 rounded-full shadow-lg flex items-center justify-center text-slate-500"
+                        className="bg-white/90 backdrop-blur-md p-1 rounded-full shadow-md flex items-center justify-center text-slate-500"
                         title="Hidden from feed"
                       >
-                        <EyeOff size={14} className="sm:w-4 sm:h-4" />
+                        <EyeOff size={11} />
                       </div>
                     )}
                   </div>
                 </div>
 
                 {/* Overlay Gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent pointer-events-none flex flex-col justify-end p-3 sm:p-4">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent pointer-events-none flex flex-col justify-end p-2.5 sm:p-3">
                   {/* Details Overlay */}
                   <div className="pointer-events-auto">
-                    <div className="text-orange-400 font-black text-[10px] sm:text-xs uppercase tracking-widest mb-0.5 sm:mb-1">{item.category_name}</div>
-                    <h3 className="text-white font-bold text-base sm:text-xl leading-tight mb-0.5 sm:mb-1 drop-shadow-md truncate" title={item.name}>{item.name}</h3>
+                    <div className="text-orange-400 font-black text-[9px] uppercase tracking-wider mb-0.5">{item.category_name}</div>
+                    <h3 className="text-white font-bold text-sm leading-tight mb-0.5 drop-shadow-md truncate" title={item.name}>{item.name}</h3>
                     {item.description && item.description.trim() !== '-' && (
-                      <p className="text-white/70 text-[11px] sm:text-xs leading-snug mb-1.5 sm:mb-2 line-clamp-1 sm:line-clamp-2">{item.description}</p>
+                      <p className="text-white/70 text-[10px] leading-snug mb-1 line-clamp-1">{item.description}</p>
                     )}
-                    <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
-                      <div className="bg-orange-500 text-white font-bold px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-lg w-max text-xs sm:text-sm shadow-lg shadow-orange-500/20">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <div className="bg-orange-500 text-white font-bold px-2 py-0.5 rounded-md w-max text-xs shadow-md shadow-orange-500/20">
                         ₹{item.price}
                       </div>
                       {item.menu_item_addons && item.menu_item_addons.length > 0 && (
-                        <div className="inline-flex items-center gap-1 bg-white/20 backdrop-blur-md px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[10px] sm:text-xs font-bold text-orange-200 border border-white/10">
-                          <Layers size={11} className="sm:w-3 sm:h-3" />
+                        <div className="inline-flex items-center gap-1 bg-white/20 backdrop-blur-md px-1.5 py-0.5 rounded-md text-[9px] font-bold text-orange-200 border border-white/10">
+                          <Layers size={9} />
                           <span>{item.menu_item_addons.length} Add-on{item.menu_item_addons.length > 1 ? 's' : ''}</span>
                         </div>
                       )}
@@ -876,23 +876,23 @@ const MenuManager = ({ user }) => {
                     {deleteConfirmId === item.id ? (
                       <div 
                         onClick={(e) => e.stopPropagation()}
-                        className="flex flex-col gap-1.5 sm:gap-2 mb-1 animate-fadeIn bg-black/90 p-2.5 sm:p-3 rounded-xl backdrop-blur-md border border-rose-500/40 shadow-xl"
+                        className="flex flex-col gap-1.5 mb-1 animate-fadeIn bg-black/95 p-2 rounded-xl backdrop-blur-md border border-rose-500/40 shadow-xl"
                       >
-                        <p className="text-white text-[11px] sm:text-xs font-bold text-center">Delete this dish?</p>
-                        <div className="flex gap-1.5 sm:gap-2">
+                        <p className="text-white text-[10px] font-bold text-center">Delete this dish?</p>
+                        <div className="flex gap-1.5">
                           <button 
                             type="button"
                             onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }} 
                             disabled={deletingItemId === item.id}
-                            className="flex-1 py-1.5 bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:bg-red-500/70 disabled:cursor-wait text-white text-[11px] sm:text-xs font-bold rounded-lg transition-colors shadow flex items-center justify-center gap-1"
+                            className="flex-1 py-1 bg-red-600 hover:bg-red-700 active:bg-red-800 disabled:bg-red-500/70 disabled:cursor-wait text-white text-[10px] font-bold rounded-lg transition-colors shadow flex items-center justify-center gap-1"
                           >
-                            {deletingItemId === item.id ? <><LoaderCircle size={13} className="animate-spin" /> Deleting…</> : 'Yes'}
+                            {deletingItemId === item.id ? <><LoaderCircle size={11} className="animate-spin" /> Deleting…</> : 'Yes'}
                           </button>
                           <button 
                             type="button"
                             onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(null); }} 
                             disabled={deletingItemId === item.id}
-                            className="flex-1 py-1.5 bg-white/20 hover:bg-white/30 active:bg-white/40 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[11px] sm:text-xs font-bold rounded-lg transition-colors"
+                            className="flex-1 py-1 bg-white/20 hover:bg-white/30 active:bg-white/40 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[10px] font-bold rounded-lg transition-colors"
                           >
                             No
                           </button>
@@ -900,51 +900,51 @@ const MenuManager = ({ user }) => {
                       </div>
                     ) : (
                       /* Action buttons: ALWAYS visible on mobile (2x2 grid), revealed on hover on desktop (4 in a row) */
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-1.5 opacity-100 translate-y-0 md:opacity-0 md:group-hover:opacity-100 md:translate-y-2 md:group-hover:translate-y-0 transition-all duration-300">
+                      <div className="grid grid-cols-4 gap-1 opacity-100 translate-y-0 md:opacity-0 md:group-hover:opacity-100 md:translate-y-1 md:group-hover:translate-y-0 transition-all duration-300">
                         {/* Edit Dish */}
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); openEditModal(item); }}
                           disabled={loadingEditId === item.id}
-                          className="py-1.5 px-2 rounded-xl bg-white/20 hover:bg-white/30 active:bg-white/40 backdrop-blur-md text-white border border-white/10 transition-colors flex items-center justify-center gap-1 sm:flex-col sm:gap-0.5 sm:py-2"
+                          className="py-1 px-1 rounded-lg bg-white/20 hover:bg-white/30 active:bg-white/40 backdrop-blur-md text-white border border-white/10 transition-colors flex flex-col items-center justify-center gap-0.5"
                           title="Edit Dish"
                         >
                           {loadingEditId === item.id ? (
-                            <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
+                            <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
                           ) : (
-                            <Pencil size={13} className="sm:w-4 sm:h-4 shrink-0" />
+                            <Pencil size={11} className="shrink-0" />
                           )}
-                          <span className="text-[10px] sm:text-[9px] font-bold uppercase tracking-wider text-slate-100">Edit</span>
+                          <span className="text-[8px] font-bold uppercase tracking-wider text-slate-100">Edit</span>
                         </button>
 
                         {/* Stock Toggle Button */}
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); handleToggleStock(item); }}
-                          className={`py-1.5 px-2 rounded-xl backdrop-blur-md text-white border transition-colors flex items-center justify-center gap-1 sm:flex-col sm:gap-0.5 sm:py-2 ${
+                          className={`py-1 px-1 rounded-lg backdrop-blur-md text-white border transition-colors flex flex-col items-center justify-center gap-0.5 ${
                             isInStock 
                               ? 'bg-emerald-600/90 hover:bg-emerald-600 active:bg-emerald-700 border-emerald-400/20' 
                               : 'bg-rose-600/90 hover:bg-rose-600 active:bg-rose-700 border-rose-400/20'
                           }`}
                           title={isInStock ? "Stock: In Stock (Click to mark Out of Stock)" : "Stock: Out of Stock (Click to mark In Stock)"}
                         >
-                          {isInStock ? <ToggleRight size={14} className="sm:w-4 sm:h-4 shrink-0" /> : <ToggleLeft size={14} className="sm:w-4 sm:h-4 shrink-0" />}
-                          <span className="text-[10px] sm:text-[9px] font-bold uppercase tracking-wider text-white">Stock</span>
+                          {isInStock ? <ToggleRight size={12} className="shrink-0" /> : <ToggleLeft size={12} className="shrink-0" />}
+                          <span className="text-[8px] font-bold uppercase tracking-wider text-white">Stock</span>
                         </button>
 
                         {/* Feed Visibility Toggle Button */}
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); handleToggleAvailability(item); }}
-                          className={`py-1.5 px-2 rounded-xl backdrop-blur-md text-white border transition-colors flex items-center justify-center gap-1 sm:flex-col sm:gap-0.5 sm:py-2 ${
+                          className={`py-1 px-1 rounded-lg backdrop-blur-md text-white border transition-colors flex flex-col items-center justify-center gap-0.5 ${
                             isAvailable 
                               ? 'bg-blue-600/90 hover:bg-blue-600 active:bg-blue-700 border-blue-400/20' 
                               : 'bg-slate-700/90 hover:bg-slate-700 active:bg-slate-800 border-slate-500/20 text-slate-300'
                           }`}
                           title={isAvailable ? "Feed: Visible (Click to hide from feed)" : "Feed: Hidden (Click to show in feed)"}
                         >
-                          {isAvailable ? <ToggleRight size={14} className="sm:w-4 sm:h-4 shrink-0" /> : <ToggleLeft size={14} className="sm:w-4 sm:h-4 shrink-0" />}
-                          <span className="text-[10px] sm:text-[9px] font-bold uppercase tracking-wider text-white">Feed</span>
+                          {isAvailable ? <ToggleRight size={12} className="shrink-0" /> : <ToggleLeft size={12} className="shrink-0" />}
+                          <span className="text-[8px] font-bold uppercase tracking-wider text-white">Feed</span>
                         </button>
 
                         {/* Delete Dish */}
@@ -952,11 +952,11 @@ const MenuManager = ({ user }) => {
                           type="button"
                           onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(item.id); }}
                           disabled={Boolean(deletingItemId)}
-                          className="py-1.5 px-2 rounded-xl bg-rose-600/85 hover:bg-rose-600 active:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-md text-white border border-rose-400/20 transition-colors flex items-center justify-center gap-1 sm:flex-col sm:gap-0.5 sm:py-2"
+                          className="py-1 px-1 rounded-lg bg-rose-600/85 hover:bg-rose-600 active:bg-rose-700 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-md text-white border border-rose-400/20 transition-colors flex flex-col items-center justify-center gap-0.5"
                           title="Delete Dish"
                         >
-                          <Trash2 size={13} className="sm:w-4 sm:h-4 shrink-0" />
-                          <span className="text-[10px] sm:text-[9px] font-bold uppercase tracking-wider text-slate-100">Delete</span>
+                          <Trash2 size={11} className="shrink-0" />
+                          <span className="text-[8px] font-bold uppercase tracking-wider text-slate-100">Delete</span>
                         </button>
                       </div>
                     )}
