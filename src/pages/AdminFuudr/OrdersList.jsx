@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { ACTIVE_ORDER_STATUSES, getOrderType, orderDateKey } from './utils/orderOverview';
-import { Eye, Search, Package, Clock, Bike, CheckCircle, RefreshCw, GraduationCap, Sparkles, Trash2, X, Loader2, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Eye, Search, Package, Clock, Bike, CheckCircle, RefreshCw, GraduationCap, Sparkles, Trash2, X, Loader2, CalendarDays, ChevronLeft, ChevronRight, ShoppingBag, Zap, XCircle } from 'lucide-react';
 
 const STATUS_CONFIG = {
   all:        { label: 'All Orders',  color: 'text-slate-700',   bg: 'bg-slate-100',  dot: 'bg-slate-400' },
@@ -14,6 +14,13 @@ const STATUS_CONFIG = {
   delivered:  { label: 'Delivered',   color: 'text-emerald-700', bg: 'bg-emerald-50',  dot: 'bg-emerald-500', icon: CheckCircle },
   cancelled:  { label: 'Cancelled',   color: 'text-rose-700',    bg: 'bg-rose-50',     dot: 'bg-rose-500',    icon: CheckCircle },
 };
+
+const ORDER_KPIS = [
+  { status: 'all', icon: ShoppingBag, accent: 'bg-orange-50 text-orange-700' },
+  { status: 'active', icon: Zap, accent: 'bg-blue-50 text-blue-700' },
+  { status: 'delivered', icon: CheckCircle, accent: 'bg-emerald-50 text-emerald-700' },
+  { status: 'cancelled', icon: XCircle, accent: 'bg-rose-50 text-rose-700' },
+];
 
 const ORDER_TYPE_CONFIG = {
   delivery: {
@@ -293,22 +300,28 @@ export default function OrdersList() {
   return (
     <div className="font-outfit space-y-6">
 
-      {/* ── Header ── */}
-      <div className="flex items-start sm:items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="text-xl sm:text-3xl font-black text-slate-900 tracking-tight whitespace-nowrap">Incoming Orders</h2>
-          <p className="text-xs sm:text-base text-slate-500 mt-1 font-medium truncate">Live queue across campus &amp; cloud kitchens</p>
-        </div>
-        <button
-          onClick={() => { setLoading(true); fetchOrders(); }}
-          className="flex flex-shrink-0 items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-emerald-700 hover:bg-emerald-100 transition-all"
-          title="Orders refresh automatically every 5 seconds"
-        >
-          <span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />
-          <span>Auto (5s)</span>
-          <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
-        </button>
-      </div>
+      <section aria-label="Order totals" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {ORDER_KPIS.map(({ status, icon: Icon, accent }) => {
+          const selected = activeTab === status;
+          return (
+            <button
+              key={status}
+              type="button"
+              aria-pressed={selected}
+              onClick={() => setFilter('status', status === 'all' ? '' : status)}
+              className={`rounded-2xl border bg-white p-4 text-left shadow-sm transition hover:shadow-md ${
+                selected ? 'border-orange-400 ring-1 ring-orange-400' : 'border-slate-200'
+              }`}
+            >
+              <span className={`inline-flex rounded-lg p-2 ${accent}`}>
+                <Icon size={18} aria-hidden="true" />
+              </span>
+              <span className="mt-2 block text-2xl font-black text-slate-900">{loading ? '—' : counts[status]}</span>
+              <span className="block text-sm font-semibold text-slate-600">{STATUS_CONFIG[status].label}</span>
+            </button>
+          );
+        })}
+      </section>
 
       {/* ── Filters Row ── */}
       <div className="space-y-3">
@@ -425,26 +438,39 @@ export default function OrdersList() {
             </div>
           )}
           </div>
+          <button
+            type="button"
+            onClick={() => { setLoading(true); fetchOrders(); }}
+            className="flex h-11 shrink-0 items-center gap-2 rounded-[14px] border border-emerald-200 bg-emerald-50 px-3 text-sm font-bold text-emerald-700 hover:bg-emerald-100"
+            title="Orders refresh automatically every 5 seconds"
+            aria-label="Refresh orders"
+          >
+            <RefreshCw size={15} aria-hidden="true" className={loading ? 'animate-spin' : ''} />
+            <span className="hidden sm:inline">Auto (5s)</span>
+          </button>
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
           {/* Status tabs */}
           <div className="flex flex-shrink-0 items-center gap-2">
-            {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
-              <button
-                key={key}
-                onClick={() => setFilter('status', key === 'all' ? '' : key)}
-                className={`flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-bold transition-all ${
-                  activeTab === key
-                    ? `${cfg.bg} ${cfg.color} border-current`
-                    : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
-                }`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                <span>{cfg.label}</span>
-                <span className="text-xs opacity-70">{counts[key]}</span>
-              </button>
-            ))}
+            {ACTIVE_ORDER_STATUSES.map(key => {
+              const cfg = STATUS_CONFIG[key];
+              return (
+                <button
+                  key={key}
+                  onClick={() => setFilter('status', key === 'all' ? '' : key)}
+                  className={`flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-bold transition-all ${
+                    activeTab === key
+                      ? `${cfg.bg} ${cfg.color} border-current`
+                      : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                  <span>{cfg.label}</span>
+                  <span className="text-xs opacity-70">{counts[key]}</span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Campus Filter Toggle */}
