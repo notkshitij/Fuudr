@@ -1,10 +1,12 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
+import { ACTIVE_ORDER_STATUSES, getOrderType, orderDateKey } from './utils/orderOverview';
 import { Eye, Search, Package, Clock, Bike, CheckCircle, RefreshCw, GraduationCap, Sparkles, Trash2, X, Loader2, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const STATUS_CONFIG = {
   all:        { label: 'All Orders',  color: 'text-slate-700',   bg: 'bg-slate-100',  dot: 'bg-slate-400' },
+  active:     { label: 'Active', color: 'text-blue-700', bg: 'bg-blue-50', dot: 'bg-blue-500' },
   placed:     { label: 'Placed',      color: 'text-slate-700',   bg: 'bg-slate-100',  dot: 'bg-slate-500',   icon: Package },
   preparing:  { label: 'Preparing',   color: 'text-amber-700',   bg: 'bg-amber-50',    dot: 'bg-amber-500',   icon: Clock },
   prepared:   { label: 'Prepared',    color: 'text-violet-700',  bg: 'bg-violet-50',   dot: 'bg-violet-500',  icon: CheckCircle },
@@ -25,27 +27,6 @@ const ORDER_TYPE_CONFIG = {
     badge: 'bg-amber-100 text-amber-900',
   },
 };
-
-const getOrderType = (order) => {
-  if (order.order_type === 'pickup' || order.order_type === 'delivery') return order.order_type;
-
-  // Older orders may only store the type in the bill.
-  let bill = order.bill;
-  if (typeof bill === 'string') {
-    try {
-      bill = JSON.parse(bill);
-    } catch {
-      return 'delivery';
-    }
-  }
-  return bill?.fulfillment_mode === 'pickup' ? 'pickup' : 'delivery';
-};
-
-const TODAY = new Intl.DateTimeFormat('en-CA', {
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-}).format(new Date());
 
 const getCustomerKey = (order) => {
   const customerId = order.customer_id ?? order.user_id ?? order.profile_id;
@@ -82,10 +63,23 @@ export default function OrdersList() {
   const [orders, setOrders]       = useState([]);
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState('');
-  const [dateFilter, setDateFilter] = useState('');
   const [campusFilter, setCampusFilter] = useState('all'); // 'all', 'poornima_only'
   const [firstOrderOnly, setFirstOrderOnly] = useState(false);
-  const [activeTab, setActiveTab] = useState('all');
+  const [filters, setFilters] = useSearchParams();
+  const statusFilter = filters.get('status');
+  const activeTab = Object.hasOwn(STATUS_CONFIG, statusFilter) ? statusFilter : 'all';
+  const requestedDate = filters.get('date') || '';
+  const dateFilter = /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) &&
+    orderDateKey(`${requestedDate}T00:00:00+05:30`) === requestedDate ? requestedDate : '';
+  const [now, setNow] = useState(Date.now);
+  const todayKey = orderDateKey(now);
+
+  const setFilter = (key, value) => {
+    const next = new URLSearchParams(filters);
+    if (value) next.set(key, value);
+    else next.delete(key);
+    setFilters(next);
+  };
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
@@ -94,7 +88,7 @@ export default function OrdersList() {
   const [savingDeliveryOrderId, setSavingDeliveryOrderId] = useState(null);
   const [deliveryStaffError, setDeliveryStaffError] = useState('');
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [calendarMonth, setCalendarMonth] = useState(() => new Date());
+  const [calendarMonth, setCalendarMonth] = useState(() => new Date(`${dateFilter || todayKey}T00:00:00`));
   const navigate = useNavigate();
 
   const calendarDays = useMemo(() => {
@@ -221,10 +215,15 @@ export default function OrdersList() {
     setSavingDeliveryOrderId(null);
   };
 
-  useEffect(() => { fetchDeliveryStaff(); }, []);
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 15_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => { queueMicrotask(fetchDeliveryStaff); }, []);
 
   useEffect(() => {
-    fetchOrders();
+    queueMicrotask(fetchOrders);
     const refreshInterval = window.setInterval(fetchOrders, 5000);
     const sub = supabase
       .channel('orders_channel')
@@ -250,10 +249,12 @@ export default function OrdersList() {
 
   // Tab counts
   const counts = useMemo(() => {
-    const c = { all: orders.length, placed: 0, preparing: 0, prepared: 0, on_the_way: 0, delivered: 0, cancelled: 0 };
-    orders.forEach(o => { if (c[o.status] !== undefined) c[o.status]++; });
+    const periodOrders = dateFilter ? orders.filter(o => orderDateKey(o.created_at) === dateFilter) : orders;
+    const c = { all: periodOrders.length, placed: 0, preparing: 0, prepared: 0, on_the_way: 0, delivered: 0, cancelled: 0 };
+    periodOrders.forEach(o => { if (c[o.status] !== undefined) c[o.status]++; });
+    c.active = ACTIVE_ORDER_STATUSES.reduce((total, status) => total + c[status], 0);
     return c;
-  }, [orders]);
+  }, [orders, dateFilter]);
 
   const poornimaOrderCount = useMemo(() => {
     return orders.filter(o => o.is_poornima).length;
@@ -266,7 +267,8 @@ export default function OrdersList() {
   // Filtered list
   const filtered = useMemo(() => {
     return orders.filter(o => {
-      const matchTab = activeTab === 'all' || o.status === activeTab;
+      const matchTab = activeTab === 'all' || o.status === activeTab ||
+        (activeTab === 'active' && ACTIVE_ORDER_STATUSES.includes(o.status));
       
       // Campus filter
       if (campusFilter === 'poornima_only' && !o.is_poornima) return false;
@@ -281,8 +283,7 @@ export default function OrdersList() {
       
       let matchDate = true;
       if (dateFilter) {
-        const localDateParts = new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(o.created_at));
-        matchDate = localDateParts === dateFilter;
+        matchDate = orderDateKey(o.created_at) === dateFilter;
       }
 
       return matchTab && matchSearch && matchDate;
@@ -337,7 +338,7 @@ export default function OrdersList() {
             <span className="text-sm font-bold whitespace-nowrap">
               {!dateFilter
                 ? 'Date'
-                : dateFilter === TODAY
+                : dateFilter === todayKey
                   ? 'Today'
                   : new Date(`${dateFilter}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </span>
@@ -376,13 +377,13 @@ export default function OrdersList() {
                   if (!day) return <span key={`empty-${index}`} />;
                   const key = dateKey(calendarMonth.getFullYear(), calendarMonth.getMonth(), day);
                   const selected = dateFilter === key;
-                  const today = TODAY === key;
+                  const today = todayKey === key;
                   return (
                     <button
                       key={key}
                       type="button"
                       onClick={() => {
-                        setDateFilter(key);
+                        setFilter('date', key);
                         setCalendarOpen(false);
                       }}
                       className={`h-8 rounded-md text-xs font-bold transition-colors ${
@@ -402,7 +403,7 @@ export default function OrdersList() {
                 <button
                   type="button"
                   onClick={() => {
-                    setDateFilter('');
+                    setFilter('date', '');
                     setCalendarOpen(false);
                   }}
                   className="text-xs font-bold text-slate-500 hover:text-slate-800"
@@ -412,7 +413,7 @@ export default function OrdersList() {
                 <button
                   type="button"
                   onClick={() => {
-                    setDateFilter(TODAY);
+                    setFilter('date', todayKey);
                     setCalendarMonth(new Date());
                     setCalendarOpen(false);
                   }}
@@ -432,7 +433,7 @@ export default function OrdersList() {
             {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
               <button
                 key={key}
-                onClick={() => setActiveTab(key)}
+                onClick={() => setFilter('status', key === 'all' ? '' : key)}
                 className={`flex flex-shrink-0 items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-bold transition-all ${
                   activeTab === key
                     ? `${cfg.bg} ${cfg.color} border-current`

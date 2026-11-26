@@ -14,6 +14,8 @@ import ProfileSetup from './pages/Partner/ProfileSetup';
 import DashboardLayout from './pages/Partner/Dashboard/DashboardLayout';
 import AdminFuudrLayout from './pages/AdminFuudr/AdminFuudrLayout';
 import AdminFuudr from './pages/AdminFuudr/AdminFuudr';
+import AdminStatistics from './pages/AdminFuudr/AdminStatistics';
+import AdminSettings from './pages/AdminFuudr/AdminSettings';
 import OrdersList from './pages/AdminFuudr/OrdersList';
 import ManageOrder from './pages/AdminFuudr/ManageOrder';
 import RestaurantsList from './pages/AdminFuudr/RestaurantsList';
@@ -63,6 +65,8 @@ export default function App() {
             </SuperAdminRoute>
           }>
             <Route index element={<AdminFuudr />} />
+            <Route path="statistics" element={<AdminStatistics />} />
+            <Route path="settings" element={<AdminSettings />} />
             <Route path="orders" element={<OrdersList />} />
             <Route path="orders/:id" element={<ManageOrder />} />
             <Route path="restaurants" element={<Navigate to="/restaurants" replace />} />

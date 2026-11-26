@@ -1,314 +1,231 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowRight, ChevronDown, ShoppingBag, CheckCircle, Clock, Bike, Package, TrendingUp, Zap, Store, GraduationCap } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowRight, CheckCircle, ShoppingBag, XCircle, Zap } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
-import { PlatformStatusToggle } from './components/PlatformStatusToggle';
-import { OrdersAnalyticsChart } from './components/OrdersAnalyticsChart';
-import { FinancialKpis } from './components/FinancialKpis';
+import { ACTIVE_ORDER_STATUSES, getOrderType, orderDateKey } from './utils/orderOverview';
 
-const STATUS_CONFIG = {
-  placed:     { label: 'Placed',      color: 'text-slate-700',   bg: 'bg-slate-100',   dot: 'bg-slate-500',   icon: Package },
-  preparing:  { label: 'Preparing',   color: 'text-amber-700',   bg: 'bg-amber-50',    dot: 'bg-amber-500',   icon: Clock },
-  prepared:   { label: 'Prepared',    color: 'text-violet-700',  bg: 'bg-violet-50',   dot: 'bg-violet-500',  icon: CheckCircle },
-  on_the_way: { label: 'On the Way',  color: 'text-blue-700',    bg: 'bg-blue-50',     dot: 'bg-blue-500',    icon: Bike },
-  delivered:  { label: 'Delivered',   color: 'text-emerald-700', bg: 'bg-emerald-50',  dot: 'bg-emerald-500', icon: CheckCircle },
-  cancelled:  { label: 'Cancelled',   color: 'text-rose-700',    bg: 'bg-rose-50',     dot: 'bg-rose-500',    icon: CheckCircle },
+const CLOSED_STATUSES = ['delivered', 'cancelled'];
+const ORDER_PATH = '/adminfuudr/orders';
+const ORDER_FIELDS = 'id, status, created_at, delivery_name, order_type, bill, assigned_rider_id, rider_response, delivery_assignees';
+const ORDER_FIELDS_WITH_PARTNER = `${ORDER_FIELDS}, partners!orders_partner_id_fkey(restaurant_name)`;
+
+const orderTime = new Intl.DateTimeFormat('en-IN', {
+  timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit',
+});
+
+const statusStyles = {
+  placed: ['Placed', 'bg-slate-100 text-slate-700'],
+  preparing: ['Preparing', 'bg-amber-50 text-amber-700'],
+  prepared: ['Prepared', 'bg-violet-50 text-violet-700'],
+  on_the_way: ['On the Way', 'bg-blue-50 text-blue-700'],
+  delivered: ['Delivered', 'bg-emerald-50 text-emerald-700'],
+  cancelled: ['Cancelled', 'bg-rose-50 text-rose-700'],
 };
 
+async function fetchDashboardOrders(today, signal, fields = ORDER_FIELDS_WITH_PARTNER) {
+  const start = new Date(`${today}T00:00:00+05:30`).toISOString();
+  const orders = [];
+  const recentFields = fields === ORDER_FIELDS_WITH_PARTNER
+    ? 'id, status, created_at, delivery_name, partners!orders_partner_id_fkey(restaurant_name)'
+    : 'id, status, created_at, delivery_name';
+  const recentQuery = supabase.from('orders').select(recentFields)
+    .in('status', CLOSED_STATUSES)
+    .order('created_at', { ascending: false }).order('id', { ascending: false })
+    .limit(5).abortSignal(signal);
+
+  const fetchQueue = async () => {
+    let lastId;
+    while (!signal.aborted) {
+      let query = supabase.from('orders').select(fields)
+        .or(`created_at.gte.${start},status.in.(${ACTIVE_ORDER_STATUSES.join(',')})`)
+        .order('id').limit(500).abortSignal(signal);
+      if (lastId !== undefined) query = query.gt('id', lastId);
+      const { data, error } = await query;
+      if (error) return error;
+      if (data.length === 0) break;
+      orders.push(...data);
+      lastId = data.at(-1).id;
+    }
+  };
+
+  const [queueError, recent] = await Promise.all([fetchQueue(), recentQuery]);
+  const error = queueError || recent.error;
+  if (error) {
+    if (!signal.aborted && fields !== ORDER_FIELDS) return fetchDashboardOrders(today, signal, ORDER_FIELDS);
+    throw error;
+  }
+  return { orders, recent: recent.data };
+}
+
+function assignedRider(order, riderNames) {
+  if (order.rider_response === 'rejected') return '';
+  if (order.assigned_rider_id) {
+    return riderNames[order.assigned_rider_id] || order.delivery_assignees?.join(', ') || 'Rider assigned';
+  }
+  return order.delivery_assignees?.join(', ') || '';
+}
+
+function OrderSection({ title, empty, loading, rows, link, linkText }) {
+  return (
+    <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
+        <h2 className="text-lg font-bold">{title}</h2>
+        {link && <Link to={link} className="text-sm font-bold text-orange-700 hover:underline">{linkText}</Link>}
+      </div>
+      {loading ? (
+        <p role="status" className="border-t border-slate-100 px-4 py-5 text-sm text-slate-500 sm:px-6">Loading orders…</p>
+      ) : rows.length ? (
+        <ul className="divide-y divide-slate-100 border-t border-slate-100">{rows}</ul>
+      ) : (
+        <p className="border-t border-slate-100 px-4 py-5 text-sm text-slate-500 sm:px-6">{empty}</p>
+      )}
+    </section>
+  );
+}
+
+function OrderRow({ order, detail, showCustomer = false }) {
+  const [status, style] = statusStyles[order.status];
+  const restaurant = order.partners?.restaurant_name || order.restaurant_name || 'Restaurant unavailable';
+  return (
+    <li>
+      <Link to={`${ORDER_PATH}/${order.id}`} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 hover:bg-slate-50 sm:px-6">
+        <div className="min-w-0 flex-1 basis-48">
+          <p className="font-bold text-slate-900">{restaurant}</p>
+          <p className="break-all text-xs text-slate-500">Order #{order.id}</p>
+          {showCustomer && order.delivery_name && <p className="mt-1 text-sm text-slate-600">{order.delivery_name}</p>}
+          <p className="mt-1 text-sm text-slate-600">{detail}</p>
+        </div>
+        <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${style}`}>{status}</span>
+        <span className="ml-auto flex items-center gap-1.5 text-xs font-bold text-orange-700">
+          Open order <ArrowRight size={14} aria-hidden="true" />
+        </span>
+      </Link>
+    </li>
+  );
+}
+
 export default function AdminFuudr() {
-  const navigate = useNavigate();
-  const [stats, setStats] = useState({ total: 0, placed: 0, preparing: 0, prepared: 0, on_the_way: 0, delivered: 0, cancelled: 0, revenue: 0 });
-  const [partnerStats, setPartnerStats] = useState({ total: 0, poornima: 0 });
-  const [allOrders, setAllOrders] = useState([]);
-  const [recentOrders, setRecentOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [updatingOrderId, setUpdatingOrderId] = useState(null);
-  const [openStatusDropdownId, setOpenStatusDropdownId] = useState(null);
-
-  const fetchDashboardData = async () => {
-    try {
-      const [ordersRes, partnersRes] = await Promise.all([
-        supabase
-          .from('orders')
-          .select(`
-            id,
-            status,
-            bill,
-            delivery_name,
-            created_at,
-            partners!orders_partner_id_fkey (
-              restaurant_name,
-              is_poornima
-            )
-          `)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('partners')
-          .select('id, is_poornima')
-      ]);
-
-      let ordersData = ordersRes.data;
-      if (ordersRes.error) {
-        console.warn('Orders joined query failed:', ordersRes.error.message, 'Trying plain select...');
-        const plainOrders = await supabase
-          .from('orders')
-          .select('*')
-          .order('created_at', { ascending: false });
-        
-        if (plainOrders.error) {
-          console.error('Plain orders query also failed:', plainOrders.error.message);
-        } else {
-          ordersData = plainOrders.data;
-        }
-      }
-
-      if (partnersRes.data) {
-        const totalP = partnersRes.data.length;
-        const poornimaP = partnersRes.data.filter(p => p.is_poornima).length;
-        setPartnerStats({ total: totalP, poornima: poornimaP });
-      } else if (partnersRes.error) {
-        console.error('Partners query failed:', partnersRes.error.message);
-      }
-
-      if (ordersData) {
-        const data = ordersData;
-        setAllOrders(data);
-        const s = { total: data.length, placed: 0, preparing: 0, prepared: 0, on_the_way: 0, delivered: 0, cancelled: 0, revenue: 0 };
-        data.forEach(o => {
-          if (s[o.status] !== undefined) s[o.status]++;
-          if (o.status !== 'cancelled') {
-            const totalPrice = o.bill?.customer_total ?? o.bill?.total ?? o.total_price ?? 0;
-            s.revenue += Number(totalPrice) || 0;
-          }
-        });
-        setStats(s);
-        setRecentOrders(data.slice(0, 5).map(o => ({
-          ...o,
-          restaurant_name: o.partners?.restaurant_name ?? o.restaurant_name,
-          is_poornima: o.partners?.is_poornima ?? o.is_poornima ?? false
-        })));
-      }
-    } catch (err) {
-      console.error('Error fetching admin dashboard data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [now, setNow] = useState(Date.now);
+  const today = orderDateKey(now);
+  const [snapshot, setSnapshot] = useState(null);
+  const [error, setError] = useState(false);
+  const [riderNames, setRiderNames] = useState({});
 
   useEffect(() => {
-    fetchDashboardData();
-    const sub = supabase
-      .channel('admin_dash')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, fetchDashboardData)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'partners' }, fetchDashboardData)
+    const timer = window.setInterval(() => setNow(Date.now()), 15_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const request = new AbortController();
+    supabase.rpc('admin_assignable_riders').abortSignal(request.signal).then(({ data }) => {
+      if (data && !request.signal.aborted) {
+        setRiderNames(Object.fromEntries(data.map(rider => [rider.id, rider.full_name])));
+      }
+    });
+    return () => request.abort();
+  }, []);
+
+  useEffect(() => {
+    let request;
+    let stopped = false;
+    const refresh = async () => {
+      if (stopped) return;
+      request?.abort();
+      request = new AbortController();
+      const { signal } = request;
+      try {
+        const data = await fetchDashboardOrders(today, signal);
+        if (signal.aborted) return;
+        setSnapshot({ ...data, today });
+        setError(false);
+      } catch (err) {
+        if (signal.aborted) return;
+        console.error('Error loading dashboard orders:', err);
+        setError(true);
+      }
+    };
+
+    refresh();
+    const interval = window.setInterval(refresh, 30_000);
+    const subscription = supabase.channel('admin_dash')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, refresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'partners' }, refresh)
       .subscribe();
-    return () => supabase.removeChannel(sub);
-  }, []);
+    return () => {
+      stopped = true;
+      window.clearInterval(interval);
+      request?.abort();
+      supabase.removeChannel(subscription);
+    };
+  }, [today]);
 
-  useEffect(() => {
-    const closeStatusDropdown = () => setOpenStatusDropdownId(null);
-    window.addEventListener('click', closeStatusDropdown);
-    return () => window.removeEventListener('click', closeStatusDropdown);
-  }, []);
+  const loading = snapshot?.today !== today && !error;
+  const orders = snapshot?.orders ?? [];
+  const todaysOrders = orders.filter(order => orderDateKey(order.created_at) === today);
+  const counts = { delivered: 0, cancelled: 0 };
+  for (const order of todaysOrders) {
+    if (Object.hasOwn(counts, order.status)) counts[order.status]++;
+  }
 
-  const handleRecentOrderStatusChange = async (event, order, newStatus) => {
-    event.stopPropagation();
-    setOpenStatusDropdownId(null);
-    if (newStatus === order.status) return;
+  const active = orders.filter(order => ACTIVE_ORDER_STATUSES.includes(order.status))
+    .sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at))
+    .map(order => {
+      const minutes = Math.max(0, Math.floor((now - Date.parse(order.created_at)) / 60_000));
+      const age = minutes >= 60 ? `${Math.floor(minutes / 60)}h ${minutes % 60}m` : `${minutes}m`;
+      const rider = assignedRider(order, riderNames);
+      const fulfillment = getOrderType(order) === 'pickup' ? 'Customer pickup' : rider || 'Rider unassigned';
+      const elapsed = Number.isFinite(minutes) ? `${age} since placed` : '';
+      return { order, detail: [elapsed, fulfillment].filter(Boolean).join(' · ') };
+    });
 
-    setUpdatingOrderId(order.id);
-    setRecentOrders(current => current.map(item =>
-      item.id === order.id ? { ...item, status: newStatus } : item
-    ));
-
-    const { error } = await supabase
-      .from('orders')
-      .update({ status: newStatus })
-      .eq('id', order.id);
-
-    if (error) {
-      setRecentOrders(current => current.map(item =>
-        item.id === order.id ? { ...item, status: order.status } : item
-      ));
-      console.error('Error updating order status:', error);
-      alert(`Could not update order status: ${error.message}`);
-    } else {
-      await fetchDashboardData();
-    }
-    setUpdatingOrderId(null);
-  };
-
-  const activeCount = stats.placed + stats.preparing + stats.prepared + stats.on_the_way;
-
-  const statCards = [
-    { label: 'Total Orders',   value: stats.total,          icon: ShoppingBag,  accent: 'orange' },
-    { label: 'Active Now',     value: activeCount,          icon: Zap,          accent: 'blue',   pulse: activeCount > 0 },
-    { label: 'Delivered',      value: stats.delivered,      icon: CheckCircle,  accent: 'emerald' },
-    { label: 'Order Value',    value: `₹${stats.revenue.toLocaleString('en-IN')}`, icon: TrendingUp, accent: 'violet' },
+  const dateQuery = `date=${today}`;
+  const cards = [
+    ['Orders Today', todaysOrders.length, ShoppingBag, dateQuery, 'border-orange-100 text-orange-700'],
+    ['Active Now', active.length, Zap, 'status=active', 'border-blue-100 text-blue-700'],
+    ['Delivered Today', counts.delivered, CheckCircle, `status=delivered&${dateQuery}`, 'border-emerald-100 text-emerald-700'],
+    ['Cancelled Today', counts.cancelled, XCircle, `status=cancelled&${dateQuery}`, 'border-rose-100 text-rose-700'],
   ];
 
-  const accentMap = {
-    orange:  { card: 'border-orange-100',  icon: 'bg-orange-50 text-orange-600',  val: 'text-orange-600' },
-    blue:    { card: 'border-blue-100',    icon: 'bg-blue-50 text-blue-600',      val: 'text-blue-600' },
-    emerald: { card: 'border-emerald-100', icon: 'bg-emerald-50 text-emerald-600',val: 'text-emerald-600' },
-    violet:  { card: 'border-violet-100',  icon: 'bg-violet-50 text-violet-600',  val: 'text-violet-600' },
-  };
-
   return (
-    <div className="font-outfit space-y-8">
-
-
-
-      {/* ── Master Platform ON/OFF Switch ── */}
-      <PlatformStatusToggle />
-
-      {/* ── Stat Cards ── */}
-      <div className="grid grid-cols-4 gap-2 sm:gap-4">
-        {statCards.map(({ label, value, icon: Icon, accent, pulse }) => {
-          const a = accentMap[accent];
-          return (
-            <div
-              key={label}
-              className={`min-w-0 bg-white rounded-md sm:rounded-2xl border ${a.card} p-2 sm:p-5 flex flex-col justify-between min-h-[82px] sm:min-h-[130px] shadow-sm hover:shadow-md transition-all`}
-            >
-              <div className="flex items-center justify-between">
-                <div className={`w-6 h-6 sm:w-10 sm:h-10 rounded-md sm:rounded-xl flex items-center justify-center ${a.icon}`}>
-                  <Icon size={14} className="sm:w-5 sm:h-5" />
-                </div>
-                {pulse && (
-                  <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-500"></span>
-                    </span>
-                    Live
-                  </span>
-                )}
-              </div>
-              <div className="mt-1.5 sm:mt-3">
-                <p className={`text-[11px] min-[375px]:text-xs sm:text-2xl font-black tracking-tight leading-none whitespace-nowrap ${a.val}`}>
-                  {loading ? '—' : value}
-                </p>
-                <p className="text-[8px] min-[375px]:text-[9px] sm:text-xs font-semibold text-slate-500 mt-1 sm:mt-1.5 leading-tight whitespace-nowrap">
-                  {label}
-                </p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <FinancialKpis orders={allOrders} loading={loading} />
-
-      {/* ── Orders & Sales Analytics Graph ── */}
-      <OrdersAnalyticsChart orders={allOrders} loading={loading} />
-
-      {/* ── Recent Orders ── */}
-      <div className="grid grid-cols-1 gap-6">
-        {/* Recent Orders */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-6">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="font-bold text-slate-900 text-base">Recent Orders</h2>
-            <button
-              onClick={() => navigate('/adminfuudr/orders')}
-              className="text-xs font-bold text-orange-500 hover:text-orange-600 flex items-center gap-1"
-            >
-              View All <ArrowRight size={12} />
-            </button>
-          </div>
-
-          {loading ? (
-            <div className="space-y-3">
-              {[1,2,3].map(i => <div key={i} className="h-14 bg-slate-100 rounded-xl animate-pulse" />)}
-            </div>
-          ) : recentOrders.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <ShoppingBag size={36} className="text-slate-300 mb-3" />
-              <p className="font-semibold text-slate-500">No orders yet</p>
-              <p className="text-sm text-slate-400 mt-1">Orders will appear here in real-time</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {recentOrders.map((order, orderIndex) => {
-                const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.placed;
-                const Icon = cfg.icon;
-                return (
-                  <div
-                    key={order.id}
-                    onClick={() => navigate(`/adminfuudr/orders/${order.id}`)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') navigate(`/adminfuudr/orders/${order.id}`);
-                    }}
-                    role="link"
-                    tabIndex={0}
-                    className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-slate-50 transition-colors text-left group cursor-pointer"
-                  >
-                    <div className={`w-9 h-9 rounded-xl ${cfg.bg} flex items-center justify-center flex-shrink-0`}>
-                      <Icon size={16} className={cfg.color} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-slate-900 text-sm truncate">{order.delivery_name || 'Unknown'}</p>
-                      {order.restaurant_name && (
-                        <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                          <p className="text-xs text-slate-500 truncate">{order.restaurant_name}</p>
-                          {order.is_poornima && (
-                            <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
-                              <GraduationCap size={9} /> Inside Poornima
-                            </span>
-                          )}
-                        </div>
-                      )}
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
-                    <div className="relative flex items-center gap-2 flex-shrink-0">
-                      <button
-                        type="button"
-                        disabled={updatingOrderId === order.id}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setOpenStatusDropdownId(current => current === order.id ? null : order.id);
-                        }}
-                        onKeyDown={(event) => event.stopPropagation()}
-                        aria-expanded={openStatusDropdownId === order.id}
-                        aria-haspopup="menu"
-                        aria-label={`Change status for order ${order.id}`}
-                        className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-md cursor-pointer disabled:cursor-wait disabled:opacity-60 ${cfg.bg} ${cfg.color}`}
-                      >
-                        {cfg.label}
-                        <ChevronDown size={12} className={`transition-transform ${openStatusDropdownId === order.id ? 'rotate-180' : ''}`} />
-                      </button>
-                      {openStatusDropdownId === order.id && (
-                        <div
-                          role="menu"
-                          onClick={(event) => event.stopPropagation()}
-                          className={`absolute right-5 z-30 w-36 overflow-hidden rounded-md border border-slate-200 bg-white p-1 shadow-xl ${
-                            orderIndex >= recentOrders.length - 2 ? 'bottom-full mb-1' : 'top-full mt-1'
-                          }`}
-                        >
-                          {Object.entries(STATUS_CONFIG).map(([status, config]) => (
-                            <button
-                              key={status}
-                              type="button"
-                              role="menuitem"
-                              onClick={(event) => handleRecentOrderStatusChange(event, order, status)}
-                              className={`w-full rounded-sm px-2.5 py-2 text-left text-xs font-bold hover:bg-slate-50 ${status === order.status ? `${config.bg} ${config.color}` : 'text-slate-600'}`}
-                            >
-                              {config.label}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                      <ArrowRight size={14} className="text-slate-300 group-hover:text-slate-500 transition-colors" />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+    <div className="space-y-6 font-outfit">
+      <section aria-label="Order summary">
+        <div className="mb-3">
+          <h1 className="text-xl font-black text-slate-900">Order overview</h1>
+          <p className="text-sm text-slate-500">Today’s counts are based on when orders were placed (India time).</p>
         </div>
-      </div>
+        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+          {cards.map(([label, count, Icon, query, style]) => (
+            <Link key={label} to={`${ORDER_PATH}?${query}`} className={`rounded-2xl border bg-white p-4 shadow-sm hover:shadow-md ${style}`}>
+              <Icon size={20} aria-hidden="true" />
+              <p className="mt-2 text-2xl font-black">{loading || error ? '—' : count}</p>
+              <p className="text-sm font-semibold text-slate-700">{label}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {error ? (
+        <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+          Dashboard orders could not be loaded. Reload the page to try again.
+        </p>
+      ) : (
+        <>
+          <OrderSection
+            title="Active Orders" empty="No active orders." loading={loading}
+            link={`${ORDER_PATH}?status=active`} linkText="View active orders"
+            rows={active.map(({ order, detail }) => <OrderRow key={order.id} order={order} detail={detail} />)}
+          />
+          <OrderSection
+            title="Recent Orders" empty="No delivered or cancelled orders yet." loading={loading}
+            link={ORDER_PATH} linkText="View all orders"
+            rows={(snapshot?.recent ?? []).map(order => (
+              <OrderRow key={order.id} order={order} showCustomer detail={orderDateKey(order.created_at)
+                ? `Placed ${orderTime.format(new Date(order.created_at))}` : ''} />
+            ))}
+          />
+        </>
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { TrendingUp, ShoppingBag, Calendar, ArrowUpRight, BarChart3 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { BarChart3 } from 'lucide-react';
 
 export function OrdersAnalyticsChart({ orders = [], loading = false }) {
   const [timeRange, setTimeRange] = useState('7d'); // '7d' | '14d' | '30d'
@@ -10,7 +10,6 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
   const chartData = useMemo(() => {
     const daysCount = timeRange === '30d' ? 30 : timeRange === '14d' ? 14 : 7;
     const now = new Date();
-    const result = [];
 
     // Create daily map
     const dayMap = {};
@@ -99,7 +98,7 @@ export function OrdersAnalyticsChart({ orders = [], loading = false }) {
       onClick={() => setHoveredPoint(null)}
     >
       {/* Header with Title, Filter & Metrics */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-4 border-b border-slate-100">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
             <BarChart3 size={20} />

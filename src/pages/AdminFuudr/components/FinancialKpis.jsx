@@ -18,7 +18,7 @@ export function FinancialKpis({ orders, loading }) {
         <h2 className="text-base font-bold text-slate-900">Financial KPIs</h2>
         <p className="text-xs text-slate-500 mt-1">All time · Non-cancelled orders · Before taxes</p>
       </div>
-      <div className="grid grid-cols-1 min-[375px]:grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 min-[375px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
         {cards.map(({ label, value, formula, colors }) => (
           <div key={label} className={`min-w-0 rounded-2xl border p-4 shadow-sm ${colors}`}>
             <p className="text-xs font-semibold opacity-80">{label}</p>
