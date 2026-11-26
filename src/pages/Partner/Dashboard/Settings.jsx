@@ -20,7 +20,7 @@ const restaurantTypes = [
   { value: 'Cloud Kitchen', label: 'Cloud Kitchen' }
 ];
 
-const Settings = ({ user, onUserUpdated }) => {
+const Settings = ({ user, onUserUpdated, showChangePassword = true }) => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -158,27 +158,36 @@ const Settings = ({ user, onUserUpdated }) => {
       const requestedReviewCount = Number(formData.total_reviews ?? 0);
 
       if (googlePlaceSelected) {
-        const { data: googleMetrics, error: ratingError } = await supabase.rpc(
-          'refresh_my_google_rating',
-          {
-            p_rating: requestedRating,
-            p_total_reviews: requestedReviewCount,
-          }
-        );
-        if (ratingError) throw ratingError;
-        savedRating = Number(googleMetrics?.avg_rating ?? 0);
-        savedReviewCount = Number(googleMetrics?.total_reviews ?? 0);
+        if (showChangePassword) {
+          const { data: googleMetrics, error: ratingError } = await supabase.rpc(
+            'refresh_my_google_rating',
+            {
+              p_rating: requestedRating,
+              p_total_reviews: requestedReviewCount,
+            }
+          );
+          if (ratingError) throw ratingError;
+          savedRating = Number(googleMetrics?.avg_rating ?? 0);
+          savedReviewCount = Number(googleMetrics?.total_reviews ?? 0);
+        } else {
+          savedRating = requestedRating;
+          savedReviewCount = requestedReviewCount;
+        }
       }
 
-      const ratingMatches = Math.abs(savedRating - requestedRating) < 0.01;
-      const reviewCountMatches = savedReviewCount === requestedReviewCount;
-      if (!ratingMatches || !reviewCountMatches) {
-        throw new Error(`Google data was not saved correctly (requested ${requestedRating}★/${requestedReviewCount} reviews, database returned ${savedRating}★/${savedReviewCount} reviews).`);
+      if (showChangePassword) {
+        const ratingMatches = Math.abs(savedRating - requestedRating) < 0.01;
+        const reviewCountMatches = savedReviewCount === requestedReviewCount;
+        if (!ratingMatches || !reviewCountMatches) {
+          throw new Error(`Google data was not saved correctly (requested ${requestedRating}★/${requestedReviewCount} reviews, database returned ${savedRating}★/${savedReviewCount} reviews).`);
+        }
       }
 
       setSuccessMsg('Settings saved successfully!');
       const updatedUser = { ...user, ...updateData, avg_rating: savedRating, total_reviews: savedReviewCount };
-      localStorage.setItem('partnerUser', JSON.stringify(updatedUser));
+      if (showChangePassword && localStorage.getItem('partnerUser')) {
+        localStorage.setItem('partnerUser', JSON.stringify(updatedUser));
+      }
       onUserUpdated?.(updatedUser);
       setGooglePlaceSelected(false);
     } catch (err) {
@@ -578,7 +587,7 @@ const Settings = ({ user, onUserUpdated }) => {
         </div>
       </form>
 
-      <ChangePasswordCard />
+      {showChangePassword && <ChangePasswordCard />}
     </div>
   );
 };
