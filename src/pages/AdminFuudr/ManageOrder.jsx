@@ -1,5 +1,6 @@
 import { loadGoogleMapsScript } from './utils/loadGoogleMapsScript';
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { ArrowLeft, MapPin, CreditCard, Clock, Package, Flame, Bike, CheckCircle, ChevronRight, IndianRupee, UtensilsCrossed, Printer, Navigation, Phone, GraduationCap, Trash2, X, Loader2, Pencil, Check, BookOpen, Map } from 'lucide-react';
@@ -981,8 +982,8 @@ export default function ManageOrder() {
       </div>
 
       {/* ── Video Player Modal Overlay ── */}
-      {activeVideoList.length > 0 && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      {activeVideoList.length > 0 && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[9999] flex items-center justify-center p-4">
           <div className="bg-slate-900 rounded-3xl overflow-hidden max-w-sm w-full relative border border-slate-800 shadow-2xl flex flex-col">
             {/* Story Style Progress Dashes */}
             {activeVideoList.length > 1 && (
@@ -1034,7 +1035,13 @@ export default function ManageOrder() {
                 src={activeVideoList[activeVideoIndex]}
                 controls
                 autoPlay
-                className="w-full h-full object-cover"
+                playsInline
+                className="w-full h-full object-cover cursor-pointer"
+                onClick={(e) => {
+                  const v = e.currentTarget;
+                  if (v.paused) v.play().catch(() => {});
+                  else v.pause();
+                }}
                 onEnded={() => {
                   if (activeVideoIndex < activeVideoList.length - 1) {
                     setActiveVideoIndex(prev => prev + 1);
@@ -1049,7 +1056,8 @@ export default function ManageOrder() {
               <p className="text-sm font-bold text-orange-500 uppercase tracking-widest text-[10px]">Fuudr food reel</p>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* ── Delete Confirmation Modal ── */}

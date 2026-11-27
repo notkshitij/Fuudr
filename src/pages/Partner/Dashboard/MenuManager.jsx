@@ -53,8 +53,8 @@ const ReelPlayer = ({ item, onClose }) => {
   const togglePlay = () => {
     const v = videoRef.current;
     if (!v) return;
-    if (v.paused) { v.play(); setIsPlaying(true); }
-    else { v.pause(); setIsPlaying(false); }
+    if (v.paused) v.play().catch(() => {});
+    else v.pause();
     setShowIcon(true);
     setTimeout(() => setShowIcon(false), 700);
   };
@@ -62,9 +62,6 @@ const ReelPlayer = ({ item, onClose }) => {
   React.useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-    v.currentTime = 0;
-    v.play().catch(() => {});
-    setIsPlaying(true);
     const onTimeUpdate = () => setProgress(v.duration ? v.currentTime / v.duration : 0);
     const onEnded = () => { if (currentIdx < reels.length - 1) goTo(currentIdx + 1); };
     v.addEventListener('timeupdate', onTimeUpdate);
@@ -95,12 +92,14 @@ const ReelPlayer = ({ item, onClose }) => {
         onClick={(e) => { e.stopPropagation(); togglePlay(); }}
       >
         <AdaptiveVideo
-          key={videoUrl}
+          key={reels[currentIdx].id}
           ref={videoRef}
           src={videoUrl}
           className="w-full h-full object-cover"
           autoPlay
           playsInline
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
         />
 
         {/* Story bars */}
