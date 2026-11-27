@@ -9,7 +9,7 @@ export const loadGoogleMapsScript = (apiKey) => {
     if (!script) {
       script = document.createElement('script');
       script.id = scriptId;
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,routes&loading=async`;
       script.async = true;
       script.defer = true;
       document.head.appendChild(script);

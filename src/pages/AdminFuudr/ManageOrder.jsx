@@ -2,18 +2,51 @@ import { loadGoogleMapsScript } from './utils/loadGoogleMapsScript';
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import { ArrowLeft, MapPin, CreditCard, Clock, Package, Flame, Bike, CheckCircle, ChevronRight, IndianRupee, UtensilsCrossed, Printer, Navigation, Phone, GraduationCap, Trash2, X, Loader2, Pencil } from 'lucide-react';
+import { ArrowLeft, MapPin, CreditCard, Clock, Package, Flame, Bike, CheckCircle, ChevronRight, IndianRupee, UtensilsCrossed, Printer, Navigation, Phone, GraduationCap, Trash2, X, Loader2, Pencil, Check, BookOpen, Map } from 'lucide-react';
 import AdaptiveVideo from '../../components/AdaptiveVideo';
 
 const STEPS = [
-  { key: 'placed',     label: 'Placed',     icon: Package, desc: 'Order placed' },
-  { key: 'preparing',  label: 'Preparing',  icon: Flame,   desc: 'Restaurant is cooking' },
-  { key: 'prepared',   label: 'Prepared',   icon: UtensilsCrossed, desc: 'Food is ready for pickup' },
-  { key: 'on_the_way', label: 'On the Way', icon: Bike,    desc: 'Out for delivery' },
-  { key: 'delivered',  label: 'Delivered',  icon: CheckCircle, desc: 'Order delivered' },
+  { key: 'placed',     label: 'Placed',     icon: Package,         desc: 'Order placed' },
+  { key: 'preparing',  label: 'Preparing',  icon: Flame,           desc: 'Cooking' },
+  { key: 'prepared',   label: 'Prepared',   icon: UtensilsCrossed, desc: 'Ready for pickup' },
+  { key: 'on_the_way', label: 'On the Way', icon: Bike,            desc: 'Out for delivery' },
+  { key: 'delivered',  label: 'Delivered',  icon: CheckCircle,     desc: 'Fulfilled' },
 ];
 
 const STEP_INDEX = { placed: 0, preparing: 1, prepared: 2, on_the_way: 3, delivered: 4 };
+
+const formatPlacedAt = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  const dayMonthYear = date.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+  const time = date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+  return `${dayMonthYear}, ${time}`;
+};
+
+const getCustomerInitials = (name) => {
+  if (!name) return 'C';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return parts[0].slice(0, 2).toUpperCase();
+};
+
+const formatPhoneNumber = (phone) => {
+  if (!phone) return '';
+  const cleaned = String(phone).trim();
+  if (!cleaned) return '';
+  if (cleaned.startsWith('+')) return cleaned;
+  return `+91 ${cleaned}`;
+};
 
 const parseBill = (bill) => {
   if (!bill) return {};
@@ -185,48 +218,9 @@ export default function ManageOrder() {
         return { distance: `${distanceKm} km`, duration: `${durationMin} mins` };
       };
 
-      const getDistance = async () => {
+      const getDistance = () => {
         const fallback = getFallbackDistance(order);
-        if (order.partners?.latitude && order.partners?.longitude && order.delivery_address) {
-          try {
-            const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-            if (!apiKey) {
-              setDistanceInfo(fallback);
-              return;
-            }
-
-            const maps = await loadGoogleMapsScript(apiKey);
-            const service = new maps.DistanceMatrixService();
-
-            const origin = new maps.LatLng(order.partners.latitude, order.partners.longitude);
-            const dest = (order.delivery_latitude && order.delivery_longitude)
-              ? new maps.LatLng(order.delivery_latitude, order.delivery_longitude)
-              : order.delivery_address;
-
-            service.getDistanceMatrix(
-              {
-                origins: [origin],
-                destinations: [dest],
-                travelMode: maps.TravelMode.DRIVING,
-              },
-              (response, status) => {
-                if (status === 'OK' && response?.rows?.[0]?.elements?.[0]?.status === 'OK') {
-                  const distText = response.rows[0].elements[0].distance.text;
-                  const durText = response.rows[0].elements[0].duration.text;
-                  setDistanceInfo({ distance: distText, duration: durText });
-                } else {
-                  console.warn('Google Maps DistanceMatrix API response status not OK:', status, response);
-                  setDistanceInfo(fallback);
-                }
-              }
-            );
-          } catch (e) {
-            console.error('Error loading Google Maps script or calling DistanceMatrix:', e);
-            setDistanceInfo(fallback);
-          }
-        } else {
-          setDistanceInfo(fallback);
-        }
+        setDistanceInfo(fallback);
       };
       getDistance();
     }
@@ -310,6 +304,8 @@ export default function ManageOrder() {
         *,
         partners!orders_partner_id_fkey (
           restaurant_name,
+          owner_name,
+          mobile_number,
           address,
           latitude,
           longitude,
@@ -320,13 +316,23 @@ export default function ManageOrder() {
       .eq('id', id)
       .single();
     if (!error && data) {
+      let partnerData = data.partners;
+      if (!partnerData && data.partner_id) {
+        const { data: pData } = await supabase
+          .from('partners')
+          .select('restaurant_name, owner_name, mobile_number, address, latitude, longitude, google_map_link, is_poornima')
+          .eq('id', data.partner_id)
+          .single();
+        if (pData) partnerData = pData;
+      }
       setCommissionDraft(data.commission_amount ?? '');
       setEditingCommission(data.commission_amount == null);
       setOrder({
         ...data,
+        partners: partnerData,
         bill: parseBill(data.bill),
-        restaurant_name: data.partners?.restaurant_name ?? data.restaurant_name,
-        is_poornima: data.partners?.is_poornima ?? data.is_poornima ?? false
+        restaurant_name: partnerData?.restaurant_name ?? data.restaurant_name,
+        is_poornima: partnerData?.is_poornima ?? data.is_poornima ?? false
       });
     }
     setLoading(false);
@@ -434,6 +440,10 @@ export default function ManageOrder() {
           <div class="row"><span class="label">Items subtotal</span><span>₹${order.bill?.subtotal ?? 0}</span></div>
           ${(order.bill?.addons_total ?? 0) > 0 ? `<div class="row"><span class="label">Add-ons</span><span>₹${order.bill.addons_total}</span></div>` : ''}
           <div class="row"><span class="label">Delivery fee</span><span>₹${order.bill?.delivery_fee ?? 0}</span></div>
+          ${Number(order.bill?.small_cart_fee ?? order.bill?.small_cart ?? order.bill?.small_cart_charge ?? order.bill?.small_order_fee ?? 0) > 0 ? `<div class="row"><span class="label">Small cart fee</span><span>₹${order.bill?.small_cart_fee ?? order.bill?.small_cart ?? order.bill?.small_cart_charge ?? order.bill?.small_order_fee}</span></div>` : ''}
+          ${Number(order.bill?.packaging_fee ?? order.bill?.packaging_charge ?? order.bill?.restaurant_packaging_fee ?? order.bill?.packaging ?? 0) > 0 ? `<div class="row"><span class="label">Packaging fee</span><span>₹${order.bill?.packaging_fee ?? order.bill?.packaging_charge ?? order.bill?.restaurant_packaging_fee ?? order.bill?.packaging}</span></div>` : ''}
+          ${Number(order.bill?.platform_fee ?? order.bill?.handling_fee ?? 0) > 0 ? `<div class="row"><span class="label">Platform fee</span><span>₹${order.bill?.platform_fee ?? order.bill?.handling_fee}</span></div>` : ''}
+          ${Number(order.bill?.tip ?? order.bill?.rider_tip ?? 0) > 0 ? `<div class="row"><span class="label">Delivery tip</span><span>₹${order.bill?.tip ?? order.bill?.rider_tip}</span></div>` : ''}
           ${(order.bill?.taxes ?? 0) > 0 ? `<div class="row"><span class="label">Taxes & charges</span><span>₹${order.bill.taxes}</span></div>` : ''}
           ${(order.bill?.discount ?? 0) > 0 ? `<div class="row"><span class="label">Coupon discount${order.bill?.coupon_code ? ` (${order.bill.coupon_code})` : ''}</span><span>-₹${order.bill.discount}</span></div>` : ''}
           ${order.bill?.coupon_code && !(order.bill?.discount > 0) ? `<div class="row"><span class="label">Coupon applied</span><span>${order.bill.coupon_code}</span></div>` : ''}
@@ -487,179 +497,312 @@ export default function ManageOrder() {
   return (
     <div className="max-w-5xl mx-auto font-outfit pb-12 space-y-6">
 
-      {/* ── Order Title + Quick Status ── */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight">Order Details</h2>
-          <p className="font-mono text-xs text-slate-400 mt-1 font-medium">{order.id}</p>
-          <p className="text-sm text-slate-500 mt-2">
-            Placed on {new Date(order.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })} at {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </p>
+      {/* ── Order Route & Party Details: Restaurant, Transit Distance, Customer ── */}
+      <div className="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-sm">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] items-center gap-4">
+          
+          {/* Left: Restaurant / Partner Box */}
+          <div className="rounded-lg border border-slate-200/80 bg-slate-50/50 p-4 flex items-start gap-3.5 min-w-0">
+            <div className="w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center shrink-0 shadow-sm shadow-orange-500/20">
+              <BookOpen size={18} />
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2 min-w-0">
+                  <h3 className="font-bold text-slate-900 text-sm sm:text-base truncate">
+                    {order.restaurant_name || order.partners?.restaurant_name || 'Restaurant'}
+                  </h3>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 shrink-0">
+                    Partner
+                  </span>
+                </div>
+                {(order.partners?.mobile_number || order.delivery_partner_mobile) && (
+                  <a
+                    href={`tel:${order.partners?.mobile_number || order.delivery_partner_mobile}`}
+                    className="text-orange-600 hover:text-orange-700 font-bold text-xs sm:text-sm shrink-0 transition-colors"
+                  >
+                    {formatPhoneNumber(order.partners?.mobile_number || order.delivery_partner_mobile)}
+                  </a>
+                )}
+              </div>
+
+              <p className="text-xs text-slate-500 mt-1 font-medium truncate">
+                Owner: {order.partners?.owner_name || '—'}
+              </p>
+
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed break-words">
+                {order.partners?.address || 'Restaurant Address'}
+              </p>
+
+              <div className="mt-3">
+                <a
+                  href={
+                    order.partners?.google_map_link
+                      ? order.partners.google_map_link
+                      : (order.partners?.latitude && order.partners?.longitude)
+                      ? `https://www.google.com/maps/search/?api=1&query=${order.partners.latitude},${order.partners.longitude}`
+                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([order.restaurant_name, order.partners?.address].filter(Boolean).join(', '))}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-xs transition-colors"
+                >
+                  <MapPin size={13} className="text-orange-500 shrink-0" />
+                  <span>View Location</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Center: Transit Distance */}
+          <div className="flex flex-col items-center justify-center py-2 px-1 shrink-0">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-orange-200 bg-orange-50/70 text-slate-800 text-xs font-bold shadow-xs whitespace-nowrap">
+              <span className="w-2 h-2 rounded-full bg-orange-500 shrink-0" />
+              <span>{distanceInfo.distance || '1.8 km'} • {distanceInfo.duration || '8 min'}</span>
+            </div>
+
+            <span className="text-[10px] text-slate-400 font-medium tracking-tight mt-1 text-center whitespace-nowrap">
+              Transit Distance
+            </span>
+
+            <a
+              href={
+                (order.delivery_latitude && order.delivery_longitude && order.partners?.latitude && order.partners?.longitude)
+                  ? `https://www.google.com/maps/dir/?api=1&origin=${order.partners.latitude},${order.partners.longitude}&destination=${order.delivery_latitude},${order.delivery_longitude}`
+                  : `https://www.google.com/maps/dir/?api=1&origin=${order.partners?.latitude || ''},${order.partners?.longitude || ''}&destination=${encodeURIComponent(order.delivery_address)}`
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+              title="View Route & Directions"
+              className="w-8 h-8 rounded-full border border-slate-200 bg-white flex items-center justify-center text-orange-500 hover:bg-orange-50 hover:border-orange-200 shadow-xs transition-colors mt-2"
+            >
+              <Map size={15} className="text-orange-500 shrink-0" />
+            </a>
+          </div>
+
+          {/* Right: Customer Box */}
+          <div className="rounded-lg border border-slate-200/80 bg-slate-50/50 p-4 flex items-start gap-3.5 min-w-0">
+            <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 font-bold text-xs sm:text-sm shadow-sm shadow-blue-600/20">
+              {getCustomerInitials(order.delivery_name)}
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2 min-w-0">
+                  <h3 className="font-bold text-slate-900 text-sm sm:text-base truncate">
+                    {order.delivery_name || 'Customer'}
+                  </h3>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-100 shrink-0">
+                    Customer
+                  </span>
+                </div>
+                {order.mobile_no && (
+                  <a
+                    href={`tel:${order.mobile_no}`}
+                    className="text-blue-600 hover:text-blue-700 font-bold text-xs sm:text-sm shrink-0 transition-colors"
+                  >
+                    {formatPhoneNumber(order.mobile_no)}
+                  </a>
+                )}
+              </div>
+
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed break-words">
+                {order.delivery_address || 'Delivery Address'}
+              </p>
+
+              <div className="mt-3">
+                <a
+                  href={
+                    (order.delivery_latitude && order.delivery_longitude)
+                      ? `https://www.google.com/maps/search/?api=1&query=${order.delivery_latitude},${order.delivery_longitude}`
+                      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.delivery_address)}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-xs transition-colors"
+                >
+                  <MapPin size={13} className="text-orange-500 shrink-0" />
+                  <span>View Location</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
         </div>
-        {order.status === 'cancelled' ? (
-          <div className="flex flex-col gap-2 w-full md:w-auto">
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Order Status</p>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black bg-rose-50 text-rose-600 border border-rose-200 shadow-sm">
-                Cancelled
+      </div>
+
+      {/* ── Order Status Card ── */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
+        {/* Top Row: Date Pill & Status Switcher */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          {/* Placed Date Badge */}
+          <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200/60 bg-slate-100/80 px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-700 self-start">
+            <Clock size={15} className="text-slate-500 shrink-0" />
+            <span>Placed: {formatPlacedAt(order.created_at)}</span>
+          </div>
+
+          {/* Status Switcher Buttons */}
+          <div className="inline-flex items-center gap-1 rounded-2xl border border-slate-200 bg-slate-50/80 p-1 flex-wrap self-start sm:self-auto">
+            {STEPS.map((step) => {
+              const isActive = order.status === step.key;
+              return (
+                <button
+                  key={step.key}
+                  type="button"
+                  disabled={updating}
+                  onClick={() => handleStatusChange(step.key)}
+                  className={`rounded-xl px-3 sm:px-3.5 py-1.5 text-xs font-bold transition-all ${
+                    isActive
+                      ? 'bg-orange-500 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  } disabled:opacity-60 disabled:cursor-not-allowed`}
+                >
+                  {step.label}
+                </button>
+              );
+            })}
+
+            {/* Cancel Button */}
+            <button
+              type="button"
+              disabled={updating}
+              onClick={() => {
+                if (order.status === 'cancelled') {
+                  setShowRestoreConfirm(true);
+                } else if (window.confirm('Are you sure you want to cancel this order?')) {
+                  handleStatusChange('cancelled');
+                }
+              }}
+              className={`rounded-xl px-3 sm:px-3.5 py-1.5 text-xs font-bold transition-all ${
+                order.status === 'cancelled'
+                  ? 'bg-rose-600 text-white shadow-sm'
+                  : 'border border-rose-200 bg-white text-rose-500 hover:bg-rose-50'
+              } disabled:opacity-60`}
+            >
+              {order.status === 'cancelled' ? 'Cancelled (Restore)' : 'Cancel'}
+            </button>
+          </div>
+        </div>
+
+        {/* Bottom Row: Step Progress Tracker */}
+        <div className="mt-8 pt-6 border-t border-slate-100">
+          <div className="relative">
+            {/* Background Track Line */}
+            <div className="absolute top-4 sm:top-5 left-[10%] right-[10%] -translate-y-1/2 h-0.5 bg-slate-200" />
+            {/* Active Progress Line */}
+            {order.status !== 'cancelled' && currentStep > 0 && (
+              <div
+                className="absolute top-4 sm:top-5 left-[10%] -translate-y-1/2 h-0.5 bg-orange-500 transition-all duration-500"
+                style={{ width: `${(currentStep / 4) * 80}%` }}
+              />
+            )}
+
+            {/* Step Nodes */}
+            <div className="relative z-10 grid grid-cols-5 text-center">
+              {STEPS.map((step, idx) => {
+                const isDone = currentStep > idx;
+                const isCurrent = currentStep === idx && order.status !== 'cancelled';
+                const isCompletedOrActive = isDone || isCurrent;
+
+                return (
+                  <div key={step.key} className="flex flex-col items-center">
+                    {/* Step Circle */}
+                    <div
+                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm transition-all ${
+                        isCompletedOrActive
+                          ? 'bg-orange-500 text-white ring-4 sm:ring-8 ring-orange-100 shadow-sm'
+                          : 'bg-white border-2 border-slate-200 text-slate-400'
+                      }`}
+                    >
+                      {isCompletedOrActive ? (
+                        <Check size={16} className="stroke-[3] text-white" />
+                      ) : (
+                        <span>{idx + 1}</span>
+                      )}
+                    </div>
+
+                    {/* Step Title */}
+                    <p
+                      className={`mt-2.5 text-xs sm:text-sm font-bold ${
+                        isCurrent
+                          ? 'text-orange-600'
+                          : isDone
+                          ? 'text-slate-900'
+                          : 'text-slate-600'
+                      }`}
+                    >
+                      {step.label}
+                    </p>
+
+                    {/* Step Subtext */}
+                    <p className="mt-0.5 text-[11px] font-medium text-slate-400">
+                      {step.desc}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Right: Rider Mobile Number (No box) */}
+        <div className="mt-4 pt-3 border-t border-slate-100/70 flex items-center justify-end text-xs">
+          {!editingPartnerMobile ? (
+            <div className="flex items-center gap-1.5 text-slate-500">
+              <Bike size={14} className="text-slate-400 shrink-0" />
+              <span className="text-slate-400 font-medium">Rider:</span>
+              <span className="font-bold text-slate-800 font-mono text-xs sm:text-sm">
+                {order.delivery_partner_mobile || <span className="text-slate-400 font-sans italic font-normal text-xs">Not assigned</span>}
               </span>
               <button
                 type="button"
-                disabled={updating}
-                onClick={() => setShowRestoreConfirm(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-orange-500 text-white border border-orange-500 hover:bg-orange-600 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                <Package size={13} />
-                {updating ? 'Updating...' : 'Move to Placed'}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2 w-full md:w-auto">
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Update Status</p>
-            <div className="flex gap-2 flex-wrap">
-              {STEPS.map((step, idx) => {
-                const Icon = step.icon;
-                const isActive = order.status === step.key;
-                const isDone = currentStep > idx;
-                return (
-                  <button
-                    key={step.key}
-                    disabled={updating || isActive}
-                    onClick={() => handleStatusChange(step.key)}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
-                      isActive
-                        ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/25'
-                        : isDone
-                        ? 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100'
-                        : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 hover:text-slate-900'
-                    } disabled:opacity-60 disabled:cursor-not-allowed`}
-                  >
-                    <Icon size={13} />
-                    {step.label}
-                  </button>
-                );
-              })}
-              {/* Allow admin to cancel order manually */}
-              <button
-                disabled={updating}
                 onClick={() => {
-                  if (window.confirm("Are you sure you want to cancel this order?")) {
-                    handleStatusChange('cancelled');
-                  }
-                }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100 disabled:opacity-60"
-              >
-                Cancel Order
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Commission and delivery assignment */}
-      <div className="grid grid-cols-1 gap-4 rounded-2xl border border-slate-200 bg-white p-4 sm:gap-5 sm:p-6 md:grid-cols-2">
-        <div>
-          <h3 className="font-bold text-slate-900">Commission</h3>
-          <div className="mt-3 flex min-w-0 flex-wrap items-center gap-2">
-            {!editingCommission ? (
-              <>
-                <span className="text-lg font-bold text-slate-900">{order.commission_amount == null ? '—' : `₹${Number(order.commission_amount).toFixed(2)}`}</span>
-                <button type="button" aria-label="Edit commission" title="Edit commission" onClick={() => { setCommissionDraft(order.commission_amount ?? ''); setEditingCommission(true); }} className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:border-orange-300 hover:text-orange-600"><Pencil size={15} /></button>
-                {order.commission_amount != null && <button type="button" aria-label="Delete commission" title="Delete commission" disabled={savingOrderFields} onClick={async () => { const removed = await saveOrderFields({ commission_amount: null }); if (removed) { setCommissionDraft(''); setEditingCommission(true); } }} className="rounded-lg border border-rose-100 p-2 text-rose-500 hover:bg-rose-50 disabled:opacity-50"><Trash2 size={15} /></button>}
-              </>
-            ) : (
-              <>
-                <input type="number" min="0" step="0.01" value={commissionDraft} onChange={event => setCommissionDraft(event.target.value)} placeholder="Amount in ₹" aria-label="Order commission amount" className="min-w-0 flex-1 basis-32 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold outline-none focus:border-orange-400" />
-                <button type="button" disabled={savingOrderFields || commissionDraft === ''} onClick={async () => { const saved = await saveOrderFields({ commission_amount: Number(commissionDraft) }); if (saved) setEditingCommission(false); }} className="shrink-0 rounded-xl bg-slate-900 px-3 sm:px-4 py-2.5 text-sm font-bold text-white hover:bg-orange-500 disabled:opacity-50">{savingOrderFields ? 'Saving…' : 'Save'}</button>
-                {order.commission_amount != null && <button type="button" disabled={savingOrderFields} onClick={() => { setCommissionDraft(order.commission_amount); setEditingCommission(false); }} className="shrink-0 rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-600 disabled:opacity-50">Cancel</button>}
-              </>
-            )}
-          </div>
-        </div>
-        <div>
-          <h3 className="font-bold text-slate-900">Assign delivery</h3>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            {assignableRiders?.map(rider => {
-              const selected = order.assigned_rider_id === rider.id;
-              return <button key={rider.id} type="button" disabled={assigning || selected}
-                aria-pressed={selected} onClick={() => void assignRider(rider.id)}
-                className={`rounded-xl border px-3 py-2 text-xs font-bold ${selected ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-200 disabled:opacity-50'}`}>
-                {rider.full_name || rider.id}
-              </button>;
-            })}
-            {assignableRiders === null && !assignmentError && <span role="status">Loading approved riders…</span>}
-            {assignableRiders?.length === 0 && <span className="text-xs text-slate-500">No approved riders.</span>}
-            {order.assigned_rider_id && <button type="button" disabled={assigning}
-              onClick={() => void assignRider(null)} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 disabled:opacity-50">
-              Unassign rider
-            </button>}
-          </div>
-          {order.assigned_rider_id && <p role="status" className="mt-2 text-sm text-slate-600">
-            {order.rider_response === 'accepted' ? 'Rider accepted the delivery'
-              : order.rider_response === 'rejected' ? 'Rider rejected the delivery'
-              : 'Awaiting rider acceptance'}
-          </p>}
-          {assigning && <p role="status" className="mt-2 text-xs">Saving assignment…</p>}
-          {assignmentError && <p role="alert" className="mt-2 text-xs font-semibold text-rose-600">{assignmentError}</p>}
-          {orderFieldsError && <p role="alert" className="mt-2 text-xs font-semibold text-rose-600">{orderFieldsError}</p>}
-        </div>
-      </div>
-
-      {/* Delivery partner mobile number */}
-      {order.status !== 'cancelled' && currentStep >= STEP_INDEX.preparing && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
-              <Bike size={16} />
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 text-sm">Delivery Partner</h3>
-              <p className="text-xs text-slate-400 mt-0.5">Mobile number of the rider assigned to this order</p>
-            </div>
-          </div>
-
-          {order.delivery_partner_mobile && !editingPartnerMobile ? (
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                <Phone size={14} className="text-slate-400" />
-                <span className="font-bold text-slate-900 text-sm">{order.delivery_partner_mobile}</span>
-              </div>
-              <button
-                onClick={() => {
-                  setPartnerMobileInput(order.delivery_partner_mobile);
+                  setPartnerMobileInput(order.delivery_partner_mobile || '');
                   setEditingPartnerMobile(true);
                 }}
-                className="text-xs font-bold text-orange-600 hover:text-orange-700"
+                className="text-slate-400 hover:text-orange-600 transition-colors p-1"
+                title="Edit rider phone number"
               >
-                Change Number
+                <Pencil size={12} />
               </button>
             </div>
           ) : (
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex items-center gap-2">
+              <Bike size={14} className="text-orange-500 shrink-0" />
+              <span className="text-slate-400 font-medium text-xs">Rider:</span>
               <input
                 type="tel"
-                inputMode="numeric"
                 maxLength={10}
-                placeholder="Enter 10-digit mobile number"
                 value={partnerMobileInput}
                 onChange={e => setPartnerMobileInput(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 placeholder-slate-400 outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+                placeholder="10-digit mobile"
+                className="w-28 px-1.5 py-0.5 text-xs font-semibold border-b border-orange-400 outline-none bg-transparent font-mono"
+                autoFocus
               />
               <button
+                type="button"
                 onClick={handleSaveDeliveryPartnerMobile}
                 disabled={savingPartnerMobile || partnerMobileInput.length !== 10}
-                className="px-5 py-2.5 bg-orange-500 text-white rounded-xl font-bold text-sm hover:bg-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-2 py-0.5 rounded bg-orange-500 text-white font-bold text-xs hover:bg-orange-600 disabled:opacity-50"
               >
-                {savingPartnerMobile ? 'Saving...' : 'Save'}
+                {savingPartnerMobile ? '...' : 'Save'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditingPartnerMobile(false)}
+                className="p-1 text-slate-400 hover:text-slate-600"
+                title="Cancel"
+              >
+                <X size={12} />
               </button>
             </div>
           )}
         </div>
-      )}
+      </div>
 
-      {/* ── Tracking Timeline or Cancelled Banner ── */}
-      {order.status === 'cancelled' ? (
+      {/* ── Cancelled Banner ── */}
+      {order.status === 'cancelled' && (
         <div className="bg-rose-50/50 border border-rose-100 rounded-2xl p-6 flex items-center gap-4 text-rose-800">
           <div className="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center flex-shrink-0 shadow-md shadow-rose-500/20">
             <CheckCircle size={18} />
@@ -669,163 +812,25 @@ export default function ManageOrder() {
             <p className="text-xs text-rose-600/90 mt-0.5 font-medium">Cancelled orders do not progress through the standard delivery timeline.</p>
           </div>
         </div>
-      ) : (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6">
-          <h3 className="font-bold text-slate-900 mb-6 text-sm uppercase tracking-widest text-slate-400">Order Tracking</h3>
-          <div className="relative">
-            {/* Progress line */}
-            <div className="absolute top-5 left-5 right-5 h-0.5 bg-slate-100" />
-            <div
-              className="absolute top-5 left-5 h-0.5 bg-orange-500 transition-all duration-700"
-              style={{ width: `${(currentStep / (STEPS.length - 1)) * (100 - (100 / STEPS.length))}%` }}
-            />
-            <div className="relative flex justify-between">
-              {STEPS.map((step, idx) => {
-                const Icon = step.icon;
-                const done = currentStep >= idx;
-                return (
-                  <div key={step.key} className="flex flex-col items-center gap-3 w-1/4">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center z-10 border-2 transition-all ${
-                      done
-                        ? 'bg-orange-500 border-orange-500 text-white shadow-md shadow-orange-500/30'
-                        : 'bg-white border-slate-200 text-slate-300'
-                    }`}>
-                      <Icon size={17} />
-                    </div>
-                    <div className="text-center">
-                      <p className={`text-xs font-bold ${ done ? 'text-slate-900' : 'text-slate-400'}`}>{step.label}</p>
-                      <p className="text-[10px] text-slate-400 mt-0.5 hidden md:block">{step.desc}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
       )}
 
-      {/* ── Customer + Order Summary ── */}
+      {/* ── Order Items Details & Order Bill ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* Customer Info */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col gap-6">
-          <h3 className="font-bold text-slate-900 text-base">Order Details & Customer</h3>
-          
-          {/* Vertical Delivery Path Visualizer */}
-          <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5 relative overflow-hidden">
-            {/* Vertical Line Connector */}
-            <div className="absolute top-0 left-0 bottom-0 w-0.5 bg-gradient-to-b from-orange-500 via-orange-300 to-blue-500 ml-[35px] my-12" />
-            
-            <div className="space-y-8 relative">
-              {/* Restaurant Node */}
-              <div className="flex items-start gap-4">
-                <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center flex-shrink-0 z-10 shadow-sm shadow-orange-500/25 ring-4 ring-white">
-                  <UtensilsCrossed size={14} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Restaurant Source</p>
-                  <div className="flex items-center gap-2 flex-wrap mt-0.5">
-                    <p className="text-sm font-black text-slate-900">{order.restaurant_name}</p>
-                    {order.is_poornima && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
-                        <GraduationCap size={11} /> Inside Poornima Campus
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-500 mt-0.5 line-clamp-2 leading-relaxed">{order.partners?.address || 'Restaurant Address'}</p>
-                  <div className="mt-2.5">
-                    <a
-                      href={
-                        order.partners?.google_map_link
-                          ? order.partners.google_map_link
-                          : (order.partners?.latitude && order.partners?.longitude)
-                          ? `https://www.google.com/maps/search/?api=1&query=${order.partners.latitude},${order.partners.longitude}`
-                          : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([order.restaurant_name, order.partners?.address].filter(Boolean).join(', '))}`
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-600 hover:text-orange-700 text-xs font-bold transition-all border border-orange-100 shadow-sm"
-                    >
-                      <MapPin size={12} />
-                      View Location
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-              {/* Distance Pill Overlaid */}
-              <div className="flex items-center gap-4 pl-12">
-                <div className="bg-white border border-slate-200/80 px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
-                  </span>
-                  <span className="text-xs font-black text-slate-700">{distanceInfo.distance || 'Calculating...'}</span>
-                  <span className="text-[10px] text-slate-400 font-bold">({distanceInfo.duration || '—'})</span>
-                </div>
-                <a
-                  href={
-                    (order.delivery_latitude && order.delivery_longitude && order.partners?.latitude && order.partners?.longitude)
-                      ? `https://www.google.com/maps/dir/?api=1&origin=${order.partners.latitude},${order.partners.longitude}&destination=${order.delivery_latitude},${order.delivery_longitude}`
-                      : `https://www.google.com/maps/dir/?api=1&origin=${order.partners?.latitude || ''},${order.partners?.longitude || ''}&destination=${encodeURIComponent(order.delivery_address)}`
-                  }
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-800 text-xs font-bold transition-all border border-slate-200/80 shadow-sm"
-                >
-                  <Navigation size={11} className="rotate-45" />
-                  Get Directions
-                </a>
-              </div>
-
-              {/* Customer Node */}
-              <div className="flex items-start gap-4">
-                <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center flex-shrink-0 z-10 shadow-sm shadow-blue-500/25 ring-4 ring-white">
-                  <MapPin size={14} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Delivery Destination</p>
-                  <p className="text-sm font-black text-slate-900 mt-0.5">{order.delivery_name}</p>
-                  <p className="text-xs text-slate-500 font-bold mt-0.5">{order.mobile_no || '—'}</p>
-                  <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">{order.delivery_address}</p>
-                  <div className="mt-2.5">
-                    <a
-                      href={
-                        (order.delivery_latitude && order.delivery_longitude)
-                          ? `https://www.google.com/maps/search/?api=1&query=${order.delivery_latitude},${order.delivery_longitude}`
-                          : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.delivery_address)}`
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 text-xs font-bold transition-all border border-blue-100 shadow-sm"
-                    >
-                      <MapPin size={12} />
-                      View Location
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
+        {/* Order Items Details */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col shadow-sm">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="font-bold text-slate-900 text-base">Order Items Details</h3>
+            <span className="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
+              {items.length} {items.length === 1 ? 'item' : 'items'}
+            </span>
           </div>
 
-          {/* Metadata Grid */}
-          <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-100/50">
-            <InfoRow icon={<Clock size={16} />} label="Ordered At" value={
-              `${new Date(order.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} · ${new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-            } />
-            <InfoRow icon={<CreditCard size={16} />} label="Payment" value={order.bill?.payment_method ?? order.payment_method ?? '—'} />
-          </div>
-
-        </div>
-
-        {/* Order Items */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col">
-          <h3 className="font-bold text-slate-900 mb-5 text-base">Order Items</h3>
-          <div className="space-y-3 flex-1">
+          <div className="space-y-3 flex-1 overflow-y-auto max-h-[620px] pr-0.5">
             {items.map((item, index) => (
-              <div key={index} className="rounded-xl border border-slate-100 p-3">
+              <div key={index} className="rounded-xl border border-slate-100 bg-slate-50/40 p-3.5 hover:bg-slate-50 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0 border border-slate-200">
+                  <div className="w-12 h-12 bg-white rounded-xl overflow-hidden flex-shrink-0 border border-slate-200">
                     {item.imageUrl
                       ? <img src={item.imageUrl} alt={item.dishName} className="w-full h-full object-cover" />
                       : <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs font-bold">?</div>}
@@ -844,7 +849,7 @@ export default function ManageOrder() {
                             setActiveVideoList(videoUrls[item.menuItemId]);
                             setActiveVideoIndex(0);
                           }}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 hover:bg-orange-100 text-orange-600 text-[10px] font-bold transition-all border border-orange-100 shadow-sm"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 hover:bg-orange-100 text-orange-600 text-[10px] font-bold transition-all border border-orange-100 shadow-xs"
                         >
                           <Flame size={10} className="animate-pulse" />
                           Watch {videoUrls[item.menuItemId].length > 1 ? `${videoUrls[item.menuItemId].length} Reels` : 'Reel'}
@@ -868,56 +873,108 @@ export default function ManageOrder() {
               </div>
             ))}
           </div>
+
           {order.delivery_instructions && (
-            <div className="mt-5">
-              <p className="text-[10px] font-black uppercase tracking-wider text-red-600">Delivery Instructions</p>
-              <p className="mt-1 text-sm font-black leading-relaxed text-slate-800">{order.delivery_instructions}</p>
+            <div className="mt-5 pt-4 border-t border-slate-100">
+              <p className="text-[10px] font-black uppercase tracking-wider text-orange-600">Delivery Instructions</p>
+              <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-800 bg-orange-50/60 border border-orange-100/80 rounded-xl p-3">
+                {order.delivery_instructions}
+              </p>
             </div>
           )}
-          <div className="border-t border-slate-100 pt-4 mt-5 space-y-2">
-            <div className="flex justify-between items-center text-xs text-slate-500 font-bold">
-              <span>Items Subtotal</span>
-              <span>₹{order.bill?.subtotal ?? 0}</span>
+        </div>
+
+        {/* Order Bill */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col justify-between shadow-sm">
+          <div>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-bold text-slate-900 text-base">Order Bill</h3>
+              <span className="text-xs font-mono font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
+                #{displayId}
+              </span>
             </div>
-            {(order.bill?.addons_total ?? 0) > 0 && (
-              <div className="flex justify-between items-center text-xs text-slate-500 font-bold">
-                <span>Add-ons Total</span>
-                <span>₹{order.bill.addons_total}</span>
+
+            {/* Breakdown Rows */}
+            <div className="space-y-3 pt-2">
+              <div className="flex justify-between items-center text-xs text-slate-600 font-medium">
+                <span>Items Subtotal</span>
+                <span className="font-bold text-slate-800">₹{order.bill?.subtotal ?? 0}</span>
               </div>
-            )}
-            <div className="flex justify-between items-center text-xs text-slate-500 font-bold">
-              <span>Delivery Fee</span>
-              <span>₹{order.bill?.delivery_fee ?? 0}</span>
+              {(order.bill?.addons_total ?? 0) > 0 && (
+                <div className="flex justify-between items-center text-xs text-slate-600 font-medium">
+                  <span>Add-ons Total</span>
+                  <span className="font-bold text-slate-800">₹{order.bill.addons_total}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center text-xs text-slate-600 font-medium">
+                <span>Delivery Fee</span>
+                <span className="font-bold text-slate-800">₹{order.bill?.delivery_fee ?? 0}</span>
+              </div>
+              {Number(order.bill?.small_cart_fee ?? order.bill?.small_cart ?? order.bill?.small_cart_charge ?? order.bill?.small_order_fee ?? 0) > 0 && (
+                <div className="flex justify-between items-center text-xs text-slate-600 font-medium">
+                  <span>Small Cart Fee</span>
+                  <span className="font-bold text-slate-800">₹{order.bill?.small_cart_fee ?? order.bill?.small_cart ?? order.bill?.small_cart_charge ?? order.bill?.small_order_fee}</span>
+                </div>
+              )}
+              {Number(order.bill?.packaging_fee ?? order.bill?.packaging_charge ?? order.bill?.restaurant_packaging_fee ?? order.bill?.packaging ?? 0) > 0 && (
+                <div className="flex justify-between items-center text-xs text-slate-600 font-medium">
+                  <span>Packaging Fee</span>
+                  <span className="font-bold text-slate-800">₹{order.bill?.packaging_fee ?? order.bill?.packaging_charge ?? order.bill?.restaurant_packaging_fee ?? order.bill?.packaging}</span>
+                </div>
+              )}
+              {Number(order.bill?.platform_fee ?? order.bill?.handling_fee ?? 0) > 0 && (
+                <div className="flex justify-between items-center text-xs text-slate-600 font-medium">
+                  <span>Platform Fee</span>
+                  <span className="font-bold text-slate-800">₹{order.bill?.platform_fee ?? order.bill?.handling_fee}</span>
+                </div>
+              )}
+              {Number(order.bill?.surge_fee ?? order.bill?.surge_charge ?? order.bill?.rain_fee ?? 0) > 0 && (
+                <div className="flex justify-between items-center text-xs text-slate-600 font-medium">
+                  <span>Surge Fee</span>
+                  <span className="font-bold text-slate-800">₹{order.bill?.surge_fee ?? order.bill?.surge_charge ?? order.bill?.rain_fee}</span>
+                </div>
+              )}
+              {Number(order.bill?.tip ?? order.bill?.rider_tip ?? order.bill?.delivery_tip ?? 0) > 0 && (
+                <div className="flex justify-between items-center text-xs text-slate-600 font-medium">
+                  <span>Delivery Tip</span>
+                  <span className="font-bold text-slate-800">₹{order.bill?.tip ?? order.bill?.rider_tip ?? order.bill?.delivery_tip}</span>
+                </div>
+              )}
+              {order.bill?.discount > 0 && (
+                <div className="flex justify-between items-center text-xs text-rose-500 font-bold">
+                  <span className="flex items-center gap-1.5">
+                    Coupon Discount
+                    {order.bill?.coupon_code && (
+                      <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-black text-emerald-700 border border-emerald-100">
+                        {order.bill.coupon_code}
+                      </span>
+                    )}
+                  </span>
+                  <span>-₹{order.bill.discount}</span>
+                </div>
+              )}
+              {order.bill?.coupon_code && !(order.bill?.discount > 0) && (
+                <div className="flex justify-between items-center text-xs text-emerald-700 font-bold">
+                  <span>Coupon Applied</span>
+                  <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-black border border-emerald-100">{order.bill.coupon_code}</span>
+                </div>
+              )}
+              {order.bill?.taxes > 0 && (
+                <div className="flex justify-between items-center text-xs text-slate-600 font-medium">
+                  <span>Taxes & Charges</span>
+                  <span className="font-bold text-slate-800">₹{order.bill.taxes}</span>
+                </div>
+              )}
             </div>
-            {order.bill?.discount > 0 && (
-              <div className="flex justify-between items-center text-xs text-rose-500 font-bold">
-                <span>
-                  Coupon Discount
-                  {order.bill?.coupon_code && (
-                    <span className="ml-1.5 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-black text-emerald-700 border border-emerald-100">
-                      {order.bill.coupon_code}
-                    </span>
-                  )}
-                </span>
-                <span>-₹{order.bill.discount}</span>
-              </div>
-            )}
-            {order.bill?.coupon_code && !(order.bill?.discount > 0) && (
-              <div className="flex justify-between items-center text-xs text-emerald-700 font-bold">
-                <span>Coupon Applied</span>
-                <span className="rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-black border border-emerald-100">{order.bill.coupon_code}</span>
-              </div>
-            )}
-            {order.bill?.taxes > 0 && (
-              <div className="flex justify-between items-center text-xs text-slate-500 font-bold">
-                <span>Taxes & Charges</span>
-                <span>₹{order.bill.taxes}</span>
-              </div>
-            )}
-            <div className="border-t border-dashed border-slate-200 pt-3 mt-1 flex justify-between items-center">
+          </div>
+
+          {/* Grand Total */}
+          <div className="border-t border-dashed border-slate-200 pt-4 mt-6 flex justify-between items-center">
+            <div>
+              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider block">Total Amount</span>
               <span className="text-sm font-black text-slate-800 flex items-center gap-1"><IndianRupee size={13} />Grand Total</span>
-              <span className="text-xl font-black text-slate-950">₹{getPayableTotal(order)}</span>
             </div>
+            <span className="text-2xl font-black text-slate-950 font-mono">₹{getPayableTotal(order)}</span>
           </div>
         </div>
 

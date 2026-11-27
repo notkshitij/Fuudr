@@ -53,6 +53,9 @@ export function AdminNavigation() {
 
   const orderMatch = matchPath({ path: '/adminfuudr/orders/:id', end: true }, location.pathname);
   const orderId = orderMatch?.params?.id;
+  const idParts = orderId ? orderId.split('-') : [];
+  const shortId = idParts.length > 1 ? idParts[idParts.length - 1].toUpperCase() : (orderId || '');
+  const prefixId = idParts.length > 1 ? idParts.slice(0, -1).join('-') : null;
 
   return (
     <>
@@ -94,14 +97,19 @@ export function AdminNavigation() {
                 >
                   <ArrowLeft size={16} />
                 </button>
-                <div className="flex items-center gap-2 text-sm font-medium min-w-0">
-                  <Link to="/adminfuudr/orders" className="text-slate-400 hover:text-slate-700 shrink-0">
+                <div className="flex items-center gap-1.5 sm:gap-2 text-sm font-medium min-w-0">
+                  <Link to="/adminfuudr/orders" className="text-slate-500 hover:text-slate-800 shrink-0 font-medium text-xs sm:text-sm">
                     Orders
                   </Link>
                   <ChevronRight size={14} className="shrink-0 text-slate-400" />
-                  <span className="font-bold text-slate-900 font-mono text-xs sm:text-sm truncate">
-                    #{orderId}
+                  <span className="font-bold text-slate-900 font-mono text-xs sm:text-sm shrink-0">
+                    #{shortId}
                   </span>
+                  {prefixId && (
+                    <span className="text-xs text-slate-400 font-mono hidden md:inline truncate font-normal">
+                      {prefixId}
+                    </span>
+                  )}
                 </div>
               </div>
             )}
@@ -110,25 +118,26 @@ export function AdminNavigation() {
           {/* Right side */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {orderId && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 sm:gap-2.5">
                 <button
                   type="button"
                   onClick={() => window.dispatchEvent(new CustomEvent('admin:print-receipt'))}
-                  className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 bg-white border border-slate-200 text-slate-700 rounded-full font-bold text-xs sm:text-sm hover:bg-slate-50 transition-all shadow-sm"
+                  className="inline-flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 bg-white border border-slate-200/90 text-slate-700 rounded-full font-bold text-xs sm:text-sm hover:bg-slate-50 transition-all shadow-sm shrink-0"
                   title="Print Receipt"
                 >
-                  <Printer size={15} className="shrink-0 text-slate-700" />
-                  <span className="hidden sm:inline">Print Receipt</span>
+                  <Printer size={16} className="shrink-0 text-slate-600" />
+                  <span>Print Receipt</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => window.dispatchEvent(new CustomEvent('admin:delete-order'))}
-                  className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 bg-rose-50 border border-rose-100 text-rose-600 rounded-full font-bold text-xs sm:text-sm hover:bg-rose-100 transition-all shadow-sm"
+                  className="inline-flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 bg-[#FFF1F2] border border-rose-100/70 text-[#E11D48] rounded-full font-bold text-xs sm:text-sm hover:bg-rose-100/80 transition-all shadow-sm shrink-0"
                   title="Delete Order"
                 >
-                  <Trash2 size={15} className="shrink-0 text-rose-600" />
-                  <span className="hidden sm:inline">Delete Order</span>
+                  <Trash2 size={16} className="shrink-0 text-[#E11D48]" />
+                  <span>Delete Order</span>
                 </button>
+                <div className="h-5 w-px bg-slate-200 mx-1 hidden sm:block" />
               </div>
             )}
 
