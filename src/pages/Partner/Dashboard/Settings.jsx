@@ -473,24 +473,6 @@ const Settings = ({ user, onUserUpdated, showChangePassword = true }) => {
                 />
               </div>
             </div>
-
-            {/* Delivery Toggle */}
-            <div className="bg-slate-900 rounded-2xl sm:rounded-3xl p-4 sm:p-5 text-white shadow-xl">
-              <div className="flex items-center justify-between gap-4">
-                <div className="min-w-0">
-                  <h4 className="font-bold text-base">In-House Delivery</h4>
-                  <p className="text-slate-400 text-xs mt-0.5 leading-snug">Do you have your own delivery fleet?</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, provides_delivery: !prev.provides_delivery }))}
-                  className={`relative shrink-0 h-7 rounded-full transition-colors duration-200 focus:outline-none ${formData.provides_delivery ? 'bg-orange-500' : 'bg-slate-600'}`}
-                  style={{ width: '52px' }}
-                >
-                  <span className={`absolute top-[3px] left-[3px] h-[22px] w-[22px] rounded-full bg-white shadow-sm transition-transform duration-200 ${formData.provides_delivery ? 'translate-x-[26px]' : 'translate-x-0'}`} />
-                </button>
-              </div>
-            </div>
           </div>
         )}
 
