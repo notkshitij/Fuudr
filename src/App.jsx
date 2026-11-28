@@ -16,6 +16,7 @@ import AdminFuudrLayout from './pages/AdminFuudr/AdminFuudrLayout';
 import AdminFuudr from './pages/AdminFuudr/AdminFuudr';
 import AdminStatistics from './pages/AdminFuudr/AdminStatistics';
 import AdminSettings from './pages/AdminFuudr/AdminSettings';
+import RazorpayTransactions from './pages/AdminFuudr/RazorpayTransactions';
 import OrdersList from './pages/AdminFuudr/OrdersList';
 import ManageOrder from './pages/AdminFuudr/ManageOrder';
 import RestaurantsList from './pages/AdminFuudr/RestaurantsList';
@@ -76,6 +77,7 @@ export default function App() {
             <Route path="statistics" element={<AdminStatistics />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="orders" element={<OrdersList />} />
+            <Route path="razorpay-transactions" element={<RazorpayTransactions />} />
             <Route path="orders/:id" element={<ManageOrder />} />
             <Route path="restaurants" element={<RestaurantsList />} />
           </Route>

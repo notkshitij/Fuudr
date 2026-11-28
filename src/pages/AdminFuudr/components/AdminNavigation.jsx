@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, matchPath, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, Store, ChevronRight, LogOut, Menu, X, BarChart3, Settings, ArrowLeft, Printer, Trash2 } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Store, ChevronRight, LogOut, Menu, X, BarChart3, Settings, ArrowLeft, Printer, Trash2, CreditCard } from 'lucide-react';
 import { supabase } from '../../../supabaseClient';
 
 const SESSION_KEY = 'fuudr_super_admin_auth';
@@ -42,6 +42,7 @@ export function AdminNavigation() {
   const navItems = [
     { name: 'Dashboard',   path: '/adminfuudr',             icon: LayoutDashboard },
     { name: 'Orders',      path: '/adminfuudr/orders',       icon: ShoppingBag, badge: liveCount },
+    { name: 'Razorpay Transactions', path: '/adminfuudr/razorpay-transactions', icon: CreditCard },
     { name: 'Statistics', path: '/adminfuudr/statistics', icon: BarChart3 },
     { name: 'Restaurants', path: '/adminfuudr/restaurants', icon: Store },
     { name: 'Settings', path: '/adminfuudr/settings', icon: Settings },
